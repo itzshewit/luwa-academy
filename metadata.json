@@ -1,8 +1,8 @@
 {
-  "name": "Luwa Academy",
+  "name": "luwa-academy",
   "author": "Shewit",
   "year": "2026",
-  "description": "AI-powered, gamified, and interactive educational platform for high school students in Ethiopia, developed solely by Shewit.",
+  "description": "AI-powered, gamified, and interactive educational platform for high school students in Ethiopia, developed by Shewit.",
   "requestFramePermissions": [
     "camera",
     "microphone"

@@ -1,3 +1,4 @@
+
 /*
   Module: Cinematic Visual Synthesis
   Purpose: Generates high-fidelity academic animations to visualize complex curriculum concepts using advanced video synthesis models.

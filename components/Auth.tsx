@@ -1,3 +1,4 @@
+
 /*
   Module: Authentication Module
   Purpose: Manages scholar admission registry, identity verification, and initial session orchestration.
@@ -109,6 +110,10 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     <div className="min-h-screen flex items-center justify-center p-4 bg-black relative overflow-hidden">
       <div className="absolute top-10 left-10 opacity-10 hidden lg:block">
         <h2 className="text-[8px] font-black uppercase tracking-[0.5em] luwa-gold">Sovereign Excellence</h2>
+      </div>
+
+      <div className="absolute bottom-10 right-10 opacity-30 text-right">
+        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Registry Instance Alpha v2.0</p>
       </div>
 
       <GlassCard className="max-w-md w-full animate-fade-in border-luwa-gold/10 p-12 relative z-10 shadow-2xl">
