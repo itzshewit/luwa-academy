@@ -1,3 +1,7 @@
+/*
+  Module: Peer Collaboration Nexus
+  Purpose: Facilitates collective intelligence through peer-to-peer knowledge exchange and AI-moderated study sessions.
+*/
 
 import React, { useState, useEffect, useRef } from 'react';
 import { GlassCard } from './GlassCard';
@@ -26,7 +30,6 @@ export const StudyNexus: React.FC<StudyNexusProps> = ({ user }) => {
       timestamp: Date.now()
     }]);
 
-    // Simulated peer entries
     const timeout = setTimeout(() => {
       setMessages(prev => [...prev, {
         id: 'peer-1',
@@ -59,7 +62,6 @@ export const StudyNexus: React.FC<StudyNexusProps> = ({ user }) => {
     setMessages(prev => [...prev, userMsg]);
     setInput('');
 
-    // Simulated Peer/AI response
     setTimeout(() => {
       setMessages(prev => [...prev, {
         id: 'zenith-1',
@@ -80,22 +82,6 @@ export const StudyNexus: React.FC<StudyNexusProps> = ({ user }) => {
             Study Nexus
           </h2>
           <p className="text-[10px] text-gray-600 font-black uppercase tracking-[0.4em] mt-1">Natural Science • Cohort Alpha-7</p>
-        </div>
-        <div className="flex gap-2">
-           {peers.map(p => (
-             <div key={p.name} className="flex flex-col items-center group relative">
-                <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-black text-white hover:border-luwa-gold transition-all">
-                  {p.name[0]}
-                </div>
-                <div className="absolute top-full mt-2 w-32 hidden group-hover:block z-50">
-                  <GlassCard className="p-3 text-[8px] border-luwa-gold/20">
-                    <p className="font-black text-white">{p.name}</p>
-                    <p className="text-luwa-gold">{p.status}</p>
-                    <p className="text-gray-500">{p.xp} XP</p>
-                  </GlassCard>
-                </div>
-             </div>
-           ))}
         </div>
       </div>
 
@@ -135,27 +121,6 @@ export const StudyNexus: React.FC<StudyNexusProps> = ({ user }) => {
              </div>
           </form>
         </GlassCard>
-
-        <div className="hidden lg:flex w-64 flex-col gap-6">
-           <GlassCard className="border-white/5 p-6">
-              <h4 className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-4">Collective Goal</h4>
-              <p className="text-xs font-bold text-white mb-2">EUEE 2024 Simulation</p>
-              <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-luwa-gold" style={{ width: '65%' }} />
-              </div>
-              <p className="text-[8px] text-gray-600 mt-2">65% Readiness Threshold Met</p>
-           </GlassCard>
-           <GlassCard className="border-white/5 p-6 flex-1">
-              <h4 className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-4">Nexus Directives</h4>
-              <div className="space-y-4">
-                 {[1,2,3].map(i => (
-                   <div key={i} className="text-[10px] text-gray-400 font-medium leading-relaxed border-b border-white/5 pb-2 last:border-0">
-                     • Focus on electromagnetic wave propagation.
-                   </div>
-                 ))}
-              </div>
-           </GlassCard>
-        </div>
       </div>
     </div>
   );

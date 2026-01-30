@@ -1,3 +1,7 @@
+/*
+  Module: Administrative Mission Control
+  Purpose: Provides high-level administrative oversight, user lifecycle management, and institutional broadcasting capabilities.
+*/
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { GlassCard } from './GlassCard';
@@ -141,31 +145,6 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
 
         {activeTab === 'observability' && (
           <div className="space-y-8 animate-fade-in">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               <GlassCard className="border-white/5 p-8 h-[300px] flex flex-col">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-10">AI Compute Latency (ms)</h3>
-                  <div className="flex-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={pulseData}>
-                        <Line type="monotone" dataKey="latency" stroke="#FFD700" strokeWidth={2} dot={false} />
-                        <Tooltip contentStyle={{ background: '#0A0A0B', border: '1px solid rgba(255,215,0,0.1)' }} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-               </GlassCard>
-               <GlassCard className="border-white/5 p-8 h-[300px] flex flex-col">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-10">Request Volume</h3>
-                  <div className="flex-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={pulseData}>
-                        <Bar dataKey="volume" fill="#008B8B" radius={[4, 4, 0, 0]} />
-                        <Tooltip contentStyle={{ background: '#0A0A0B', border: '1px solid rgba(0,139,139,0.1)' }} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-               </GlassCard>
-            </div>
-
             <GlassCard className="border-white/5 p-10">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-8">Global Command Ledger</h3>
               <div className="space-y-4">
@@ -182,49 +161,8 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                     </div>
                   </div>
                 ))}
-                {logs.length === 0 && <p className="text-center py-20 text-[10px] text-gray-700 uppercase italic font-black">No institutional events recorded.</p>}
               </div>
             </GlassCard>
-          </div>
-        )}
-
-        {activeTab === 'benchmarks' && (
-          <div className="space-y-8 animate-fade-in">
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <GlassCard className="text-center p-8 border-luwa-gold/10">
-                   <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-2">Cohort Avg Readiness</p>
-                   <p className="text-5xl font-black luwa-gold">{cohortStats?.avgReadiness || 0}%</p>
-                </GlassCard>
-                <GlassCard className="text-center p-8 border-white/5">
-                   <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-2">Total Accumulated XP</p>
-                   <p className="text-5xl font-black text-white">{(cohortStats?.avgXp || 0) * users.length}</p>
-                </GlassCard>
-                <GlassCard className="text-center p-8 border-white/5">
-                   <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-2">Elite Readiness (80%+)</p>
-                   <p className="text-5xl font-black text-green-500">{users.filter(u => u.readiness >= 80).length}</p>
-                </GlassCard>
-             </div>
-
-             <GlassCard className="h-[400px] border-white/5 p-10 flex flex-col">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-12">National Lifecycle Distribution</h3>
-                <div className="flex-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData}>
-                      <XAxis dataKey="name" stroke="#1A1A1B" fontSize={10} fontWeight="900" axisLine={false} tickLine={false} />
-                      <Tooltip 
-                        contentStyle={{ background: '#0A0A0B', border: '1px solid rgba(255,215,0,0.1)', borderRadius: '16px' }}
-                        itemStyle={{ color: '#FFD700', fontSize: '12px', fontWeight: '900' }}
-                        labelStyle={{ display: 'none' }}
-                      />
-                      <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                        {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#FFD700' : '#008B8B'} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-             </GlassCard>
           </div>
         )}
 

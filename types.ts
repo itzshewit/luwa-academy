@@ -1,3 +1,7 @@
+/*
+  Module: Global Type Definitions
+  Purpose: Defines core data structures, enums, and interfaces for the Luwa Academy ecosystem.
+*/
 
 export enum Grade {
   G11 = 'Grade 11',

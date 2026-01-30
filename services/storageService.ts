@@ -1,3 +1,7 @@
+/*
+  Module: Persistent Storage & Logic Service
+  Purpose: Manages application state persistence, curriculum graphing, and scholar profile logic.
+*/
 
 import { User, Stream, GlobalDirective, AccessToken, AcademicIntent, IntentType, ConceptMastery, ReviewEvent, ConceptNode, NodeStatus, LifecycleStage, AuditEntry, AcademicHealth, PrestigeTier } from '../types';
 
@@ -71,7 +75,6 @@ export const storageService = {
   logout: () => {
     localStorage.removeItem(`${PREFIX}active_session`);
     localStorage.removeItem(`${PREFIX}simulation_active_user`);
-    // Aggressive clear of all Luwa prefixed session items
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && (key.includes('active_session') || key.includes('simulation_active_user'))) {

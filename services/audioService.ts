@@ -1,3 +1,7 @@
+/*
+  Module: Audio Processing Utilities
+  Purpose: Provides base64 encoding/decoding and PCM audio buffer management for real-time vocal interactions.
+*/
 
 export function decodeBase64(base64: string): Uint8Array {
   const binaryString = atob(base64);

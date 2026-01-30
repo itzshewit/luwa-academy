@@ -1,4 +1,12 @@
 
+/*
+  Luwa Academy – AI-Powered Educational Platform
+  Developed by Shewit – 2026
+  Purpose: Interactive, gamified, and AI-assisted learning for high school students.
+  Module: Direct Sync Live Interaction
+  Author: Shewit – 2026
+*/
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GlassCard } from './GlassCard';
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';

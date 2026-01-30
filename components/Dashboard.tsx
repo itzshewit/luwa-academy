@@ -1,3 +1,7 @@
+/*
+  Module: Scholar Dashboard & Console
+  Purpose: Primary interface for scholars to monitor academic progress, manage study intents, and access key learning vectors.
+*/
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { GlassCard } from './GlassCard';
@@ -167,7 +171,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onUpdate
               <p className="text-gray-500 text-sm font-medium tracking-wide">Targeting: {leverageTask.node.subject} • Priority: {Math.round(leverageTask.node.importanceScore * 100)}%</p>
             </div>
             <div className="flex items-center justify-between pt-10 border-t border-white/5">
-              <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] max-w-sm leading-loose">{leverageTask.node.description}</p>
+              <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest max-w-sm leading-loose">{leverageTask.node.description}</p>
               <span className="bg-luwa-gold text-black px-12 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] group-hover:px-16 transition-all shadow-xl shadow-luwa-gold/10">Execute Synthesis</span>
             </div>
           </div>
@@ -203,10 +207,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onUpdate
             )) : <p className="text-[9px] text-gray-600 uppercase font-black italic">Registry nodes initializing...</p>}
           </div>
         </GlassCard>
-      </div>
-      
-      <div className="pt-8 w-full border-t border-white/5 text-center opacity-30 hover:opacity-100 transition-opacity">
-         <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.5em] italic">Enterprise Robustness Verified • Academic Health: {user.health.status} • Luwa OS v2.0-Elite</p>
       </div>
     </div>
   );

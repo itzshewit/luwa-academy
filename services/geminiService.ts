@@ -1,3 +1,7 @@
+/*
+  Module: Generative AI Orchestration Service
+  Purpose: Orchestrates calls to Gemini models for streaming tutoring, quiz generation, and multimedia synthesis.
+*/
 
 import { GoogleGenAI, Type } from "@google/genai";
 import { Quiz, TutorMode, QuizResult, IntentType } from "../types";

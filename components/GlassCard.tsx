@@ -1,3 +1,7 @@
+/*
+  Module: Shared UI Components (GlassCard)
+  Purpose: A highly reusable container component implementing the application's signature glassmorphism aesthetic.
+*/
 
 import React from 'react';
 

@@ -1,7 +1,6 @@
-
 /*
   Module: App Core
-  Author: Shewit – 2026
+  Purpose: Root component orchestrating global state, navigation, and core academic modules.
 */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -14,12 +13,13 @@ import { ScholarAnalytics } from './components/ScholarAnalytics';
 import { LuwaLive } from './components/LuwaLive';
 import { CinematicConcepts } from './components/CinematicConcepts';
 import { StudyNexus } from './components/StudyNexus';
+import { About } from './components/About';
 import { storageService } from './services/storageService';
 import { User, GlobalDirective } from './types';
 import { ICONS } from './constants';
 import { GlassCard } from './components/GlassCard';
 
-type Tab = 'home' | 'tutor' | 'lab' | 'analytics' | 'live' | 'video' | 'admin' | 'nexus';
+type Tab = 'home' | 'tutor' | 'lab' | 'analytics' | 'live' | 'video' | 'admin' | 'nexus' | 'about';
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 Minutes Inactivity Threshold
 
@@ -197,6 +197,7 @@ const App: React.FC = () => {
       case 'live': return <LuwaLive />;
       case 'video': return <CinematicConcepts />;
       case 'nexus': return <StudyNexus user={user} />;
+      case 'about': return <About />;
       case 'admin': return <AdminControl onSimulate={(u) => {
         storageService.enterSimulation(u);
         setUser(u);
@@ -242,6 +243,7 @@ const App: React.FC = () => {
             { id: 'analytics', icon: ICONS.Layout, label: 'Academic Record', role: 'both' },
             { id: 'live', icon: ICONS.Mic, label: 'Direct Sync', role: 'both' },
             { id: 'video', icon: ICONS.Video, label: 'Cinema Recaps', role: 'both' },
+            { id: 'about', icon: ICONS.Info, label: 'About', role: 'both' },
             { id: 'admin', icon: ICONS.Trophy, label: 'Mission Control', role: 'admin' }
           ]
           .filter(item => item.role === 'both' || item.role === user.role)
@@ -313,7 +315,7 @@ const App: React.FC = () => {
         {/* Institutional Branding Footer */}
         <footer className="absolute bottom-0 w-full h-12 flex items-center justify-center px-10 border-t border-white/5 bg-black/40 backdrop-blur-md z-30">
           <p className="text-[9px] font-black uppercase tracking-[0.5em] text-gray-600">
-            © 2026 <span className="text-luwa-gold/60">Shewit</span> • Institutional Excellence Verified
+            © 2026 Luwa Academy
           </p>
         </footer>
       </main>

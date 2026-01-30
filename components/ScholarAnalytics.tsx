@@ -1,3 +1,7 @@
+/*
+  Module: Scholar Analytics & Audit System
+  Purpose: Aggregates academic performance metrics and executes complex performance audits to provide scholars with actionable insights.
+*/
 
 import React, { useState, useMemo } from 'react';
 import { GlassCard } from './GlassCard';
@@ -95,26 +99,6 @@ export const ScholarAnalytics: React.FC<ScholarAnalyticsProps> = ({ user }) => {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex justify-around text-[8px] font-black uppercase tracking-widest text-gray-600 mt-4">
-                 <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-nile-blue" /> ENG</span>
-                 <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-luwa-gold" /> CON</span>
-                 <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-crimson" /> BRN</span>
-              </div>
-           </GlassCard>
-
-           <GlassCard className="border-white/5 p-10">
-              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-gray-600 mb-8">Professional Prestige</h3>
-              <div className="space-y-6">
-                 <div>
-                    <p className="text-[10px] font-black text-white uppercase tracking-widest mb-2">Current Tier: {user.prestige}</p>
-                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                       <div className="h-full bg-luwa-gold" style={{ width: `${(user.xp / 10000) * 100}%` }} />
-                    </div>
-                 </div>
-                 <p className="text-[9px] text-gray-600 font-medium leading-relaxed italic">
-                   "Sovereign tier scholars are eligible for national research grants and institutional registry honors."
-                 </p>
-              </div>
            </GlassCard>
         </div>
 
@@ -140,7 +124,7 @@ export const ScholarAnalytics: React.FC<ScholarAnalyticsProps> = ({ user }) => {
               <div className="flex-1 flex flex-col items-center justify-center text-center">
                 <ICONS.Trophy className="w-24 h-24 text-white/[0.01] mb-12" />
                 <p className="text-[11px] text-gray-700 uppercase font-black tracking-[0.5em] mb-12 leading-loose max-w-sm">
-                  Strategic Audit Ready.<br/>Input: {user.quizHistory.length} Sessions detected.<br/>Goal: Burnout Prevention & Mastery Projection.
+                  Strategic Audit Ready.<br/>Input: {user.quizHistory.length} Sessions detected.
                 </p>
                 <button onClick={performBrainAudit} disabled={user.quizHistory.length < 2} className="w-full bg-luwa-gold text-black font-black py-6 rounded-2xl text-[10px] uppercase tracking-[0.3em] shadow-2xl hover:brightness-110 transition-all">
                   AUTHORIZE PERFORMANCE AUDIT

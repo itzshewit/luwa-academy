@@ -1,3 +1,7 @@
+/*
+  Module: Neural Tutoring Interface
+  Purpose: Handles AI-powered multimodal tutoring, including text analysis, image recognition, and Socratic dialogue.
+*/
 
 import React, { useState, useRef, useEffect } from 'react';
 import { GlassCard } from './GlassCard';
@@ -94,7 +98,6 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
         }
       }
 
-      // Institutional Observability: Log AI synthesis
       storageService.logAudit(user, 'AI Synthesis', `Generated scholarly response in ${mode} mode regarding: "${messageContent.slice(0, 30)}..."`, 'info');
 
     } catch (err) {
@@ -131,7 +134,7 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
                   timestamp: Date.now()
                 }]);
               }}
-              className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] transition-all ${mode === m ? 'bg-luwa-gold text-black shadow-lg shadow-luwa-gold/10' : 'text-gray-500 hover:text-white'}`}
+              className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] transition-all ${mode === m ? 'bg-luwa-gold text-black font-black shadow-lg shadow-luwa-gold/10' : 'text-gray-500 hover:text-white'}`}
             >
               {m}
             </button>

@@ -1,3 +1,7 @@
+/*
+  Module: Academic Assessment Interface
+  Purpose: Facilitates diagnostic testing, performance evaluation, and real-time conceptual feedback for scholars.
+*/
 
 import React, { useState, useEffect, useRef } from 'react';
 import { GlassCard } from './GlassCard';
@@ -278,11 +282,6 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ user, onUpdateUser
                     <div className="p-10 bg-black/40 rounded-[2.5rem] border border-white/5 relative group">
                       <div className="text-base leading-loose text-gray-300">
                         <span className="text-luwa-gold font-black uppercase mr-4 tracking-[0.4em] text-[10px] block mb-2">Neural Breakdown:</span>
-                        {res.metrics.effortScore < 0.4 ? (
-                          <span className="opacity-80 block mb-4 border-l-2 border-luwa-gold/20 pl-4 italic text-sm">
-                            Instructional Note: This node requires deeper deliberation. Avoid rapid selection.
-                          </span>
-                        ) : null}
                         {res.explanation}
                       </div>
                       <div className="mt-12 flex justify-end">
