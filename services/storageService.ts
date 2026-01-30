@@ -46,7 +46,9 @@ export const storageService = {
 
   getSession: (): User | null => {
     const simUser = localStorage.getItem(`${PREFIX}simulation_active_user`);
-    let sessionUser: User | null = simUser ? JSON.parse(simUser) : JSON.parse(localStorage.getItem(`${PREFIX}active_session`) || 'null');
+    const activeSession = localStorage.getItem(`${PREFIX}active_session`);
+    
+    let sessionUser: User | null = simUser ? JSON.parse(simUser) : (activeSession ? JSON.parse(activeSession) : null);
 
     if (sessionUser) {
       const oldStage = sessionUser.lifecycleStage;
@@ -69,6 +71,13 @@ export const storageService = {
   logout: () => {
     localStorage.removeItem(`${PREFIX}active_session`);
     localStorage.removeItem(`${PREFIX}simulation_active_user`);
+    // Aggressive clear of all Luwa prefixed session items
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.includes('active_session') || key.includes('simulation_active_user'))) {
+        localStorage.removeItem(key);
+      }
+    }
     sessionStorage.clear();
   },
 
@@ -93,15 +102,12 @@ export const storageService = {
     const history = user.quizHistory;
     if (history.length === 0) return { burnoutRisk: 0, engagementScore: 1, consistencyLevel: 1, status: 'Vibrant' };
     
-    // Engagement based on volume
     const engagementScore = Math.min(1, history.length / 20);
-    
-    // Burnout risk based on average score vs effort
     const avgScore = history.reduce((acc, q) => acc + (q.score / q.total), 0) / history.length;
     const avgEffort = history.reduce((acc, q) => acc + q.aggregateEffort, 0) / history.length;
     
     let burnoutRisk = 0;
-    if (avgEffort > 0.8 && avgScore < 0.6) burnoutRisk = 0.7; // High effort, low score = high stress
+    if (avgEffort > 0.8 && avgScore < 0.6) burnoutRisk = 0.7;
     if (history.length > 50) burnoutRisk += 0.2;
 
     const consistencyLevel = user.streak > 7 ? 0.9 : user.streak > 3 ? 0.6 : 0.3;

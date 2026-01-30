@@ -1,4 +1,9 @@
 
+/*
+  Module: Cinematic Visual Synthesis
+  Author: Shewit – 2026
+*/
+
 import React, { useState, useEffect } from 'react';
 import { GlassCard } from './GlassCard';
 import { geminiService } from '../services/geminiService';
@@ -102,7 +107,7 @@ export const CinematicConcepts: React.FC = () => {
       <div className="flex justify-between items-end mb-2">
         <div>
           <h2 className="text-2xl font-black uppercase tracking-tighter luwa-gold">Cinematic Synthesis</h2>
-          <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.3em] mt-1">Multimedia Knowledge Engine</p>
+          <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.3em] mt-1">Developed by Shewit • Multimedia Knowledge Engine</p>
         </div>
         <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-xl">
            <p className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Render Target</p>

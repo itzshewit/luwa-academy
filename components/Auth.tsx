@@ -1,4 +1,9 @@
 
+/*
+  Module: Authentication Module
+  Author: Shewit – 2026
+*/
+
 import React, { useState } from 'react';
 import { GlassCard } from './GlassCard';
 import { storageService } from '../services/storageService';
@@ -71,7 +76,6 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     const userId = Math.random().toString(36).substr(2, 9);
     
     if (storageService.validateAndUseToken(token, userId)) {
-      // Fix: Added missing 'prestige' and 'health' properties to comply with User interface
       const newUser: User = {
         id: userId,
         email,
@@ -108,12 +112,20 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         <h2 className="text-[8px] font-black uppercase tracking-[0.5em] luwa-gold">Sovereign Excellence</h2>
       </div>
 
+      <div className="absolute bottom-10 right-10 opacity-30 text-right">
+        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Developed by <span className="text-luwa-gold">Shewit</span></p>
+        <p className="text-[7px] font-black uppercase tracking-[0.6em] text-gray-700 mt-1">Registry Alpha v2.0</p>
+      </div>
+
       <GlassCard className="max-w-md w-full animate-fade-in border-luwa-gold/10 p-12 relative z-10 shadow-2xl">
         <div className="text-center mb-16">
           <h1 className="text-5xl font-black luwa-gold mb-2 tracking-tighter">LUWA</h1>
           <p className="text-gray-600 text-[10px] font-black uppercase tracking-[0.4em]">
             {isLogin ? 'Identity Authentication' : 'Admission Registry'}
           </p>
+          <div className="mt-4 inline-block px-3 py-1 bg-white/5 border border-white/5 rounded-full">
+            <p className="text-[7px] font-black uppercase tracking-[0.5em] text-gray-700">Built by Shewit</p>
+          </div>
         </div>
 
         {isLogin ? (

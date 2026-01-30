@@ -1,6 +1,8 @@
 {
   "name": "Luwa Academy",
-  "description": "A premium, AI-driven educational platform for Ethiopian scholars, featuring neural tutoring, live voice sessions, cinematic concept visualization, and advanced scholar analytics.",
+  "author": "Shewit",
+  "year": "2026",
+  "description": "A premium, AI-driven educational platform for Ethiopian scholars, developed by Shewit. Featuring neural tutoring, live voice sessions, cinematic concept visualization, and advanced scholar analytics.",
   "requestFramePermissions": [
     "camera",
     "microphone"
