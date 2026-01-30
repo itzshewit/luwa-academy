@@ -1,6 +1,8 @@
+
 /*
+  Luwa Academy – AI-Powered Educational Platform
+  Developed by Shewit – 2026
   Module: Scholar Dashboard & Console
-  Purpose: Primary interface for scholars to monitor academic progress, manage study intents, and access key learning vectors.
 */
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -32,17 +34,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onUpdate
   }, []);
 
   const leverageTask = useMemo(() => storageService.getLeverageTask(user), [user]);
+  const suggestions = useMemo(() => storageService.getPersonalizedSuggestions(user), [user]);
   const masteryEntries = Object.values(user.masteryRecord || {}) as ConceptMastery[];
-
-  const lifecycleStages: { stage: LifecycleStage, icon: any, instruction: string }[] = [
-    { stage: 'Admission', icon: ICONS.Home, instruction: 'Establish conceptual baselines via core Diagnostics.' },
-    { stage: 'Exploration', icon: ICONS.Brain, instruction: 'Synthesize first principles and build intuition nodes.' },
-    { stage: 'Skill Acquisition', icon: ICONS.Zap, instruction: 'Execute high-repetition practice and spaced recall.' },
-    { stage: 'Mastery', icon: ICONS.Layout, instruction: 'Refine efficiency and tackle high-difficulty simulations.' },
-    { stage: 'Ready', icon: ICONS.Trophy, instruction: 'Finalize cognitive readiness and review memory stability.' },
-  ];
-
-  const currentStageIdx = lifecycleStages.findIndex(s => s.stage === user.lifecycleStage);
 
   const updateIntent = (type: IntentType) => {
     const newIntent = { type, confidence: 1.0, detectedAt: Date.now(), expiresAt: Date.now() + (1000 * 60 * 60 * 2) };
@@ -50,164 +43,135 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onUpdate
     setShowIntentSelector(false);
   };
 
-  const getObjectiveText = () => {
-    if (leverageTask.status === 'Review') return `Memory Restoration: ${leverageTask.node.topic}`;
-    if (leverageTask.status === 'Ready') return `Advancement: ${leverageTask.node.topic}`;
-    return user.currentObjective;
-  };
-
   return (
-    <div className="h-full flex flex-col items-center justify-start gap-12 animate-fade-in max-w-5xl mx-auto px-4 overflow-y-auto custom-scrollbar pb-10">
+    <div className="h-full flex flex-col items-center justify-start gap-12 animate-fade-in max-w-6xl mx-auto px-4 overflow-y-auto custom-scrollbar pb-20 pt-4">
       
-      {/* Institutional Directive Banner */}
-      {directives.length > 0 && (
-        <div className="w-full animate-fade-in">
-           <div className="bg-luwa-gold/10 border border-luwa-gold/30 rounded-3xl p-6 flex items-center gap-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-5">
-                <ICONS.Zap className="w-20 h-20 luwa-gold" />
-              </div>
-              <div className="w-10 h-10 rounded-full bg-luwa-gold flex items-center justify-center shrink-0">
-                <ICONS.Zap className="w-5 h-5 text-black" />
-              </div>
-              <div className="flex-1">
-                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-luwa-gold mb-1">Sovereign Registry Directive</p>
-                <p className="text-sm font-bold text-white tracking-tight">{directives[0].content}</p>
-              </div>
-              <span className="text-[8px] font-black text-luwa-gold/40 uppercase tracking-widest">{new Date(directives[0].timestamp).toLocaleDateString()}</span>
+      {/* Personalized Welcome */}
+      <div className="w-full flex flex-col md:flex-row justify-between items-end gap-6 shrink-0">
+        <div className="text-left">
+          <p className="text-luwa-teal text-[10px] font-black uppercase tracking-[0.4em] mb-3">Sovereign Excellence</p>
+          <h1 className="text-5xl font-serif font-bold text-luwa-purple tracking-tight">
+            Welcome, {user.name.split(' ')[0]}.
+          </h1>
+          <p className="text-slate-400 font-medium mt-2">Your {user.stream} study path is optimized for mastery.</p>
+        </div>
+        <div className="flex items-center gap-6">
+           <div className="text-right">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">EUEE Readiness</p>
+              <p className="text-3xl font-serif font-black text-luwa-purple">{user.readiness}%</p>
+           </div>
+           <div className="h-10 w-px bg-slate-200" />
+           <div className="text-right">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Scholar XP</p>
+              <p className="text-3xl font-serif font-black text-luwa-teal">{user.xp.toLocaleString()}</p>
            </div>
         </div>
-      )}
-
-      <div className="text-center space-y-4 max-w-2xl mt-4">
-        <div className="flex items-center justify-center gap-4 mb-2">
-          <button 
-            onClick={() => setShowIntentSelector(!showIntentSelector)}
-            className="text-[10px] font-black text-luwa-gold border border-luwa-gold/20 px-4 py-1.5 rounded-full uppercase tracking-[0.4em] hover:bg-luwa-gold/10 transition-all flex items-center gap-2"
-          >
-            <div className="w-1.5 h-1.5 bg-luwa-gold rounded-full animate-pulse" />
-            Intel: {user.currentIntent?.type || 'Initializing...'}
-          </button>
-          <div className="text-[10px] font-black text-white/40 border border-white/5 px-4 py-1.5 rounded-full uppercase tracking-[0.4em]">
-            Stage: {user.lifecycleStage}
-          </div>
-          <div className="text-[10px] font-black text-luwa-gold border border-luwa-gold/20 px-4 py-1.5 rounded-full uppercase tracking-[0.4em]">
-            {user.prestige} Tier
-          </div>
-        </div>
-        <h1 className="text-5xl font-black text-white tracking-tighter leading-tight">
-          What is the highest leverage task you should execute today?
-        </h1>
       </div>
 
+      {/* Primary Engagement Cards */}
+      <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8">
+          <GlassCard onClick={() => onNavigate('lab')} className="h-full group relative cursor-pointer border-slate-100 hover:border-luwa-teal/30 hover:shadow-2xl hover:shadow-luwa-teal/5 p-12 overflow-hidden transition-all duration-500">
+            <div className="absolute top-0 right-0 p-12 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity"><ICONS.Zap className="w-64 h-64 text-luwa-teal" /></div>
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <div className="flex items-center gap-4 mb-12">
+                  <span className="bg-luwa-teal/10 text-luwa-teal text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">Recommended Focus</span>
+                  <span className="text-slate-300 text-[11px] font-bold">•</span>
+                  <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest">National Curriculum Node</span>
+                </div>
+                <h3 className="text-5xl font-serif font-bold text-luwa-purple mb-6 tracking-tight leading-tight">{leverageTask.node.topic}</h3>
+                <p className="text-slate-500 max-w-lg leading-relaxed mb-12">{leverageTask.node.description}</p>
+              </div>
+              <div className="flex items-center justify-between pt-8 border-t border-slate-50">
+                <div className="flex items-center gap-2">
+                   <div className="w-2 h-2 rounded-full bg-luwa-teal animate-pulse" />
+                   <p className="text-[10px] font-black uppercase tracking-widest text-luwa-teal">Sync status: {leverageTask.status}</p>
+                </div>
+                <span className="bg-luwa-purple text-white px-10 py-4 rounded-xl font-bold text-sm uppercase tracking-widest shadow-xl shadow-luwa-purple/20 transition-all group-hover:px-12">Enter Nexus</span>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
+
+        <div className="lg:col-span-4 flex flex-col gap-6">
+           <GlassCard className="flex-1 bg-luwa-purple text-white p-8 border-none flex flex-col justify-between shadow-2xl shadow-luwa-purple/20">
+              <div>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-6">Neural Surge</h4>
+                <div className="flex items-center justify-between mb-2">
+                   <span className="text-4xl font-serif font-black">{user.streak}</span>
+                   <div className="text-3xl">🔥</div>
+                </div>
+                <p className="text-[11px] font-bold text-white/70">Continuous Learning Days</p>
+              </div>
+              <button 
+                onClick={() => onNavigate('lab')}
+                className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-4 rounded-xl text-xs uppercase tracking-widest border border-white/20 transition-all mt-8"
+              >
+                Boost Streak
+              </button>
+           </GlassCard>
+           
+           <GlassCard className="flex-1 p-8 border-slate-100 flex flex-col justify-between">
+              <div>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">Academic Mode</h4>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="p-3 bg-slate-50 rounded-xl">
+                     <ICONS.Brain className="w-5 h-5 text-luwa-purple" />
+                  </div>
+                  <p className="text-lg font-bold text-luwa-purple">{user.currentIntent?.type}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowIntentSelector(!showIntentSelector)}
+                className="w-full bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold py-4 rounded-xl text-[10px] uppercase tracking-widest border border-slate-100 transition-all"
+              >
+                Switch Intent
+              </button>
+           </GlassCard>
+        </div>
+      </div>
+
+      {/* Quick Access Grid */}
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {suggestions.map((s) => (
+          <GlassCard key={s.id} className="group hover:border-luwa-teal transition-all p-8 flex flex-col h-full border-slate-50">
+             <div className="flex justify-between items-start mb-6">
+                <span className="text-luwa-teal text-[9px] font-black uppercase tracking-widest">{s.type}</span>
+                <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-luwa-teal/5 transition-colors">
+                   <ICONS.Zap className="w-4 h-4 text-slate-300 group-hover:text-luwa-teal transition-colors" />
+                </div>
+             </div>
+             <h4 className="text-xl font-serif font-bold text-luwa-purple mb-3 leading-tight">{s.title}</h4>
+             <p className="text-slate-500 text-sm leading-relaxed flex-1 mb-8">{s.desc}</p>
+             <div className="flex items-center justify-between pt-6 border-t border-slate-50">
+                <span className="text-[11px] font-bold text-luwa-purple">{s.xp} XP</span>
+                <span className="text-luwa-teal font-black text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Launch →</span>
+             </div>
+          </GlassCard>
+        ))}
+      </div>
+
+      {/* Activity Intent Selection Overlay */}
       {showIntentSelector && (
-        <div className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-5 gap-4 animate-fade-in">
+        <div className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 animate-fade-in">
           {intents.map((i) => (
             <button
               key={i.type}
               onClick={() => updateIntent(i.type)}
-              className={`p-6 rounded-2xl border flex flex-col items-center text-center gap-3 transition-all ${user.currentIntent?.type === i.type ? 'border-luwa-gold bg-luwa-gold/10' : 'border-white/5 bg-white/5 hover:border-white/20'}`}
+              className={`p-8 rounded-3xl border-2 flex flex-col items-center text-center gap-4 transition-all ${user.currentIntent?.type === i.type ? 'border-luwa-purple bg-white shadow-2xl shadow-luwa-purple/10' : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-slate-200'}`}
             >
-              <i.icon className={`w-5 h-5 ${user.currentIntent?.type === i.type ? 'text-luwa-gold' : 'text-gray-500'}`} />
-              <span className="text-[9px] font-black uppercase tracking-widest text-white">{i.label}</span>
-              <span className="text-[8px] text-gray-600 leading-tight">{i.desc}</span>
+              <div className={`p-4 rounded-2xl ${user.currentIntent?.type === i.type ? 'bg-luwa-purple text-white' : 'bg-white text-slate-400 shadow-sm'}`}>
+                <i.icon className="w-6 h-6" />
+              </div>
+              <div>
+                <p className={`text-[11px] font-black uppercase tracking-widest mb-1 ${user.currentIntent?.type === i.type ? 'text-luwa-purple' : 'text-slate-400'}`}>{i.label}</p>
+                <p className="text-[9px] text-slate-400 font-medium leading-relaxed">{i.desc}</p>
+              </div>
             </button>
           ))}
         </div>
       )}
-
-      {/* Lifecycle Progress & Directive */}
-      <div className="w-full px-10">
-        <div className="flex justify-between items-center mb-10 px-2">
-           {lifecycleStages.map((s, i) => (
-             <div key={s.stage} className="flex flex-col items-center gap-3 relative group">
-                <div className={`w-10 h-10 rounded-2xl border flex items-center justify-center transition-all ${i <= currentStageIdx ? 'bg-luwa-gold border-luwa-gold text-black shadow-lg shadow-luwa-gold/20' : 'bg-white/5 border-white/5 text-gray-700'}`}>
-                  <s.icon className="w-5 h-5" />
-                </div>
-                {i < lifecycleStages.length - 1 && (
-                  <div className={`absolute left-full w-full h-[1px] top-5 -translate-x-1/2 -z-10 ${i < currentStageIdx ? 'bg-luwa-gold' : 'bg-white/5'}`} style={{ width: 'calc(100% * 5.2)' }} />
-                )}
-             </div>
-           ))}
-        </div>
-        <div className="text-center">
-           <p className="text-[9px] text-gray-600 uppercase font-black tracking-[0.5em] mb-2">Academic Mentorship Note</p>
-           <p className="text-sm font-bold text-gray-300 italic">"{lifecycleStages[currentStageIdx].instruction}"</p>
-        </div>
-      </div>
-
-      {/* Microlearning & Collaboration Hub */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full">
-         <GlassCard onClick={() => onNavigate('nexus')} className="lg:col-span-2 cursor-pointer border-luwa-gold/10 bg-luwa-gold/[0.01] flex items-center gap-8 group">
-            <div className="w-20 h-20 bg-luwa-gold rounded-3xl flex items-center justify-center shrink-0 shadow-2xl shadow-luwa-gold/20 transition-transform group-hover:scale-110">
-               <ICONS.Layout className="w-10 h-10 text-black" />
-            </div>
-            <div>
-               <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-luwa-gold mb-1">Study Nexus</h4>
-               <p className="text-xl font-black text-white tracking-tight">Sync with your cohort in the Nexus.</p>
-               <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mt-2">3 Peers Active • AI Moderator: Zenith</p>
-            </div>
-         </GlassCard>
-         <GlassCard className="lg:col-span-1 border-white/5 p-8 flex flex-col justify-center">
-            <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-4">Consistency Pulse</p>
-            <div className="flex gap-1">
-               {[...Array(21)].map((_, i) => (
-                 <div key={i} className={`h-6 w-1 rounded-sm ${i < user.streak ? 'bg-luwa-gold' : 'bg-white/5'}`} />
-               ))}
-            </div>
-            <p className="text-[10px] font-black text-white uppercase tracking-widest mt-4">{user.streak} Day Neural Streak</p>
-         </GlassCard>
-      </div>
-
-      <div className="w-full">
-        <GlassCard onClick={() => onNavigate('lab')} className="group relative cursor-pointer border-luwa-gold/20 hover:bg-luwa-gold/5 p-16 overflow-hidden transition-all duration-700 hover:scale-[1.01] shadow-2xl">
-          <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity"><ICONS.Zap className="w-48 h-48 luwa-gold" /></div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-10">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-luwa-gold">Strategic Vector</h3>
-              <span className={`px-4 py-1 rounded text-[8px] font-black uppercase tracking-widest ${leverageTask.status === 'Review' ? 'bg-red-500/20 text-red-500' : 'bg-luwa-gold/20 text-luwa-gold'}`}>{leverageTask.status} Required</span>
-            </div>
-            <div className="space-y-6 mb-16">
-              <p className="text-5xl font-black text-white leading-tight tracking-tight">{getObjectiveText()}</p>
-              <p className="text-gray-500 text-sm font-medium tracking-wide">Targeting: {leverageTask.node.subject} • Priority: {Math.round(leverageTask.node.importanceScore * 100)}%</p>
-            </div>
-            <div className="flex items-center justify-between pt-10 border-t border-white/5">
-              <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest max-w-sm leading-loose">{leverageTask.node.description}</p>
-              <span className="bg-luwa-gold text-black px-12 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] group-hover:px-16 transition-all shadow-xl shadow-luwa-gold/10">Execute Synthesis</span>
-            </div>
-          </div>
-        </GlassCard>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
-        <GlassCard className="flex flex-col justify-between border-white/5 p-8 relative overflow-hidden group">
-          <div className="flex justify-between items-start mb-10">
-            <div>
-              <h4 className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 mb-1">EUEE Readiness</h4>
-              <p className="text-lg font-black text-white">Sovereign Preparedness</p>
-            </div>
-            <div className="text-3xl font-black luwa-gold">{user.readiness}%</div>
-          </div>
-          <div className="h-4 bg-white/5 rounded-full overflow-hidden border border-white/5">
-            <div className="h-full bg-gradient-to-r from-luwa-gold to-nile-blue transition-all duration-1000 ease-out" style={{ width: `${user.readiness}%` }} />
-          </div>
-          <p className="text-[9px] font-black uppercase tracking-widest text-gray-600 mt-6">Composite Index: Mastery • Retention • Effort</p>
-        </GlassCard>
-
-        <GlassCard onClick={() => onNavigate('analytics')} className="cursor-pointer border-white/5 hover:bg-white/5 p-8">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h4 className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500 mb-1">Cognitive Record</h4>
-              <p className="text-lg font-black text-white">Mastery Heatmap</p>
-            </div>
-            <ICONS.Layout className="w-5 h-5 text-gray-700" />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {masteryEntries.length > 0 ? masteryEntries.slice(0, 32).map((m, i) => (
-              <div key={i} className="w-3 h-3 rounded-sm" style={{ backgroundColor: m.retentionScore > 0.8 ? '#008B8B' : m.retentionScore > 0.4 ? '#FFD700' : '#9B111E', opacity: 0.3 + (m.retentionScore * 0.7) }} />
-            )) : <p className="text-[9px] text-gray-600 uppercase font-black italic">Registry nodes initializing...</p>}
-          </div>
-        </GlassCard>
-      </div>
     </div>
   );
 };

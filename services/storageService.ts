@@ -1,9 +1,13 @@
+
 /*
+  Luwa Academy – AI-Powered Educational Platform
+  Developed by Shewit – 2026
+  Purpose: Interactive, gamified, and AI-assisted learning for high school students.
   Module: Persistent Storage & Logic Service
-  Purpose: Manages application state persistence, curriculum graphing, and scholar profile logic.
+  Author: Shewit – 2026
 */
 
-import { User, Stream, GlobalDirective, AccessToken, AcademicIntent, IntentType, ConceptMastery, ReviewEvent, ConceptNode, NodeStatus, LifecycleStage, AuditEntry, AcademicHealth, PrestigeTier } from '../types';
+import { User, Stream, GlobalDirective, AccessToken, AcademicIntent, IntentType, ConceptMastery, ConceptNode, NodeStatus, LifecycleStage, AuditEntry, AcademicHealth, PrestigeTier, HistoricalQuestion, Language, Achievement, Exam, ExamSubmission } from '../types';
 
 const PREFIX = 'luwa_mvp_v1_';
 const SALT = '_luwasalt';
@@ -36,9 +40,11 @@ export const storageService = {
         id: 'admin-primary', email: 'admin@luwa.academy', passwordHash: btoa('admin123' + SALT),
         token: 'MASTER-ADMIN', name: 'Luwa Registry Admin', role: 'admin', stream: Stream.NATURAL,
         grade: 'N/A', targetYear: 'N/A', xp: 0, level: 'Builder', prestige: 'Bronze',
-        weakConcepts: [], currentObjective: 'Oversee Nexus Operations', quizHistory: [], streak: 1,
+        weakConcepts: [], currentObjective: 'Oversee Nexus Operations', quizHistory: [], questionLedger: [], 
+        achievements: [], streak: 1, lastActiveDate: new Date().toISOString().split('T')[0],
         masteryRecord: {}, lifecycleStage: 'Admission', readiness: 0,
-        health: { burnoutRisk: 0, engagementScore: 1, consistencyLevel: 1, status: 'Vibrant' }
+        health: { burnoutRisk: 0, engagementScore: 1, consistencyLevel: 1, status: 'Vibrant' },
+        preferredLanguage: 'en'
       };
       users.push(defaultAdmin);
       localStorage.setItem(`${PREFIX}all_users`, JSON.stringify(users));
@@ -51,22 +57,34 @@ export const storageService = {
   getSession: (): User | null => {
     const simUser = localStorage.getItem(`${PREFIX}simulation_active_user`);
     const activeSession = localStorage.getItem(`${PREFIX}active_session`);
-    
     let sessionUser: User | null = simUser ? JSON.parse(simUser) : (activeSession ? JSON.parse(activeSession) : null);
 
     if (sessionUser) {
-      const oldStage = sessionUser.lifecycleStage;
+      if (!sessionUser.questionLedger) sessionUser.questionLedger = [];
+      if (!sessionUser.achievements) sessionUser.achievements = [];
       if (!sessionUser.currentIntent) sessionUser.currentIntent = storageService.inferIntent(sessionUser);
       if (!sessionUser.masteryRecord) sessionUser.masteryRecord = {};
-      sessionUser.masteryRecord = storageService.decayRetention(sessionUser.masteryRecord);
+      if (!sessionUser.preferredLanguage) sessionUser.preferredLanguage = 'en';
       
+      sessionUser.masteryRecord = storageService.decayRetention(sessionUser.masteryRecord);
       sessionUser.lifecycleStage = storageService.calculateLifecycleStage(sessionUser);
       sessionUser.readiness = storageService.calculateReadiness(sessionUser);
       sessionUser.health = storageService.calculateHealth(sessionUser);
       sessionUser.prestige = storageService.calculatePrestige(sessionUser.xp);
-
-      if (oldStage && oldStage !== sessionUser.lifecycleStage) {
-        storageService.logAudit(sessionUser, 'Lifecycle Shift', `Transitioned from ${oldStage} to ${sessionUser.lifecycleStage}`, 'info');
+      
+      // Update streak
+      const today = new Date().toISOString().split('T')[0];
+      if (sessionUser.lastActiveDate !== today) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        
+        if (sessionUser.lastActiveDate === yesterdayStr) {
+          sessionUser.streak += 1;
+        } else {
+          sessionUser.streak = 1;
+        }
+        sessionUser.lastActiveDate = today;
       }
     }
     return sessionUser;
@@ -75,51 +93,107 @@ export const storageService = {
   logout: () => {
     localStorage.removeItem(`${PREFIX}active_session`);
     localStorage.removeItem(`${PREFIX}simulation_active_user`);
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (key.includes('active_session') || key.includes('simulation_active_user'))) {
-        localStorage.removeItem(key);
-      }
-    }
     sessionStorage.clear();
   },
 
-  logAudit: (user: User, action: string, detail: string, severity: AuditEntry['severity'] = 'info') => {
-    const logs: AuditEntry[] = JSON.parse(localStorage.getItem(`${PREFIX}audit_ledger`) || '[]');
-    const entry: AuditEntry = {
-      id: Math.random().toString(36).substr(2, 9),
-      timestamp: Date.now(),
-      userId: user.id,
-      userName: user.name,
-      action,
-      detail,
-      severity
-    };
-    logs.unshift(entry);
-    localStorage.setItem(`${PREFIX}audit_ledger`, JSON.stringify(logs.slice(0, 100)));
+  // SES Storage Methods
+  getExams: (): Exam[] => JSON.parse(localStorage.getItem(`${PREFIX}exams`) || '[]'),
+  saveExam: (exam: Exam) => {
+    const exams = storageService.getExams();
+    const idx = exams.findIndex(e => e.id === exam.id);
+    if (idx > -1) exams[idx] = exam;
+    else exams.push(exam);
+    localStorage.setItem(`${PREFIX}exams`, JSON.stringify(exams));
+  },
+  
+  getSubmissions: (): ExamSubmission[] => JSON.parse(localStorage.getItem(`${PREFIX}submissions`) || '[]'),
+  saveSubmission: (sub: ExamSubmission) => {
+    const subs = storageService.getSubmissions();
+    const idx = subs.findIndex(s => s.id === sub.id);
+    if (idx > -1) subs[idx] = sub;
+    else subs.push(sub);
+    localStorage.setItem(`${PREFIX}submissions`, JSON.stringify(subs));
   },
 
-  getAuditLogs: (): AuditEntry[] => JSON.parse(localStorage.getItem(`${PREFIX}audit_ledger`) || '[]'),
+  getPersonalizedSuggestions: (user: User) => {
+    const suggestions = [];
+    if (user.weakConcepts.length > 0) {
+      suggestions.push({
+        id: 'weak-1',
+        type: 'Remediation',
+        title: `Deep Dive: ${user.weakConcepts[0]}`,
+        desc: "Adaptive algorithms suggest prioritizing this gap to stabilize your EUEE readiness.",
+        xp: 150
+      });
+    }
+    const readyItems = CURRICULUM_GRAPH.filter(n => storageService.getNodeStatus(user, n.id) === 'Ready');
+    if (readyItems.length > 0) {
+      suggestions.push({
+        id: 'next-1',
+        type: 'Advancement',
+        title: `Next Pillar: ${readyItems[0].topic}`,
+        desc: "Foundational nodes verified. Ready for higher-level conceptual synthesis.",
+        xp: 200
+      });
+    }
+    if (user.health.burnoutRisk > 0.5) {
+      suggestions.push({
+        id: 'health-1',
+        type: 'Recovery',
+        title: 'Cognitive Reboot',
+        desc: "Vigilance score dropping. A session of 'Exploration' mode is advised.",
+        xp: 50
+      });
+    }
+    return suggestions;
+  },
+
+  checkAchievements: (user: User): User => {
+    const newAchievements: Achievement[] = [...user.achievements];
+    const existingIds = new Set(newAchievements.map(a => a.id));
+
+    if (!existingIds.has('first-step') && user.xp > 0) {
+      newAchievements.push({ id: 'first-step', title: 'The Awakening', icon: '🌟', unlockedAt: Date.now(), description: 'Initialize first academic sync.' });
+    }
+    if (!existingIds.has('streak-3') && user.streak >= 3) {
+      newAchievements.push({ id: 'streak-3', title: 'Neural Consistency', icon: '🔥', unlockedAt: Date.now(), description: 'Maintain 3-day active streak.' });
+    }
+    if (!existingIds.has('master-1') && Object.values(user.masteryRecord).some(m => m.retentionScore > 0.9)) {
+      newAchievements.push({ id: 'master-1', title: 'Sovereign Node', icon: '🏛️', unlockedAt: Date.now(), description: 'Achieve absolute mastery (>90%) on any node.' });
+    }
+
+    return { ...user, achievements: newAchievements };
+  },
+
+  addToLedger: (user: User, entry: Omit<HistoricalQuestion, 'id' | 'timestamp'>) => {
+    const questionLedger = user.questionLedger || [];
+    const newEntry: HistoricalQuestion = {
+      ...entry,
+      id: Math.random().toString(36).substr(2, 9),
+      timestamp: Date.now(),
+      lang: user.preferredLanguage
+    };
+    let updatedUser = { ...user, questionLedger: [newEntry, ...questionLedger].slice(0, 100) };
+    updatedUser = storageService.checkAchievements(updatedUser);
+    storageService.saveUser(updatedUser);
+    storageService.setSession(updatedUser);
+    return updatedUser;
+  },
 
   calculateHealth: (user: User): AcademicHealth => {
     const history = user.quizHistory;
     if (history.length === 0) return { burnoutRisk: 0, engagementScore: 1, consistencyLevel: 1, status: 'Vibrant' };
-    
     const engagementScore = Math.min(1, history.length / 20);
     const avgScore = history.reduce((acc, q) => acc + (q.score / q.total), 0) / history.length;
     const avgEffort = history.reduce((acc, q) => acc + q.aggregateEffort, 0) / history.length;
-    
     let burnoutRisk = 0;
     if (avgEffort > 0.8 && avgScore < 0.6) burnoutRisk = 0.7;
     if (history.length > 50) burnoutRisk += 0.2;
-
     const consistencyLevel = user.streak > 7 ? 0.9 : user.streak > 3 ? 0.6 : 0.3;
-
     let status: AcademicHealth['status'] = 'Vibrant';
     if (burnoutRisk > 0.6) status = 'At Risk';
     else if (burnoutRisk > 0.3) status = 'Fatigued';
     else if (engagementScore > 0.4) status = 'Stable';
-
     return { burnoutRisk, engagementScore, consistencyLevel, status };
   },
 
@@ -133,10 +207,13 @@ export const storageService = {
 
   getCohortStats: () => {
     const users = storageService.getAllUsers().filter(u => u.role === 'scholar');
-    if (users.length === 0) return null;
+    const totalXp = users.reduce((acc, u) => acc + (u.xp || 0), 0);
+    const avgXp = users.length > 0 ? totalXp / users.length : 1000;
+    const avgReadiness = users.length > 0 ? users.reduce((acc, u) => acc + (u.readiness || 0), 0) / users.length : 0;
+    
     return {
-      avgReadiness: Math.round(users.reduce((acc, u) => acc + u.readiness, 0) / users.length),
-      avgXp: Math.round(users.reduce((acc, u) => acc + u.xp, 0) / users.length),
+      avgReadiness: Math.round(avgReadiness),
+      avgXp: Math.round(avgXp),
       stageDistribution: {
         Admission: users.filter(u => u.lifecycleStage === 'Admission').length,
         Exploration: users.filter(u => u.lifecycleStage === 'Exploration').length,
@@ -196,19 +273,23 @@ export const storageService = {
   updateMastery: (user: User, conceptId: string, topic: string, outcome: 'correct' | 'wrong', effortScore: number): User => {
     const now = Date.now();
     const record = user.masteryRecord || {};
-    const existing = record[conceptId] || { id: conceptId, topic: topic, difficulty: 'medium', lastReviewed: 0, retentionScore: 0, scheduledNextReview: now, reviewHistory: [], interval: 1 };
+    const existing = record[conceptId] || { id: conceptId, topic: topic, difficulty: 'medium', lastReviewed: 0, retentionScore: 0, scheduledNextReview: now, reviewHistory: [], interval: 1, adaptiveLevel: 1 };
     const history = [...existing.reviewHistory, { date: now, outcome, effortScore }];
     let interval = existing.interval;
     let retentionScore = existing.retentionScore;
+    let adaptiveLevel = existing.adaptiveLevel;
+
     if (outcome === 'correct') {
       interval = Math.ceil(interval * (1.5 + (effortScore * 0.5)));
       retentionScore = Math.min(1, retentionScore + 0.3 * effortScore);
+      if (retentionScore > 0.8 && adaptiveLevel < 5) adaptiveLevel += 1;
     } else {
       interval = Math.max(1, Math.floor(interval / 2));
       retentionScore = Math.max(0, retentionScore - 0.4);
+      if (adaptiveLevel > 1) adaptiveLevel -= 1;
     }
     const nextReview = now + (interval * 24 * 60 * 60 * 1000);
-    const updatedMastery = { ...existing, lastReviewed: now, retentionScore, scheduledNextReview: nextReview, reviewHistory: history, interval };
+    const updatedMastery = { ...existing, lastReviewed: now, retentionScore, scheduledNextReview: nextReview, reviewHistory: history, interval, adaptiveLevel };
     return { ...user, masteryRecord: { ...record, [conceptId]: updatedMastery } };
   },
 
@@ -221,11 +302,6 @@ export const storageService = {
       concept.retentionScore = Math.max(0, concept.retentionScore - ((daysSinceLast / (concept.interval * 2)) * 0.1));
     });
     return decayed;
-  },
-
-  getReviewCandidates: (user: User): ConceptMastery[] => {
-    if (!user.masteryRecord) return [];
-    return Object.values(user.masteryRecord).filter(c => c.scheduledNextReview <= Date.now() || c.retentionScore < 0.4).sort((a, b) => a.retentionScore - b.retentionScore);
   },
 
   inferIntent: (user: User): AcademicIntent => {
@@ -273,4 +349,5 @@ export const storageService = {
   calculateLevel: (xp: number): 'Initiate' | 'Builder' | 'Strategist' => xp >= 5000 ? 'Strategist' : xp >= 1000 ? 'Builder' : 'Initiate',
   getSubjects: (stream: Stream) => stream === Stream.NATURAL ? ['Mathematics', 'Physics', 'English', 'Chemistry', 'Biology', 'SAT'] : ['English', 'Mathematics', 'Geography', 'History', 'Economics', 'SAT'],
   getUserByEmail: (email: string) => storageService.getAllUsers().find(u => u.email.toLowerCase() === email.toLowerCase()) || null,
+  getAuditLogs: (): AuditEntry[] => JSON.parse(localStorage.getItem(`${PREFIX}audit_logs`) || '[]'),
 };

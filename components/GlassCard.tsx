@@ -1,6 +1,7 @@
+
 /*
   Module: Shared UI Components (GlassCard)
-  Purpose: A highly reusable container component implementing the application's signature glassmorphism aesthetic.
+  Purpose: A highly reusable container component implementing the application's clean, modern branding.
 */
 
 import React from 'react';
@@ -15,7 +16,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({ children, className = '', 
   return (
     <div 
       onClick={onClick}
-      className={`glass rounded-2xl p-6 transition-all duration-300 hover:border-white/20 ${className}`}
+      className={`bg-white rounded-2xl p-6 transition-all duration-300 card-shadow border border-luwa-border ${className}`}
     >
       {children}
     </div>

@@ -1,6 +1,10 @@
+
 /*
+  Luwa Academy – AI-Powered Educational Platform
+  Developed by Shewit – 2026
+  Purpose: Interactive, gamified, and AI-assisted learning for high school students.
   Module: Global Type Definitions
-  Purpose: Defines core data structures, enums, and interfaces for the Luwa Academy ecosystem.
+  Author: Shewit – 2026
 */
 
 export enum Grade {
@@ -13,6 +17,8 @@ export enum Stream {
   SOCIAL = 'Social Science',
 }
 
+export type Language = 'en' | 'am';
+
 export type LifecycleStage = 'Admission' | 'Exploration' | 'Skill Acquisition' | 'Mastery' | 'Ready';
 
 export type TutorMode = 'Teach' | 'Practice' | 'Exam';
@@ -20,6 +26,14 @@ export type TutorMode = 'Teach' | 'Practice' | 'Exam';
 export type IntentType = 'Exploration' | 'Deep Study' | 'Exam Prep' | 'Rapid Revision' | 'Recovery';
 
 export type PrestigeTier = 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Sovereign';
+
+export interface Achievement {
+  id: string;
+  title: string;
+  icon: string;
+  unlockedAt: number;
+  description: string;
+}
 
 export interface AuditEntry {
   id: string;
@@ -39,9 +53,9 @@ export interface AcademicIntent {
 }
 
 export interface AcademicHealth {
-  burnoutRisk: number; // 0 to 1
-  engagementScore: number; // 0 to 1
-  consistencyLevel: number; // 0 to 1
+  burnoutRisk: number;
+  engagementScore: number;
+  consistencyLevel: number;
   status: 'Vibrant' | 'Stable' | 'Fatigued' | 'At Risk';
 }
 
@@ -66,6 +80,7 @@ export interface ConceptMastery {
   scheduledNextReview: number;
   reviewHistory: ReviewEvent[];
   interval: number;
+  adaptiveLevel: number; // 1 (Intro) to 5 (Advanced)
 }
 
 export interface ConceptNode {
@@ -79,6 +94,56 @@ export interface ConceptNode {
 }
 
 export type NodeStatus = 'Locked' | 'Ready' | 'Review' | 'Mastered';
+
+export interface HistoricalQuestion {
+  id: string;
+  question: string;
+  answer: string;
+  timestamp: number;
+  topic?: string;
+  lang?: Language;
+}
+
+// SES Definitions
+export type QuestionType = 'MCQ' | 'Short' | 'TF';
+
+export interface ExamQuestion {
+  id: string;
+  type: QuestionType;
+  text: string;
+  options?: string[];
+  correctAnswer: string | number;
+  marks: number;
+  section: string;
+  explanation: string;
+}
+
+export interface Exam {
+  id: string;
+  title: string;
+  subject: string;
+  topic: string;
+  questions: ExamQuestion[];
+  startTime: number;
+  durationMinutes: number;
+  isApproved: boolean;
+  status: 'Draft' | 'Scheduled' | 'Live' | 'Completed';
+  totalMarks: number;
+}
+
+export interface ExamSubmission {
+  id: string;
+  examId: string;
+  userId: string;
+  userName: string;
+  answers: Record<string, string | number>;
+  startTime: number;
+  submitTime: number;
+  score: number;
+  sectionScores: Record<string, number>;
+  isGraded: boolean;
+  status: 'Pending' | 'Approved' | 'Flagged';
+}
 
 export interface User {
   id: string;
@@ -96,8 +161,11 @@ export interface User {
   weakConcepts: string[];
   currentObjective: string;
   quizHistory: QuizResult[];
+  questionLedger: HistoricalQuestion[];
+  achievements: Achievement[];
   deactivated?: boolean;
   streak: number;
+  lastActiveDate?: string;
   themeColor?: string;
   currentIntent?: AcademicIntent;
   averageEffort?: number;
@@ -106,6 +174,8 @@ export interface User {
   lifecycleStage: LifecycleStage;
   readiness: number;
   health: AcademicHealth;
+  preferredLanguage: Language;
+  examSubmissions?: ExamSubmission[];
 }
 
 export interface AccessToken {
@@ -123,6 +193,7 @@ export interface QuizResult {
   date: string;
   timestamp: number;
   aggregateEffort: number;
+  adaptiveRating?: number;
   results: {
     question: string;
     answer: string;

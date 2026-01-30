@@ -90,13 +90,16 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         level: 'Initiate',
         prestige: 'Bronze',
         weakConcepts: [],
-        currentObjective: 'Establish baseline proficiency via Diagnostics.',
+        currentObjective: 'Establish baseline proficiency.',
         quizHistory: [],
+        questionLedger: [],
+        achievements: [],
         streak: 1,
         masteryRecord: {},
         lifecycleStage: 'Admission',
         readiness: 0,
-        health: { burnoutRisk: 0, engagementScore: 1, consistencyLevel: 1, status: 'Vibrant' }
+        health: { burnoutRisk: 0, engagementScore: 1, consistencyLevel: 1, status: 'Vibrant' },
+        preferredLanguage: 'en'
       };
       storageService.saveUser(newUser);
       storageService.setSession(newUser);
@@ -107,162 +110,129 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-black relative overflow-hidden">
-      <div className="absolute top-10 left-10 opacity-10 hidden lg:block">
-        <h2 className="text-[8px] font-black uppercase tracking-[0.5em] luwa-gold">Sovereign Excellence</h2>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-luwa-gray relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-24 opacity-[0.03] pointer-events-none">
+        <h1 className="text-[240px] font-black font-serif text-luwa-purple select-none">Luwa</h1>
       </div>
 
-      <div className="absolute bottom-10 right-10 opacity-30 text-right">
-        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">Registry Instance Alpha v2.0</p>
-      </div>
-
-      <GlassCard className="max-w-md w-full animate-fade-in border-luwa-gold/10 p-12 relative z-10 shadow-2xl">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-black luwa-gold mb-2 tracking-tighter">LUWA</h1>
-          <p className="text-gray-600 text-[10px] font-black uppercase tracking-[0.4em]">
+      <GlassCard className="max-w-md w-full animate-fade-in border-luwa-border p-12 relative z-10 shadow-2xl bg-white/90 backdrop-blur-md">
+        <div className="text-center mb-12">
+          <div className="flex justify-center mb-4">
+             <div className="w-16 h-16 bg-luwa-purple rounded-2xl flex items-center justify-center text-white shadow-xl rotate-3">
+                <span className="text-2xl font-serif font-black">L</span>
+             </div>
+          </div>
+          <h1 className="text-3xl font-serif font-bold text-luwa-purple mb-1">Luwa Academy</h1>
+          <p className="text-luwa-teal text-[10px] font-black uppercase tracking-[0.3em]">
             {isLogin ? 'Identity Authentication' : 'Admission Registry'}
           </p>
         </div>
 
         {isLogin ? (
-          <form onSubmit={handleLogin} className="space-y-8">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-4">
-              <div className="group">
-                <label className="block text-[8px] font-black uppercase text-gray-600 mb-2 tracking-widest group-focus-within:text-luwa-gold transition-colors">Credential Email</label>
+              <div>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 tracking-widest">Credential Email</label>
                 <input 
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/5 rounded-2xl p-5 text-sm font-bold focus:border-luwa-gold outline-none transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium focus:ring-2 focus:ring-luwa-purple/10 focus:border-luwa-purple outline-none transition-all"
                   required
                 />
               </div>
-              <div className="group">
-                <label className="block text-[8px] font-black uppercase text-gray-600 mb-2 tracking-widest group-focus-within:text-luwa-gold transition-colors">Neural Passcode</label>
+              <div>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 tracking-widest">Neural Passcode</label>
                 <input 
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/5 rounded-2xl p-5 text-sm font-bold focus:border-luwa-gold outline-none transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium focus:ring-2 focus:ring-luwa-purple/10 focus:border-luwa-purple outline-none transition-all"
                   required
                 />
               </div>
             </div>
             
-            {error && <p className="text-red-500 text-[9px] font-black text-center uppercase tracking-widest">{error}</p>}
+            {error && <p className="text-red-500 text-[10px] font-bold text-center uppercase tracking-widest">{error}</p>}
 
-            <button type="submit" className="w-full bg-luwa-gold text-black font-black py-6 rounded-2xl text-xs uppercase tracking-[0.3em] hover:brightness-110 active:scale-[0.98] transition-all">
-              Initialize Registry Session
+            <button type="submit" className="w-full bg-luwa-purple text-white font-bold py-4 rounded-xl text-sm uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-luwa-purple/20">
+              Initialize Session
             </button>
             
-            <div className="text-center pt-6">
+            <div className="text-center pt-4">
               <button 
                 type="button"
                 onClick={() => { setIsLogin(false); setStep(1); }}
-                className="text-[9px] text-gray-600 hover:text-luwa-gold font-black uppercase tracking-widest transition-colors"
+                className="text-[10px] text-slate-400 hover:text-luwa-purple font-bold uppercase tracking-widest transition-colors"
               >
                 Apply for Admission
               </button>
             </div>
           </form>
         ) : (
-          <div className="space-y-8">
-            <div className="flex justify-between items-center px-12 mb-10">
+          <div className="space-y-6">
+            <div className="flex justify-center gap-2 mb-8">
               {[1, 2, 3].map(s => (
-                <div key={s} className={`w-1.5 h-1.5 rounded-full transition-all duration-700 ${step >= s ? 'bg-luwa-gold shadow-[0_0_8px_#FFD700]' : 'bg-gray-800'}`} />
+                <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${step === s ? 'w-8 bg-luwa-teal' : 'w-2 bg-slate-200'}`} />
               ))}
             </div>
 
             {step === 1 && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="space-y-4">
-                  <div className="group">
-                    <label className="block text-[8px] font-black uppercase text-gray-600 mb-2 tracking-widest group-focus-within:text-luwa-gold transition-colors">Full Academic Name</label>
-                    <input 
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-white/5 border border-white/5 rounded-2xl p-5 text-sm font-bold focus:border-luwa-gold outline-none transition-all"
-                    />
-                  </div>
-                  <div className="group">
-                    <label className="block text-[8px] font-black uppercase text-gray-600 mb-2 tracking-widest group-focus-within:text-luwa-gold transition-colors">Cognitive Email</label>
-                    <input 
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-white/5 border border-white/5 rounded-2xl p-5 text-sm font-bold focus:border-luwa-gold outline-none transition-all"
-                    />
-                  </div>
-                  <div className="group">
-                    <label className="block text-[8px] font-black uppercase text-gray-600 mb-2 tracking-widest group-focus-within:text-luwa-gold transition-colors">Secure Passcode</label>
-                    <input 
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-white/5 border border-white/5 rounded-2xl p-5 text-sm font-bold focus:border-luwa-gold outline-none transition-all"
-                    />
-                  </div>
+              <div className="space-y-4 animate-fade-in">
+                <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 tracking-widest">Full Name</label>
+                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium focus:border-luwa-purple outline-none transition-all" />
                 </div>
-                <button 
-                  onClick={handleSignupNext}
-                  className="w-full bg-white/5 text-white font-black py-5 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all border border-white/5"
-                >
-                  Confirm Profile Markers
-                </button>
+                <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 tracking-widest">Email</label>
+                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium focus:border-luwa-purple outline-none transition-all" />
+                </div>
+                <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 tracking-widest">Passcode</label>
+                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium focus:border-luwa-purple outline-none transition-all" />
+                </div>
+                <button onClick={handleSignupNext} className="w-full bg-luwa-purple text-white font-bold py-4 rounded-xl text-sm uppercase tracking-widest hover:brightness-110 transition-all shadow-lg">Next Step</button>
               </div>
             )}
 
             {step === 2 && (
-              <div className="space-y-10 animate-fade-in">
+              <div className="space-y-8 animate-fade-in">
                 <div>
-                  <label className="block text-[8px] font-black uppercase text-gray-600 tracking-widest mb-6 text-center">Select Academic Stream</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-4 text-center">Academic Stream</label>
                   <div className="grid grid-cols-2 gap-4">
                      {[Stream.NATURAL, Stream.SOCIAL].map(s => (
                        <button
                         key={s}
                         onClick={() => setStream(s)}
-                        className={`p-6 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all ${stream === s ? 'bg-luwa-gold text-black border-luwa-gold' : 'border-white/5 text-gray-600 bg-white/[0.02]'}`}
+                        className={`p-6 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${stream === s ? 'bg-white border-luwa-teal text-luwa-teal shadow-xl' : 'border-slate-100 text-slate-400 bg-slate-50'}`}
                        >
                          {s.split(' ')[0]}
                        </button>
                      ))}
                   </div>
                 </div>
-                <button 
-                  onClick={handleSignupNext}
-                  className="w-full bg-white/5 text-white font-black py-5 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all border border-white/5"
-                >
-                  Proceed to Authorization
-                </button>
+                <button onClick={handleSignupNext} className="w-full bg-luwa-purple text-white font-bold py-4 rounded-xl text-sm uppercase tracking-widest hover:brightness-110 transition-all shadow-lg">Confirm Stream</button>
               </div>
             )}
 
             {step === 3 && (
-              <form onSubmit={handleSignupFinal} className="space-y-10 animate-fade-in text-center">
-                <label className="block text-[9px] font-black uppercase text-gray-600 mb-6 tracking-[0.4em]">Academy Access Token</label>
+              <form onSubmit={handleSignupFinal} className="space-y-8 animate-fade-in text-center">
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-4 tracking-widest">Access Token</label>
                 <input 
                   type="text"
                   placeholder="LUWA-XXXX-XXXX"
                   value={token}
                   onChange={(e) => setToken(e.target.value.toUpperCase())}
-                  className="w-full bg-white/5 border border-white/5 rounded-2xl p-8 text-center tracking-[0.5em] text-2xl font-black focus:border-luwa-gold transition-all text-luwa-gold"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-6 text-center tracking-[0.3em] text-xl font-black text-luwa-purple focus:border-luwa-teal outline-none transition-all"
                   required
                 />
-                {error && <p className="text-red-500 text-[9px] font-black uppercase">{error}</p>}
-                <button type="submit" className="w-full bg-luwa-gold text-black font-black py-6 rounded-2xl text-xs uppercase tracking-[0.3em] shadow-xl hover:brightness-110 active:scale-[0.98] transition-all">
-                  Finalize Admission
-                </button>
+                {error && <p className="text-red-500 text-[10px] font-bold uppercase">{error}</p>}
+                <button type="submit" className="w-full bg-luwa-purple text-white font-bold py-4 rounded-xl text-sm uppercase tracking-widest shadow-lg shadow-luwa-purple/20">Finalize Admission</button>
               </form>
             )}
 
-            <div className="text-center">
-              <button 
-                onClick={() => setIsLogin(true)}
-                className="text-[9px] text-gray-600 hover:text-white font-black uppercase tracking-widest transition-colors"
-              >
-                Already Indexed? Return to Console
-              </button>
+            <div className="text-center pt-4">
+              <button onClick={() => setIsLogin(true)} className="text-[10px] text-slate-400 hover:text-luwa-purple font-bold uppercase tracking-widest transition-colors">Back to Login</button>
             </div>
           </div>
         )}

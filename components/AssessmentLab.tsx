@@ -1,12 +1,16 @@
+
 /*
+  Luwa Academy – AI-Powered Educational Platform
+  Developed by Shewit – 2026
+  Purpose: Interactive, gamified, and AI-assisted learning for high school students.
   Module: Academic Assessment Interface
-  Purpose: Facilitates diagnostic testing, performance evaluation, and real-time conceptual feedback for scholars.
+  Author: Shewit – 2026
 */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { GlassCard } from './GlassCard';
 import { geminiService } from '../services/geminiService';
-import { Quiz, User, EffortMetrics } from '../types';
+import { Quiz, User, EffortMetrics, ConceptMastery } from '../types';
 import { ICONS } from '../constants';
 import { storageService } from '../services/storageService';
 
@@ -24,7 +28,6 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ user, onUpdateUser
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [showResult, setShowResult] = useState(false);
-  const [isNeuralSurge, setIsNeuralSurge] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   const [questionMetrics, setQuestionMetrics] = useState<EffortMetrics[]>([]);
@@ -63,14 +66,19 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ user, onUpdateUser
     const finalTopic = selectedTopic || topic;
     if (!finalTopic.trim()) return;
     setLoading(true);
+    
+    // Determine Adaptive Difficulty
+    const masteryList = Object.values(user.masteryRecord) as ConceptMastery[];
+    const relevantMastery = masteryList.find(m => m.topic.toLowerCase().includes(finalTopic.toLowerCase()));
+    const difficultyLevel = relevantMastery ? relevantMastery.adaptiveLevel : 3;
+
     try {
-      const generated = await geminiService.generateQuiz(finalTopic, user.stream, user.currentIntent?.type);
+      const generated = await geminiService.generateQuiz(finalTopic, user.stream, user.currentIntent?.type, difficultyLevel);
       setQuiz(generated);
       setAnswers([]);
       setQuestionMetrics([]);
       setCurrentIdx(0);
       setShowResult(false);
-      setIsNeuralSurge(false);
       
       if (user.currentIntent?.type === 'Exam Prep') setTimeLeft(60 * 5);
       else setTimeLeft(null);
@@ -116,7 +124,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ user, onUpdateUser
     
     let xpGained = score * 20;
     if (aggregateEffort > 0.8) xpGained += 50;
-    if (score === quiz!.questions.length) { xpGained += 100; setIsNeuralSurge(true); }
+    if (score === quiz!.questions.length) xpGained += 100;
 
     const quizResults = quiz!.questions.map((q, i) => ({
       question: q.question,
@@ -143,10 +151,20 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ user, onUpdateUser
       weakConcepts: Array.from(new Set([...missedConcepts, ...user.weakConcepts])).slice(0, 3),
       currentObjective: newObjective,
       averageEffort: user.averageEffort ? (user.averageEffort + aggregateEffort) / 2 : aggregateEffort,
-      quizHistory: [{ id: Date.now().toString(), topic: quiz!.topic, score, total: quiz!.questions.length, date: new Date().toLocaleDateString(), timestamp: Date.now(), aggregateEffort, results: quizResults }, ...user.quizHistory]
+      quizHistory: [{ 
+        id: Date.now().toString(), 
+        topic: quiz!.topic, 
+        score, 
+        total: quiz!.questions.length, 
+        date: new Date().toLocaleDateString(), 
+        timestamp: Date.now(), 
+        aggregateEffort, 
+        results: quizResults 
+      }, ...user.quizHistory]
     };
     
-    onUpdateUser(updatedUser);
+    const finalizedUser = storageService.checkAchievements(updatedUser);
+    onUpdateUser(finalizedUser);
     setShowResult(true);
     setLoading(false);
   };
@@ -165,7 +183,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ user, onUpdateUser
           </h2>
           {!showResult && (
             <span className="text-[8px] font-black text-gray-700 uppercase tracking-[0.4em] ml-9">
-              Curriculum Intelligent Diagnostic Active
+              Adaptive Neural Scaling Active
             </span>
           )}
         </div>
@@ -191,7 +209,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ user, onUpdateUser
               <ICONS.Zap className="w-12 h-12 luwa-gold mb-8" />
               <h3 className="text-3xl font-black uppercase tracking-widest mb-3 text-white">Subject Mastery</h3>
               <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                Initialize diagnostics across core national curriculum benchmarks.
+                Initialize diagnostics across core national curriculum benchmarks. AI scales difficulty based on your history.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4 w-full">
@@ -207,15 +225,18 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ user, onUpdateUser
           <GlassCard className="flex flex-col p-12 border-white/5 bg-white/[0.01]">
             <div className="mb-12">
               <ICONS.Brain className="w-12 h-12 text-gray-700 mb-8" />
-              <h3 className="text-3xl font-black uppercase tracking-widest mb-3 text-white">Targeted Vector</h3>
+              <h3 className="text-3xl font-black uppercase tracking-widest mb-3 text-white">Weekly Revision</h3>
               <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                Isolate specific nodes for localized diagnostic verification.
+                AI-powered mini-tests targeting your specific weak areas from the past 7 days.
               </p>
             </div>
             <div className="mt-auto">
-              <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. Acid-Base Equilibrium" className="w-full bg-black/40 border border-white/10 rounded-2xl p-8 mb-8 text-sm font-bold focus:border-luwa-gold transition-all outline-none text-white" />
-              <button onClick={() => startQuiz()} disabled={loading} className="w-full bg-luwa-gold text-black px-8 py-8 rounded-2xl font-black text-xs uppercase tracking-[0.5em] shadow-2xl hover:brightness-110 transition-all">
-                {loading ? 'CALIBRATING...' : 'INITIALIZE LAB SESSION'}
+              <button 
+                onClick={() => startQuiz(user.weakConcepts[0] || 'General Revision')} 
+                disabled={loading} 
+                className="w-full bg-luwa-gold text-black px-8 py-8 rounded-2xl font-black text-xs uppercase tracking-[0.5em] shadow-2xl hover:brightness-110 transition-all"
+              >
+                {loading ? 'CALIBRATING...' : 'INITIALIZE REVISION CYCLE'}
               </button>
             </div>
           </GlassCard>
@@ -240,64 +261,20 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ user, onUpdateUser
                 <p className="text-3xl font-black text-luwa-gold uppercase">{Math.round(latestResult.aggregateEffort * 100)}%</p>
               </div>
             </GlassCard>
-            
-            <GlassCard className="flex-1 border-white/5 py-8 px-12 flex flex-col justify-center">
-               <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500 mb-3">Integrity Ledger</h3>
-               <p className="text-sm font-medium text-gray-400 italic leading-relaxed">
-                 {latestResult.aggregateEffort > 0.7 
-                    ? "Reasoned discipline detected. Mistakes recorded as high-value data." 
-                    : "Rapid response patterns detected. Focus on deliberation is recommended."}
-               </p>
-            </GlassCard>
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-10 pr-6 custom-scrollbar">
-            {wrongQuestions.length > 0 && (
-              <div className="space-y-10">
-                <div className="text-[10px] font-black uppercase tracking-[0.6em] text-red-500 opacity-60 px-2">Remediation Targets</div>
-                {wrongQuestions.map((res, i) => (
-                  <GlassCard key={i} className="border-red-500/10 bg-red-500/[0.01] p-16 animate-fade-in shadow-xl">
-                    <div className="flex justify-between items-start mb-12">
-                       <div className="flex items-center gap-3">
-                         <span className="text-[10px] font-black uppercase px-5 py-2.5 rounded bg-red-500/10 text-red-500 border border-red-500/20 tracking-[0.3em]">
-                           {res.metrics.effortScore > 0.6 ? 'Reasoned Error' : 'Rapid Response Error'}
-                         </span>
-                       </div>
-                       <span className="text-[10px] font-black uppercase text-gray-600 tracking-[0.3em]">{res.conceptTag}</span>
-                    </div>
-                    
-                    <h4 className="text-3xl font-black mb-16 leading-relaxed text-white max-w-4xl">{res.question}</h4>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-                       <div className="p-8 rounded-3xl bg-red-500/[0.03] border border-red-500/10 shadow-inner">
-                         <p className="text-[10px] font-black text-red-500 uppercase tracking-[0.4em] mb-3">Scholar Hypothesis</p>
-                         <p className="text-lg font-bold text-gray-500">{res.answer}</p>
-                       </div>
-                       <div className="p-8 rounded-3xl bg-green-500/[0.03] border border-green-500/10 shadow-inner">
-                         <p className="text-[10px] font-black text-green-500 uppercase tracking-[0.4em] mb-3">Sovereign Truth</p>
-                         <p className="text-lg font-bold text-white">{(res as any).originalQuestion.options[(res as any).originalQuestion.correctIndex]}</p>
-                       </div>
-                    </div>
-
-                    <div className="p-10 bg-black/40 rounded-[2.5rem] border border-white/5 relative group">
-                      <div className="text-base leading-loose text-gray-300">
-                        <span className="text-luwa-gold font-black uppercase mr-4 tracking-[0.4em] text-[10px] block mb-2">Neural Breakdown:</span>
-                        {res.explanation}
-                      </div>
-                      <div className="mt-12 flex justify-end">
-                        <button 
-                          onClick={() => onConsultTutor(`Instructor, I misunderstood this concept: "${res.question}". I incorrectly chose "${res.answer}". Why is the correct logic "${(res as any).originalQuestion.options[(res as any).originalQuestion.correctIndex]}"? Breakdown: ${res.explanation}`)}
-                          className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.4em] text-luwa-gold hover:text-white transition-all hover:gap-6"
-                        >
-                          <ICONS.Brain className="w-5 h-5" />
-                          Consult The Instructor
-                        </button>
-                      </div>
-                    </div>
-                  </GlassCard>
-                ))}
-              </div>
-            )}
+            {wrongQuestions.map((res, i) => (
+              <GlassCard key={i} className="border-red-500/10 bg-red-500/[0.01] p-16 animate-fade-in shadow-xl">
+                <h4 className="text-3xl font-black mb-16 leading-relaxed text-white max-w-4xl">{res.question}</h4>
+                <div className="p-10 bg-black/40 rounded-[2.5rem] border border-white/5 relative group">
+                  <div className="text-base leading-loose text-gray-300">
+                    <span className="text-luwa-gold font-black uppercase mr-4 tracking-[0.4em] text-[10px] block mb-2">Neural Breakdown:</span>
+                    {res.explanation}
+                  </div>
+                </div>
+              </GlassCard>
+            ))}
           </div>
 
           <button onClick={() => setQuiz(null)} className="w-full bg-white/5 hover:bg-white/10 py-10 rounded-3xl font-black text-[11px] uppercase tracking-[0.6em] transition-all border border-white/5 shrink-0">
@@ -309,10 +286,6 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ user, onUpdateUser
           <div className="max-w-4xl mx-auto w-full space-y-10 text-center">
             <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
               <div className="h-full bg-luwa-gold shadow-[0_0_20px_#FFD700] transition-all duration-1000 ease-out" style={{ width: `${((currentIdx + 1) / 5) * 100}%` }} />
-            </div>
-            <div className="flex justify-between items-center px-6">
-              <span className="text-[11px] font-black text-gray-600 uppercase tracking-[0.4em]">{quiz.topic}</span>
-              <span className="text-[11px] font-black text-luwa-gold uppercase tracking-[0.5em]">Node {currentIdx + 1}/5</span>
             </div>
           </div>
 

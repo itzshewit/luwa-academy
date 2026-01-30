@@ -4,34 +4,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luwa Academy | Sovereign Excellence</title>
+    <title>Luwa Academy | Crafted Learning</title>
     <meta name="author" content="Shewit">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              luwa: {
+                purple: '#2E2E7B',
+                teal: '#268E91',
+                white: '#FFFFFF',
+                gray: '#F8FAFC',
+                dark: '#0F172A',
+                border: '#E2E8F0'
+              }
+            },
+            fontFamily: {
+              serif: ['Crimson Pro', 'serif'],
+              sans: ['Inter', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0A0A0B;
-            color: #E2E8F0;
+            background-color: #F8FAFC;
+            color: #0F172A;
             overflow-x: hidden;
         }
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .card-shadow {
+            box-shadow: 0 4px 20px -2px rgba(46, 46, 123, 0.05);
         }
-        .luwa-gold { color: #FFD700; }
-        .bg-luwa-gold { background-color: #FFD700; }
-        .border-luwa-gold { border-color: #FFD700; }
-        
-        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+        .luwa-gradient {
+            background: linear-gradient(135deg, #2E2E7B 0%, #1a1a5e 100%);
+        }
+        .luwa-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
         
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 215, 0, 0.2); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 215, 0, 0.4); }
+        ::-webkit-scrollbar-track { background: #F1F5F9; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar-hide::-webkit-scrollbar { display: none; }
     </style>
 <script type="importmap">
 {

@@ -1,3 +1,4 @@
+
 /*
   Module: Global Icons & Constants
   Purpose: Centralized repository for application-wide UI constants, color palettes, and SVG icon components.
@@ -6,11 +7,12 @@
 import React from 'react';
 
 export const COLORS = {
-  deep: '#0A0A0B',
-  gold: '#FFD700',
-  crimson: '#9B111E',
-  nile: '#008B8B',
-  sheba: '#663399',
+  purple: '#2E2E7B',
+  teal: '#268E91',
+  white: '#FFFFFF',
+  gray: '#F8FAFC',
+  dark: '#0F172A',
+  border: '#E2E8F0'
 };
 
 export const ICONS = {

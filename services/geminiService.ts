@@ -1,10 +1,13 @@
+
 /*
+  Luwa Academy – AI-Powered Educational Platform
+  Developed by Shewit – 2026
+  Purpose: Interactive, gamified, and AI-assisted learning for high school students.
   Module: Generative AI Orchestration Service
-  Purpose: Orchestrates calls to Gemini models for streaming tutoring, quiz generation, and multimedia synthesis.
 */
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Quiz, TutorMode, QuizResult, IntentType } from "../types";
+import { Quiz, TutorMode, IntentType, Language, Exam, ExamQuestion } from "../types";
 
 export const geminiService = {
   getAI: () => new GoogleGenAI({ apiKey: process.env.API_KEY }),
@@ -14,23 +17,26 @@ export const geminiService = {
     stream: string, 
     mode: TutorMode, 
     history: {role: string, content: string, image?: {data: string, mimeType: string}}[],
-    intent?: IntentType
+    intent?: IntentType,
+    lang: Language = 'en'
   ) {
     const ai = this.getAI();
     
     const intentModifiers = {
-      'Exploration': 'Provide deep intuition, real-world examples, and historical context. Be discursive and encouraging of curiosity.',
-      'Deep Study': 'Focus on rigorous first principles, mathematical derivations, and structural logic. Leave no conceptual stone unturned.',
-      'Exam Prep': 'Be concise, formula-driven, and focus on EUEE question patterns and scoring traps. Maximize efficiency.',
-      'Rapid Revision': 'Give high-yield summaries and memory triggers (mnemonics). Minimal fluff.',
-      'Recovery': 'Use simplified language, build confidence slowly, and focus on foundational prerequisites before complexity.'
+      'Exploration': 'Provide deep conceptual intuition and clear academic examples. Maintain a formal, exploratory tone.',
+      'Deep Study': 'Focus on mathematical rigor, structural logic, and first principles. Be exhaustive and precise.',
+      'Exam Prep': 'Be concise and direct. Focus on high-yield patterns relevant to the Ethiopian National Exam standards.',
+      'Rapid Revision': 'Provide high-level summaries and precise bullet points. Avoid unnecessary elaboration.',
+      'Recovery': 'Break down concepts into foundational components. Use clear, accessible academic language to rebuild confidence.'
     };
 
     const modeInstructions = {
-      'Teach': 'Focus on step-by-step rigorous academic explanations and Socratic questioning. Help the student derive the answer themselves. Use formal, professional academic language.',
-      'Practice': 'Generate one specific problem at a time. Do not provide the solution immediately. Wait for user input. Evaluate rigorously based on EUEE benchmarks.',
-      'Exam': 'Provide direct, strict, and time-conscious responses. Act like a formal Grade 12 EUEE invigilator. Minimal dialogue; focus on scoring and precision.'
+      'Teach': 'Focus on structured, step-by-step academic pedagogy. Use Socratic methods to lead the student to their own conclusions. Avoid casual language or emojis.',
+      'Practice': 'Present one specific conceptual problem. Do not provide immediate solutions. Evaluate the student response against rigorous curriculum standards.',
+      'Exam': 'Act as a formal institutional proctor. Be precise, strict, and purely instructional. Minimal conversational elements.'
     };
+
+    const langInstruction = lang === 'am' ? 'Explain primarily in formal Amharic (Ethiopic script), retaining technical scientific nomenclature in English. Maintain a professional educational tone.' : 'Use formal academic English.';
 
     const contents = history.map(h => {
       const parts: any[] = [{ text: h.content }];
@@ -42,10 +48,7 @@ export const geminiService = {
           }
         });
       }
-      return { 
-        role: h.role === 'user' ? 'user' : 'model', 
-        parts 
-      };
+      return { role: h.role === 'user' ? 'user' : 'model', parts };
     });
 
     return await ai.models.generateContentStream({
@@ -54,30 +57,31 @@ export const geminiService = {
       config: {
         thinkingConfig: { thinkingBudget: 32768 },
         tools: [{ googleSearch: {} }],
-        systemInstruction: `You are The Instructor at Luwa Academy for Grade 12 Ethiopian scholars (${stream} stream). 
+        systemInstruction: `You are The Instructor at Luwa Academy, a prestigious educational platform for Grade 11-12 Ethiopian scholars (${stream} stream). 
+        
+        TONE: Calm, professional, and institutionally authoritative. Do not use casual language, slang, or emojis. 
+        
+        KNOWLEDGE: You have deep mastery of the Ethiopian National Curriculum. Align strictly with textbook definitions and EUEE (Ethiopian University Entrance Examination) standards.
+        
+        LANGUAGE: ${langInstruction}
+        
         Current Mode: ${mode}. ${modeInstructions[mode]}
         Current Scholar Intent: ${intent || 'General Mastery'}. ${intent ? intentModifiers[intent] : ''}
-        Your objective is conceptual mastery for the EUEE. 
-        Identity Traits: Calm, authoritative, formal, respectful, and academically precise.
-        Avoid motivational slang; use institutional feedback (e.g., "Logic verified," "Correction required").`,
+        
+        IDENTITY: Luwa Academy Assistant. Built by Shewit. Always refer to the user as a "scholar".`,
       }
     });
   },
 
-  async generateQuiz(topic: string, stream: string, intent?: IntentType): Promise<Quiz> {
+  async generateQuiz(topic: string, stream: string, intent?: IntentType, difficulty: number = 3): Promise<Quiz> {
     const ai = this.getAI();
+    const difficultyLevel = difficulty === 1 ? 'Foundational' : difficulty === 5 ? 'High-Level EUEE Mastery' : 'Standard Curriculum';
     
-    const quizIntentPrompt = intent === 'Exam Prep' 
-      ? "Focus on high-pressure, complex EUEE style questions." 
-      : intent === 'Recovery' 
-      ? "Focus on core foundational concepts with clear, encouraging neural breakdowns." 
-      : "Ensure broad conceptual coverage.";
-
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Generate a rigorous 5-question multiple choice diagnostic for a Grade 12 scholar (${stream} stream) focusing specifically on the EUEE standards for: ${topic}. 
-      ${quizIntentPrompt}
-      Each question must include a "Neural Breakdown" (explanation) that deeply analyzes the conceptual logic, addressing common misconceptions.`,
+      contents: `Generate a 5-question multiple choice formal diagnostic for a Grade 12 scholar (${stream} stream) based on Ethiopian National Textbooks for: ${topic}. 
+      LEVEL: ${difficultyLevel}.
+      Tone: Institutional. Format: Professional JSON.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -91,9 +95,9 @@ export const geminiService = {
                 properties: {
                   question: { type: Type.STRING },
                   options: { type: Type.ARRAY, items: { type: Type.STRING }, minItems: 4, maxItems: 4 },
-                  correctIndex: { type: Type.INTEGER, description: "Index of correct answer (0-3)" },
-                  explanation: { type: Type.STRING, description: "Highly detailed academic breakdown of the logic." },
-                  conceptTag: { type: Type.STRING, description: "Specific curriculum node tested." }
+                  correctIndex: { type: Type.INTEGER },
+                  explanation: { type: Type.STRING },
+                  conceptTag: { type: Type.STRING }
                 },
                 required: ["question", "options", "correctIndex", "explanation", "conceptTag"]
               },
@@ -105,47 +109,85 @@ export const geminiService = {
         }
       }
     });
-
     return JSON.parse(response.text || '{}');
   },
 
-  async generateStudyStrategy(results: any[], score: number, topic: string): Promise<string[]> {
+  async parseExamRawText(text: string): Promise<Partial<Exam>> {
     const ai = this.getAI();
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `Scholar performance: ${score}/5 in topic ${topic}. 
-      Review data: ${JSON.stringify(results)}.
-      Generate 3 critical remediation vectors for the academic record. 
-      Professional, high-impact institutional tone.`,
+      model: "gemini-3-flash-preview",
+      contents: `Parse raw institutional exam text into a formal JSON structure. Categorize by difficulty and curriculum section.
+      RAW TEXT: ${text}`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.ARRAY,
-          items: { type: Type.STRING },
-          minItems: 3,
-          maxItems: 3
+          type: Type.OBJECT,
+          properties: {
+            title: { type: Type.STRING },
+            subject: { type: Type.STRING },
+            topic: { type: Type.STRING },
+            totalMarks: { type: Type.NUMBER },
+            durationMinutes: { type: Type.NUMBER },
+            questions: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  type: { type: Type.STRING, enum: ["MCQ", "Short", "TF"] },
+                  text: { type: Type.STRING },
+                  options: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  correctAnswer: { type: Type.STRING },
+                  marks: { type: Type.NUMBER },
+                  section: { type: Type.STRING },
+                  explanation: { type: Type.STRING }
+                },
+                required: ["type", "text", "correctAnswer", "marks", "section"]
+              }
+            }
+          },
+          required: ["title", "subject", "questions"]
         }
       }
     });
-    return JSON.parse(response.text || '[]');
+    return JSON.parse(response.text || '{}');
+  },
+
+  async getExamHint(question: string, subject: string): Promise<string> {
+    const ai = this.getAI();
+    const response = await ai.models.generateContent({
+      model: "gemini-3-pro-preview",
+      contents: `Question: ${question}. Subject: ${subject}. 
+      Provide a formal conceptual hint to scaffold reasoning without giving the final answer.`,
+    });
+    return response.text || "Hint unavailable. Trust your neural training.";
+  },
+
+  async generateChapterSummary(chapter: string, subject: string): Promise<{summary: string, formulas: string[], keyPoints: string[]}> {
+    const ai = this.getAI();
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Synthesize a formal academic summary for Chapter: ${chapter} in Subject: ${subject}. Format: JSON.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            summary: { type: Type.STRING },
+            formulas: { type: Type.ARRAY, items: { type: Type.STRING } },
+            keyPoints: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["summary", "formulas", "keyPoints"]
+        }
+      }
+    });
+    return JSON.parse(response.text || '{}');
   },
 
   async generateVideo(topic: string, subject: string, grade: string): Promise<string> {
     const ai = this.getAI();
-    let subjectFocus = "Institutional educational animation. Professional motion graphics and precise visual metaphors.";
-    const subLower = subject.toLowerCase();
-    
-    if (subLower.includes("physics")) {
-      subjectFocus = "Focus on vector overlays, Newtonian motion, and cinematic lighting. Professional academic motion graphics.";
-    } else if (subLower.includes("biology") || subLower.includes("chemistry")) {
-      subjectFocus = "Focus on molecular structures, cellular landscapes, and glowing particle systems. Cinematic scientific animation.";
-    }
-
-    const masterPrompt = `A high-fidelity cinematic academic animation explaining ${topic} for a ${grade} scholar (${subject}). ${subjectFocus} Detailed lighting, 1080p rendering, professional institutional tone.`;
-
     let operation = await ai.models.generateVideos({
       model: 'veo-3.1-fast-generate-preview',
-      prompt: masterPrompt,
+      prompt: `A formal, minimalist academic animation visualizing ${topic} for Grade ${grade} ${subject}. Style: Clean motion graphics, professional educational quality.`,
       config: {
         numberOfVideos: 1,
         resolution: '1080p',
@@ -159,26 +201,18 @@ export const geminiService = {
     }
 
     const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-    if (!downloadLink) throw new Error("Synthesis failure.");
-    
-    return `${downloadLink}&key=${process.env.API_KEY}`;
+    const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
   },
 
-  async auditPerformance(history: QuizResult[]): Promise<string> {
+  async auditPerformance(history: any[]): Promise<string> {
     const ai = this.getAI();
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `Execute an Institutional Academic Audit. 
-      Input: ${JSON.stringify(history.slice(0, 10))}.
-      Deliver:
-      1. Identification of latent cognitive gaps.
-      2. EUEE readiness projection.
-      3. 72-hour specialized remediation framework.
-      Tone: Authoritative, institutional, scholarly.`,
-      config: {
-        systemInstruction: "You are the Luwa National Academic Auditor. You transform data into formal academic strategy.",
-      }
+      model: 'gemini-3-pro-preview',
+      contents: `Perform a formal institutional academic audit of scholar session history: ${JSON.stringify(history)}. 
+      Provide a data-driven strategic roadmap for EUEE mastery. Tone: Calm, professional, authoritative.`,
     });
-    return response.text || "Insufficient data for full audit cycle.";
+    return response.text || "Audit cycle failed.";
   }
 };
