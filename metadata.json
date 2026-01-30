@@ -1,0 +1,8 @@
+{
+  "name": "Luwa Academy",
+  "description": "A premium, AI-driven educational platform for Ethiopian scholars, featuring neural tutoring, live voice sessions, cinematic concept visualization, and advanced scholar analytics.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
