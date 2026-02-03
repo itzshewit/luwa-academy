@@ -1,4 +1,3 @@
-
 /*
   Luwa Academy – AI-Powered Educational Platform
   Developed by Shewit – 2026
@@ -8,11 +7,11 @@
 */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { GlassCard } from './GlassCard';
-import { geminiService } from '../services/geminiService';
-import { Quiz, User, EffortMetrics, ConceptMastery } from '../types';
-import { ICONS } from '../constants';
-import { storageService } from '../services/storageService';
+import { GlassCard } from './GlassCard.tsx';
+import { geminiService } from '../services/geminiService.ts';
+import { Quiz, User, EffortMetrics, ConceptMastery } from '../types.ts';
+import { ICONS } from '../constants.tsx';
+import { storageService } from '../services/storageService.ts';
 
 interface AssessmentLabProps {
   user: User;

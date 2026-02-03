@@ -1,13 +1,12 @@
-
 /*
   Luwa Academy – Dashboard V2.2 (Integrated Mission Center)
 */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { GlassCard } from './GlassCard';
-import { User, IntentType, ConceptMastery, GlobalDirective } from '../types';
-import { ICONS } from '../constants';
-import { storageService } from '../services/storageService';
+import { GlassCard } from './GlassCard.tsx';
+import { User, IntentType, ConceptMastery, GlobalDirective } from '../types.ts';
+import { ICONS } from '../constants.tsx';
+import { storageService } from '../services/storageService.ts';
 
 interface DashboardProps {
   user: User;

@@ -1,4 +1,3 @@
-
 /*
   Luwa Academy – AI-Powered Educational Platform
   Developed by Shewit – 2026
@@ -7,11 +6,11 @@
 */
 
 import React, { useState, useEffect } from 'react';
-import { GlassCard } from './GlassCard';
-import { storageService } from '../services/storageService';
-import { User, AccessToken, GlobalDirective, Exam, ExamSubmission } from '../types';
-import { geminiService } from '../services/geminiService';
-import { ICONS } from '../constants';
+import { GlassCard } from './GlassCard.tsx';
+import { storageService } from '../services/storageService.ts';
+import { User, AccessToken, GlobalDirective, Exam, ExamSubmission } from '../types.ts';
+import { geminiService } from '../services/geminiService.ts';
+import { ICONS } from '../constants.tsx';
 
 interface AdminControlProps {
   onSimulate: (user: User) => void;
@@ -275,7 +274,6 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
           </div>
         )}
 
-        {/* ... Other tabs adapted similarly ... */}
         {activeTab === 'Exam Control' && (
            <div className="space-y-12 animate-fade-in">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">

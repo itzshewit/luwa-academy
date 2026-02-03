@@ -1,4 +1,3 @@
-
 /*
   Luwa Academy – AI-Powered Educational Platform
   Developed by Shewit – 2026
@@ -7,7 +6,7 @@
 */
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Quiz, TutorMode, IntentType, Language, Exam, ExamQuestion } from "../types";
+import { Quiz, TutorMode, IntentType, Language, Exam, ExamQuestion } from "../types.ts";
 
 export const geminiService = {
   getAI: () => new GoogleGenAI({ apiKey: process.env.API_KEY }),

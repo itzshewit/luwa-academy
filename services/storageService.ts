@@ -1,5 +1,4 @@
-
-import { User, Stream, GlobalDirective, AccessToken, ConceptNode, Exam, ExamSubmission, AuditEntry, PrestigeTier, HistoricalQuestion, ReviewEvent, ConceptMastery, StudyGoal } from '../types';
+import { User, Stream, GlobalDirective, AccessToken, ConceptNode, Exam, ExamSubmission, AuditEntry, PrestigeTier, HistoricalQuestion, ReviewEvent, ConceptMastery, StudyGoal } from '../types.ts';
 
 const PREFIX = 'luwa_v2_';
 const SALT = '_luwa_secured';
@@ -125,7 +124,7 @@ export const storageService = {
       const subs = storageService.getSubjects(user.stream);
       return subs.includes(n.subject);
     });
-    return { node: relevant[0], status: 'Ready' };
+    return { node: relevant[0] || CURRICULUM_GRAPH[0], status: 'Ready' };
   },
 
   getPersonalizedSuggestions: (user: User) => [

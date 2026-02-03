@@ -1,14 +1,13 @@
-
 /*
   Module: Cinematic Visual Synthesis
   Purpose: Generates high-fidelity academic animations to visualize complex curriculum concepts using advanced video synthesis models.
 */
 
 import React, { useState, useEffect } from 'react';
-import { GlassCard } from './GlassCard';
-import { geminiService } from '../services/geminiService';
-import { ICONS } from '../constants';
-import { storageService } from '../services/storageService';
+import { GlassCard } from './GlassCard.tsx';
+import { geminiService } from '../services/geminiService.ts';
+import { ICONS } from '../constants.tsx';
+import { storageService } from '../services/storageService.ts';
 
 export const CinematicConcepts: React.FC = () => {
   const [topic, setTopic] = useState('');

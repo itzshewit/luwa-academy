@@ -1,13 +1,12 @@
-
 /*
   Module: Authentication Module
   Purpose: Manages scholar admission registry, identity verification, and initial session orchestration.
 */
 
 import React, { useState } from 'react';
-import { GlassCard } from './GlassCard';
-import { storageService } from '../services/storageService';
-import { User, Stream } from '../types';
+import { GlassCard } from './GlassCard.tsx';
+import { storageService } from '../services/storageService.ts';
+import { User, Stream } from '../types.ts';
 
 interface AuthProps {
   onLogin: (user: User) => void;
@@ -76,7 +75,6 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     const userId = Math.random().toString(36).substr(2, 9);
     
     if (storageService.validateAndUseToken(token, userId)) {
-      // Fix: Added missing properties studyGoals and bookmarks as required by User type definition in types.ts
       const newUser: User = {
         id: userId,
         email,

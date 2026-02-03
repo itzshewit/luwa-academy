@@ -1,19 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
-import { Auth } from './components/Auth';
-import { Dashboard } from './components/Dashboard';
-import { NeuralTutor } from './components/NeuralTutor';
-import { AssessmentLab } from './components/AssessmentLab';
-import { AdminControl } from './components/AdminControl';
-import { ScholarAnalytics } from './components/ScholarAnalytics';
-import { LuwaLive } from './components/LuwaLive';
-import { CurriculumLibrary } from './components/CurriculumLibrary';
-import { AcademicPlanner } from './components/AcademicPlanner';
-import { ExamSystem } from './components/ExamSystem';
-import { About } from './components/About';
-import { storageService } from './services/storageService';
-import { User } from './types';
-import { ICONS } from './constants';
+import { Auth } from './components/Auth.tsx';
+import { Dashboard } from './components/Dashboard.tsx';
+import { NeuralTutor } from './components/NeuralTutor.tsx';
+import { AssessmentLab } from './components/AssessmentLab.tsx';
+import { AdminControl } from './components/AdminControl.tsx';
+import { ScholarAnalytics } from './components/ScholarAnalytics.tsx';
+import { LuwaLive } from './components/LuwaLive.tsx';
+import { CurriculumLibrary } from './components/CurriculumLibrary.tsx';
+import { AcademicPlanner } from './components/AcademicPlanner.tsx';
+import { ExamSystem } from './components/ExamSystem.tsx';
+import { About } from './components/About.tsx';
+import { storageService } from './services/storageService.ts';
+import { User } from './types.ts';
+import { ICONS } from './constants.tsx';
 
 type Tab = 'home' | 'tutor' | 'lab' | 'analytics' | 'admin' | 'library' | 'planner' | 'exams' | 'about';
 
@@ -125,6 +124,7 @@ const App: React.FC = () => {
           {activeTab === 'planner' && <AcademicPlanner user={user} onUpdateUser={handleUpdateUser} />}
           {activeTab === 'analytics' && <ScholarAnalytics user={user} />}
           {activeTab === 'admin' && <AdminControl onSimulate={(u) => { storageService.enterSimulation(u); setUser(u); setActiveTab('home'); }} />}
+          {activeTab === 'about' && <About />}
         </div>
       </main>
     </div>
