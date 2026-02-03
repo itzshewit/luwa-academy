@@ -1,10 +1,7 @@
 
 /*
   Luwa Academy – AI-Powered Educational Platform
-  Developed by Shewit – 2026
-  Purpose: Interactive, gamified, and AI-assisted learning for high school students.
-  Module: Global Type Definitions
-  Author: Shewit – 2026
+  Global Type Definitions - V2.1 (Full MVP Compliance)
 */
 
 export enum Grade {
@@ -26,6 +23,24 @@ export type TutorMode = 'Teach' | 'Practice' | 'Exam';
 export type IntentType = 'Exploration' | 'Deep Study' | 'Exam Prep' | 'Rapid Revision' | 'Recovery';
 
 export type PrestigeTier = 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Sovereign';
+
+export interface StudyNote {
+  id: string;
+  topic: string;
+  subject: string;
+  content: string; // Markdown supported
+  visuals?: string[]; // URLs or Base64
+  isBookmarked: boolean;
+  lastRead?: number;
+}
+
+export interface StudyGoal {
+  id: string;
+  title: string;
+  deadline: number;
+  isCompleted: boolean;
+  priority: 'low' | 'medium' | 'high';
+}
 
 export interface Achievement {
   id: string;
@@ -80,7 +95,7 @@ export interface ConceptMastery {
   scheduledNextReview: number;
   reviewHistory: ReviewEvent[];
   interval: number;
-  adaptiveLevel: number; // 1 (Intro) to 5 (Advanced)
+  adaptiveLevel: number; 
 }
 
 export interface ConceptNode {
@@ -91,6 +106,7 @@ export interface ConceptNode {
   prerequisites: string[];
   importanceScore: number;
   description: string;
+  summaryNote?: string;
 }
 
 export type NodeStatus = 'Locked' | 'Ready' | 'Review' | 'Mastered';
@@ -104,7 +120,6 @@ export interface HistoricalQuestion {
   lang?: Language;
 }
 
-// SES Definitions
 export type QuestionType = 'MCQ' | 'Short' | 'TF';
 
 export interface ExamQuestion {
@@ -176,6 +191,8 @@ export interface User {
   health: AcademicHealth;
   preferredLanguage: Language;
   examSubmissions?: ExamSubmission[];
+  studyGoals: StudyGoal[];
+  bookmarks: string[]; // IDs of notes or questions
 }
 
 export interface AccessToken {

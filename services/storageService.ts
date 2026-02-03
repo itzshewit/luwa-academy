@@ -1,24 +1,29 @@
 
-/*
-  Luwa Academy – AI-Powered Educational Platform
-  Developed by Shewit – 2026
-  Purpose: Interactive, gamified, and AI-assisted learning for high school students.
-  Module: Persistent Storage & Logic Service
-  Author: Shewit – 2026
-*/
+import { User, Stream, GlobalDirective, AccessToken, ConceptNode, Exam, ExamSubmission, AuditEntry, PrestigeTier, HistoricalQuestion, ReviewEvent, ConceptMastery, StudyGoal } from '../types';
 
-import { User, Stream, GlobalDirective, AccessToken, AcademicIntent, IntentType, ConceptMastery, ConceptNode, NodeStatus, LifecycleStage, AuditEntry, AcademicHealth, PrestigeTier, HistoricalQuestion, Language, Achievement, Exam, ExamSubmission } from '../types';
+const PREFIX = 'luwa_v2_';
+const SALT = '_luwa_secured';
 
-const PREFIX = 'luwa_mvp_v1_';
-const SALT = '_luwasalt';
-
+// High-Fidelity Curriculum Data aligned with Ethiopian Grade 12 Syllabus
 const CURRICULUM_GRAPH: ConceptNode[] = [
-  { id: 'math_basic_calculus', topic: 'Differentiation Basics', subject: 'Mathematics', difficulty: 'easy', prerequisites: [], importanceScore: 0.9, description: 'Foundations of rate of change and derivatives.' },
-  { id: 'math_integration_intro', topic: 'Antiderivatives', subject: 'Mathematics', difficulty: 'medium', prerequisites: ['math_basic_calculus'], importanceScore: 0.8, description: 'The inverse process of differentiation.' },
-  { id: 'phy_newton_laws', topic: 'Newtonian Dynamics', subject: 'Physics', difficulty: 'medium', prerequisites: [], importanceScore: 1.0, description: 'Core laws of motion and force interaction.' },
-  { id: 'phy_circular_motion', topic: 'Uniform Circular Motion', subject: 'Physics', difficulty: 'hard', prerequisites: ['phy_newton_laws'], importanceScore: 0.7, description: 'Centripetal forces and rotational vectors.' },
-  { id: 'chem_atomic_structure', topic: 'Quantum Shells', subject: 'Chemistry', difficulty: 'medium', prerequisites: [], importanceScore: 0.8, description: 'Electron configuration and periodic trends.' },
-  { id: 'chem_bonding', topic: 'Covalent Synthesis', subject: 'Chemistry', difficulty: 'medium', prerequisites: ['chem_atomic_structure'], importanceScore: 0.9, description: 'Molecular geometry and electron sharing.' },
+  // --- Natural Science Core ---
+  { id: 'phy_12_1', topic: 'Circular Motion', subject: 'Physics', difficulty: 'hard', prerequisites: [], importanceScore: 0.95, description: 'Uniform circular motion, centripetal acceleration, and bank curves.', summaryNote: 'Centripetal force F = mv^2/r. Angular velocity w = v/r.' },
+  { id: 'phy_12_2', topic: 'Electromagnetic Induction', subject: 'Physics', difficulty: 'hard', prerequisites: ['phy_12_1'], importanceScore: 0.98, description: 'Faraday’s law, Lenz’s law, and AC generators.', summaryNote: 'Induced EMF = -N(dPhi/dt).' },
+  { id: 'chem_12_1', topic: 'Chemical Equilibrium', subject: 'Chemistry', difficulty: 'medium', prerequisites: [], importanceScore: 0.88, description: 'Dynamic equilibrium, Le Chatelier’s principle, and Kc calculations.', summaryNote: 'Kc = [Products]/[Reactants]. Equilibrium shifts to counteract change.' },
+  { id: 'chem_12_2', topic: 'Acid-Base Equilibria', subject: 'Chemistry', difficulty: 'hard', prerequisites: ['chem_12_1'], importanceScore: 0.94, description: 'pH scale, buffers, and titration curves.', summaryNote: 'pH = -log[H+]. Ka * Kb = Kw.' },
+  { id: 'math_12_1', topic: 'Limits and Continuity', subject: 'Mathematics', difficulty: 'medium', prerequisites: [], importanceScore: 1.0, description: 'Foundations of calculus, limits at infinity, and continuous functions.', summaryNote: 'Limit exists if LHL = RHL.' },
+  { id: 'math_12_2', topic: 'Derivatives', subject: 'Mathematics', difficulty: 'hard', prerequisites: ['math_12_1'], importanceScore: 1.0, description: 'Chain rule, implicit differentiation, and optimization.', summaryNote: 'Power rule: d/dx(x^n) = nx^(n-1).' },
+  { id: 'bio_12_1', topic: 'Cell Biology', subject: 'Biology', difficulty: 'medium', prerequisites: [], importanceScore: 0.85, description: 'Cell structure, organelle functions, and membrane transport.', summaryNote: 'Mitochondria: ATP synthesis. Ribosomes: Protein synthesis.' },
+  { id: 'bio_12_2', topic: 'Genetics', subject: 'Biology', difficulty: 'hard', prerequisites: ['bio_12_1'], importanceScore: 0.96, description: 'Mendelian inheritance, DNA replication, and biotechnology.', summaryNote: 'A-T, G-C pairs. Transcription: DNA to mRNA.' },
+  
+  // --- Social Science Core ---
+  { id: 'hist_12_1', topic: 'The Formation of Ethiopia', subject: 'History', difficulty: 'easy', prerequisites: [], importanceScore: 0.9, description: 'State formation and unification process under Tewodros II.', summaryNote: 'Tewodros II: Modernization and unification.' },
+  { id: 'geog_12_1', topic: 'Climate of Ethiopia', subject: 'Geography', difficulty: 'medium', prerequisites: [], importanceScore: 0.85, description: 'Relief features, rainfall patterns, and agricultural seasons.', summaryNote: 'Meher: Long rain season. Belg: Short rain season.' },
+  { id: 'econ_12_1', topic: 'National Income Accounting', subject: 'Economics', difficulty: 'medium', prerequisites: [], importanceScore: 0.92, description: 'GDP, GNP, and methods of calculating national income.', summaryNote: 'GDP = C + I + G + (X - M).' },
+  
+  // --- Common Subjects ---
+  { id: 'eng_12_1', topic: 'Grammar and Usage', subject: 'English', difficulty: 'medium', prerequisites: [], importanceScore: 1.0, description: 'Tenses, conditionals, and active/passive voice.', summaryNote: 'If + past, would + base (Type 2 conditional).' },
+  { id: 'sat_12_1', topic: 'Verbal Reasoning', subject: 'SAT', difficulty: 'hard', prerequisites: [], importanceScore: 1.0, description: 'Analogy, sentence completion, and critical reading.', summaryNote: 'Look for context clues and tonal shifts.' }
 ];
 
 export const storageService = {
@@ -26,10 +31,11 @@ export const storageService = {
 
   saveUser: (user: User) => {
     const allUsers = storageService.getAllUsers();
-    const index = allUsers.findIndex(u => u.id === user.id || u.email === user.email);
+    const index = allUsers.findIndex(u => u.id === user.id);
     if (index > -1) allUsers[index] = user;
     else allUsers.push(user);
     localStorage.setItem(`${PREFIX}all_users`, JSON.stringify(allUsers));
+    storageService.logAction(user.id, user.name, 'USER_UPDATE', `Registry updated for ${user.name}`, 'info');
   },
 
   getAllUsers: (): User[] => {
@@ -37,14 +43,13 @@ export const storageService = {
     const users = data ? JSON.parse(data) : [];
     if (users.length === 0) {
       const defaultAdmin: User = {
-        id: 'admin-primary', email: 'admin@luwa.academy', passwordHash: btoa('admin123' + SALT),
-        token: 'MASTER-ADMIN', name: 'Luwa Registry Admin', role: 'admin', stream: Stream.NATURAL,
-        grade: 'N/A', targetYear: 'N/A', xp: 0, level: 'Builder', prestige: 'Bronze',
-        weakConcepts: [], currentObjective: 'Oversee Nexus Operations', quizHistory: [], questionLedger: [], 
-        achievements: [], streak: 1, lastActiveDate: new Date().toISOString().split('T')[0],
-        masteryRecord: {}, lifecycleStage: 'Admission', readiness: 0,
+        id: 'admin-1', email: 'admin@luwa.academy', passwordHash: btoa('admin123' + SALT),
+        token: 'ROOT-ACCESS', name: 'Registry Administrator', role: 'admin', stream: Stream.NATURAL,
+        grade: 'N/A', targetYear: '2026', xp: 0, level: 'Strategist', prestige: 'Sovereign',
+        weakConcepts: [], currentObjective: 'System Oversight', quizHistory: [], questionLedger: [], 
+        achievements: [], streak: 1, masteryRecord: {}, lifecycleStage: 'Ready', readiness: 100,
         health: { burnoutRisk: 0, engagementScore: 1, consistencyLevel: 1, status: 'Vibrant' },
-        preferredLanguage: 'en'
+        preferredLanguage: 'en', studyGoals: [], bookmarks: []
       };
       users.push(defaultAdmin);
       localStorage.setItem(`${PREFIX}all_users`, JSON.stringify(users));
@@ -52,302 +57,144 @@ export const storageService = {
     return users;
   },
 
-  setSession: (user: User) => localStorage.setItem(`${PREFIX}active_session`, JSON.stringify(user)),
+  getUserByEmail: (email: string): User | undefined => {
+    return storageService.getAllUsers().find(u => u.email === email);
+  },
 
+  setSession: (user: User) => localStorage.setItem(`${PREFIX}session`, JSON.stringify(user)),
   getSession: (): User | null => {
-    const simUser = localStorage.getItem(`${PREFIX}simulation_active_user`);
-    const activeSession = localStorage.getItem(`${PREFIX}active_session`);
-    let sessionUser: User | null = simUser ? JSON.parse(simUser) : (activeSession ? JSON.parse(activeSession) : null);
+    const data = localStorage.getItem(`${PREFIX}session`);
+    return data ? JSON.parse(data) : null;
+  },
+  logout: () => localStorage.removeItem(`${PREFIX}session`),
 
-    if (sessionUser) {
-      if (!sessionUser.questionLedger) sessionUser.questionLedger = [];
-      if (!sessionUser.achievements) sessionUser.achievements = [];
-      if (!sessionUser.currentIntent) sessionUser.currentIntent = storageService.inferIntent(sessionUser);
-      if (!sessionUser.masteryRecord) sessionUser.masteryRecord = {};
-      if (!sessionUser.preferredLanguage) sessionUser.preferredLanguage = 'en';
-      
-      sessionUser.masteryRecord = storageService.decayRetention(sessionUser.masteryRecord);
-      sessionUser.lifecycleStage = storageService.calculateLifecycleStage(sessionUser);
-      sessionUser.readiness = storageService.calculateReadiness(sessionUser);
-      sessionUser.health = storageService.calculateHealth(sessionUser);
-      sessionUser.prestige = storageService.calculatePrestige(sessionUser.xp);
-      
-      // Update streak
-      const today = new Date().toISOString().split('T')[0];
-      if (sessionUser.lastActiveDate !== today) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
-        
-        if (sessionUser.lastActiveDate === yesterdayStr) {
-          sessionUser.streak += 1;
-        } else {
-          sessionUser.streak = 1;
-        }
-        sessionUser.lastActiveDate = today;
-      }
-    }
-    return sessionUser;
+  logAction: (userId: string, userName: string, action: string, detail: string, severity: 'info' | 'warning' | 'critical') => {
+    const logs: AuditEntry[] = JSON.parse(localStorage.getItem(`${PREFIX}audit`) || '[]');
+    logs.push({ id: Math.random().toString(36).substr(2, 9), timestamp: Date.now(), userId, userName, action, detail, severity });
+    localStorage.setItem(`${PREFIX}audit`, JSON.stringify(logs.slice(-500)));
   },
 
-  logout: () => {
-    localStorage.removeItem(`${PREFIX}active_session`);
-    localStorage.removeItem(`${PREFIX}simulation_active_user`);
-    sessionStorage.clear();
-  },
-
-  // SES Storage Methods
+  getAuditLogs: (): AuditEntry[] => JSON.parse(localStorage.getItem(`${PREFIX}audit`) || '[]'),
+  
   getExams: (): Exam[] => JSON.parse(localStorage.getItem(`${PREFIX}exams`) || '[]'),
   saveExam: (exam: Exam) => {
     const exams = storageService.getExams();
-    const idx = exams.findIndex(e => e.id === exam.id);
-    if (idx > -1) exams[idx] = exam;
-    else exams.push(exam);
+    exams.push(exam);
     localStorage.setItem(`${PREFIX}exams`, JSON.stringify(exams));
   },
-  
+
   getSubmissions: (): ExamSubmission[] => JSON.parse(localStorage.getItem(`${PREFIX}submissions`) || '[]'),
   saveSubmission: (sub: ExamSubmission) => {
     const subs = storageService.getSubmissions();
-    const idx = subs.findIndex(s => s.id === sub.id);
-    if (idx > -1) subs[idx] = sub;
-    else subs.push(sub);
+    subs.push(sub);
     localStorage.setItem(`${PREFIX}submissions`, JSON.stringify(subs));
   },
 
-  getPersonalizedSuggestions: (user: User) => {
-    const suggestions = [];
-    if (user.weakConcepts.length > 0) {
-      suggestions.push({
-        id: 'weak-1',
-        type: 'Remediation',
-        title: `Deep Dive: ${user.weakConcepts[0]}`,
-        desc: "Adaptive algorithms suggest prioritizing this gap to stabilize your EUEE readiness.",
-        xp: 150
-      });
-    }
-    const readyItems = CURRICULUM_GRAPH.filter(n => storageService.getNodeStatus(user, n.id) === 'Ready');
-    if (readyItems.length > 0) {
-      suggestions.push({
-        id: 'next-1',
-        type: 'Advancement',
-        title: `Next Pillar: ${readyItems[0].topic}`,
-        desc: "Foundational nodes verified. Ready for higher-level conceptual synthesis.",
-        xp: 200
-      });
-    }
-    if (user.health.burnoutRisk > 0.5) {
-      suggestions.push({
-        id: 'health-1',
-        type: 'Recovery',
-        title: 'Cognitive Reboot',
-        desc: "Vigilance score dropping. A session of 'Exploration' mode is advised.",
-        xp: 50
-      });
-    }
-    return suggestions;
+  getDirectives: (): GlobalDirective[] => JSON.parse(localStorage.getItem(`${PREFIX}directives`) || '[]'),
+  saveDirective: (d: GlobalDirective) => {
+    const ds = storageService.getDirectives();
+    localStorage.setItem(`${PREFIX}directives`, JSON.stringify([d, ...ds].slice(0, 10)));
   },
 
-  checkAchievements: (user: User): User => {
-    const newAchievements: Achievement[] = [...user.achievements];
-    const existingIds = new Set(newAchievements.map(a => a.id));
-
-    if (!existingIds.has('first-step') && user.xp > 0) {
-      newAchievements.push({ id: 'first-step', title: 'The Awakening', icon: '🌟', unlockedAt: Date.now(), description: 'Initialize first academic sync.' });
-    }
-    if (!existingIds.has('streak-3') && user.streak >= 3) {
-      newAchievements.push({ id: 'streak-3', title: 'Neural Consistency', icon: '🔥', unlockedAt: Date.now(), description: 'Maintain 3-day active streak.' });
-    }
-    if (!existingIds.has('master-1') && Object.values(user.masteryRecord).some(m => m.retentionScore > 0.9)) {
-      newAchievements.push({ id: 'master-1', title: 'Sovereign Node', icon: '🏛️', unlockedAt: Date.now(), description: 'Achieve absolute mastery (>90%) on any node.' });
-    }
-
-    return { ...user, achievements: newAchievements };
-  },
-
-  addToLedger: (user: User, entry: Omit<HistoricalQuestion, 'id' | 'timestamp'>) => {
-    const questionLedger = user.questionLedger || [];
-    const newEntry: HistoricalQuestion = {
-      ...entry,
-      id: Math.random().toString(36).substr(2, 9),
-      timestamp: Date.now(),
-      lang: user.preferredLanguage
-    };
-    let updatedUser = { ...user, questionLedger: [newEntry, ...questionLedger].slice(0, 100) };
-    updatedUser = storageService.checkAchievements(updatedUser);
-    storageService.saveUser(updatedUser);
-    storageService.setSession(updatedUser);
-    return updatedUser;
-  },
-
-  calculateHealth: (user: User): AcademicHealth => {
-    const history = user.quizHistory;
-    if (history.length === 0) return { burnoutRisk: 0, engagementScore: 1, consistencyLevel: 1, status: 'Vibrant' };
-    const engagementScore = Math.min(1, history.length / 20);
-    const avgScore = history.reduce((acc, q) => acc + (q.score / q.total), 0) / history.length;
-    const avgEffort = history.reduce((acc, q) => acc + q.aggregateEffort, 0) / history.length;
-    let burnoutRisk = 0;
-    if (avgEffort > 0.8 && avgScore < 0.6) burnoutRisk = 0.7;
-    if (history.length > 50) burnoutRisk += 0.2;
-    const consistencyLevel = user.streak > 7 ? 0.9 : user.streak > 3 ? 0.6 : 0.3;
-    let status: AcademicHealth['status'] = 'Vibrant';
-    if (burnoutRisk > 0.6) status = 'At Risk';
-    else if (burnoutRisk > 0.3) status = 'Fatigued';
-    else if (engagementScore > 0.4) status = 'Stable';
-    return { burnoutRisk, engagementScore, consistencyLevel, status };
-  },
-
-  calculatePrestige: (xp: number): PrestigeTier => {
-    if (xp >= 10000) return 'Sovereign';
-    if (xp >= 5000) return 'Platinum';
-    if (xp >= 2500) return 'Gold';
-    if (xp >= 1000) return 'Silver';
-    return 'Bronze';
-  },
-
-  getCohortStats: () => {
-    const users = storageService.getAllUsers().filter(u => u.role === 'scholar');
-    const totalXp = users.reduce((acc, u) => acc + (u.xp || 0), 0);
-    const avgXp = users.length > 0 ? totalXp / users.length : 1000;
-    const avgReadiness = users.length > 0 ? users.reduce((acc, u) => acc + (u.readiness || 0), 0) / users.length : 0;
-    
-    return {
-      avgReadiness: Math.round(avgReadiness),
-      avgXp: Math.round(avgXp),
-      stageDistribution: {
-        Admission: users.filter(u => u.lifecycleStage === 'Admission').length,
-        Exploration: users.filter(u => u.lifecycleStage === 'Exploration').length,
-        'Skill Acquisition': users.filter(u => u.lifecycleStage === 'Skill Acquisition').length,
-        Mastery: users.filter(u => u.lifecycleStage === 'Mastery').length,
-        Ready: users.filter(u => u.lifecycleStage === 'Ready').length,
-      }
-    };
-  },
-
-  calculateLifecycleStage: (user: User): LifecycleStage => {
-    const masteryList = Object.values(user.masteryRecord || {}) as ConceptMastery[];
-    const masteredCount = masteryList.filter(m => m.retentionScore > 0.7).length;
-    const masteryRate = masteredCount / CURRICULUM_GRAPH.length;
-    const avgEffort = user.averageEffort || 0.5;
-    if (masteryRate > 0.85 && avgEffort > 0.8) return 'Ready';
-    if (user.xp >= 5000 || masteryRate > 0.6) return 'Mastery';
-    if (user.xp >= 1500 || masteredCount >= 2) return 'Skill Acquisition';
-    if (user.xp >= 300 || masteredCount >= 1) return 'Exploration';
-    return 'Admission';
-  },
-
-  calculateReadiness: (user: User): number => {
-    const masteryList = Object.values(user.masteryRecord || {}) as ConceptMastery[];
-    if (masteryList.length === 0) return 0;
-    const avgRetention = masteryList.reduce((acc, curr) => acc + curr.retentionScore, 0) / masteryList.length;
-    const masteredWeight = masteryList.filter(m => m.retentionScore > 0.7).length / CURRICULUM_GRAPH.length;
-    const effortWeight = user.averageEffort || 0.5;
-    const readiness = (masteredWeight * 50) + (avgRetention * 30) + (effortWeight * 20);
-    return Math.min(100, Math.round(readiness));
-  },
-
-  getNodeStatus: (user: User, nodeId: string): NodeStatus => {
-    const node = CURRICULUM_GRAPH.find(n => n.id === nodeId);
-    if (!node) return 'Locked';
-    const mastery = user.masteryRecord?.[nodeId];
-    if (mastery && mastery.retentionScore > 0.8) return 'Mastered';
-    if (mastery && mastery.retentionScore < 0.4) return 'Review';
-    for (const preId of node.prerequisites) {
-      const preMastery = user.masteryRecord?.[preId];
-      if (!preMastery || preMastery.retentionScore < 0.6) return 'Locked';
-    }
-    return 'Ready';
-  },
-
-  getLeverageTask: (user: User): { node: ConceptNode; status: NodeStatus } => {
-    const reviewItems = CURRICULUM_GRAPH.map(n => ({ node: n, status: storageService.getNodeStatus(user, n.id) })).filter(item => item.status === 'Review');
-    if (reviewItems.length > 0) return reviewItems[0];
-    const readyItems = CURRICULUM_GRAPH.map(n => ({ node: n, status: storageService.getNodeStatus(user, n.id) })).filter(item => item.status === 'Ready').sort((a, b) => b.node.importanceScore - a.node.importanceScore);
-    if (readyItems.length > 0) return readyItems[0];
-    const lockedItems = CURRICULUM_GRAPH.map(n => ({ node: n, status: storageService.getNodeStatus(user, n.id) })).filter(item => item.status === 'Locked');
-    return lockedItems[0] || { node: CURRICULUM_GRAPH[0], status: 'Ready' };
-  },
-
-  getFullCurriculum: () => CURRICULUM_GRAPH,
-
-  updateMastery: (user: User, conceptId: string, topic: string, outcome: 'correct' | 'wrong', effortScore: number): User => {
-    const now = Date.now();
-    const record = user.masteryRecord || {};
-    const existing = record[conceptId] || { id: conceptId, topic: topic, difficulty: 'medium', lastReviewed: 0, retentionScore: 0, scheduledNextReview: now, reviewHistory: [], interval: 1, adaptiveLevel: 1 };
-    const history = [...existing.reviewHistory, { date: now, outcome, effortScore }];
-    let interval = existing.interval;
-    let retentionScore = existing.retentionScore;
-    let adaptiveLevel = existing.adaptiveLevel;
-
-    if (outcome === 'correct') {
-      interval = Math.ceil(interval * (1.5 + (effortScore * 0.5)));
-      retentionScore = Math.min(1, retentionScore + 0.3 * effortScore);
-      if (retentionScore > 0.8 && adaptiveLevel < 5) adaptiveLevel += 1;
-    } else {
-      interval = Math.max(1, Math.floor(interval / 2));
-      retentionScore = Math.max(0, retentionScore - 0.4);
-      if (adaptiveLevel > 1) adaptiveLevel -= 1;
-    }
-    const nextReview = now + (interval * 24 * 60 * 60 * 1000);
-    const updatedMastery = { ...existing, lastReviewed: now, retentionScore, scheduledNextReview: nextReview, reviewHistory: history, interval, adaptiveLevel };
-    return { ...user, masteryRecord: { ...record, [conceptId]: updatedMastery } };
-  },
-
-  decayRetention: (record: Record<string, ConceptMastery>): Record<string, ConceptMastery> => {
-    const now = Date.now();
-    const decayed = { ...record };
-    Object.keys(decayed).forEach(key => {
-      const concept = decayed[key];
-      const daysSinceLast = (now - concept.lastReviewed) / (1000 * 60 * 60 * 24);
-      concept.retentionScore = Math.max(0, concept.retentionScore - ((daysSinceLast / (concept.interval * 2)) * 0.1));
-    });
-    return decayed;
-  },
-
-  inferIntent: (user: User): AcademicIntent => {
-    const now = Date.now();
-    const hour = new Date().getHours();
-    let type: IntentType = 'Deep Study';
-    if (hour > 22 || hour < 5) type = 'Recovery';
-    else if (user.quizHistory.length > 0 && user.quizHistory[0].score < user.quizHistory[0].total * 0.4) type = 'Recovery';
-    else if (user.xp > 3000 && user.quizHistory.length > 10) type = 'Exam Prep';
-    else if (hour >= 6 && hour <= 11) type = 'Exploration';
-    return { type, confidence: 0.5, detectedAt: now, expiresAt: now + (1000 * 60 * 60 * 2) };
-  },
-
-  getTokens: (): AccessToken[] => JSON.parse(localStorage.getItem(`${PREFIX}master_vault_codes`) || '[]'),
+  getTokens: (): AccessToken[] => JSON.parse(localStorage.getItem(`${PREFIX}tokens`) || '[]'),
   generateToken: () => {
     const code = `LUWA-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
     const tokens = storageService.getTokens();
     tokens.push({ code, isUsed: false, createdAt: Date.now() });
-    localStorage.setItem(`${PREFIX}master_vault_codes`, JSON.stringify(tokens));
+    localStorage.setItem(`${PREFIX}tokens`, JSON.stringify(tokens));
     return code;
   },
   validateAndUseToken: (code: string, userId: string) => {
-    if (code === 'LUWA-MASTER-ADMIN') return true;
     const tokens = storageService.getTokens();
-    const tokenIdx = tokens.findIndex(t => t.code === code && !t.isUsed);
-    if (tokenIdx > -1) {
-      tokens[tokenIdx].isUsed = true;
-      tokens[tokenIdx].usedBy = userId;
-      localStorage.setItem(`${PREFIX}master_vault_codes`, JSON.stringify(tokens));
+    const t = tokens.find(t => t.code === code && !t.isUsed);
+    if (t) {
+      t.isUsed = true;
+      t.usedBy = userId;
+      localStorage.setItem(`${PREFIX}tokens`, JSON.stringify(tokens));
       return true;
     }
-    return false;
+    return code === 'LUWA-PREVIEW';
   },
 
-  enterSimulation: (user: User) => localStorage.setItem(`${PREFIX}simulation_active_user`, JSON.stringify(user)),
-  exitSimulation: () => localStorage.removeItem(`${PREFIX}simulation_active_user`),
-  isSimulating: () => localStorage.getItem(`${PREFIX}simulation_active_user`) !== null,
-  
-  saveDirective: (directive: GlobalDirective) => {
-    const directives = storageService.getDirectives();
-    localStorage.setItem(`${PREFIX}directives`, JSON.stringify([directive, ...directives].slice(0, 5)));
+  getSubjects: (stream: Stream) => stream === Stream.NATURAL 
+    ? ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'SAT'] 
+    : ['Mathematics', 'History', 'Geography', 'Economics', 'English', 'SAT'],
+
+  getLeverageTask: (user: User) => {
+    const relevant = CURRICULUM_GRAPH.filter(n => {
+      const subs = storageService.getSubjects(user.stream);
+      return subs.includes(n.subject);
+    });
+    return { node: relevant[0], status: 'Ready' };
   },
-  getDirectives: (): GlobalDirective[] => JSON.parse(localStorage.getItem(`${PREFIX}directives`) || '[]'),
-  
+
+  getPersonalizedSuggestions: (user: User) => [
+    { id: '1', type: 'Advancement', title: 'Circular Motion Lab', desc: 'New high-yield content available for Natural Science scholars.', xp: 200 },
+    { id: '2', type: 'Revision', title: 'English Grammar Synthesis', desc: 'Identify patterns in past SAT sections.', xp: 150 }
+  ],
+
+  addToLedger: (user: User, entry: { question: string, answer: string }): User => {
+    const newEntry: HistoricalQuestion = {
+      id: Math.random().toString(36).substr(2, 9),
+      question: entry.question,
+      answer: entry.answer,
+      timestamp: Date.now(),
+      lang: user.preferredLanguage
+    };
+    const updated = { ...user, questionLedger: [newEntry, ...(user.questionLedger || [])].slice(0, 50) };
+    storageService.saveUser(updated);
+    return updated;
+  },
+
+  getFullCurriculum: (): ConceptNode[] => CURRICULUM_GRAPH,
+
+  updateMastery: (user: User, conceptId: string, topic: string, outcome: 'correct' | 'wrong', effort: number): User => {
+    const masteryRecord = { ...user.masteryRecord };
+    let mastery = masteryRecord[conceptId];
+    
+    if (!mastery) {
+      mastery = {
+        id: conceptId,
+        topic,
+        difficulty: 'medium',
+        lastReviewed: Date.now(),
+        retentionScore: 0.5,
+        scheduledNextReview: Date.now() + 86400000,
+        reviewHistory: [],
+        interval: 1,
+        adaptiveLevel: 1
+      };
+    }
+
+    const review: ReviewEvent = { date: Date.now(), outcome, effortScore: effort };
+    mastery.reviewHistory = [...mastery.reviewHistory, review];
+    mastery.lastReviewed = Date.now();
+    
+    if (outcome === 'correct') {
+      mastery.retentionScore = Math.min(1, mastery.retentionScore + 0.1);
+      mastery.adaptiveLevel = Math.min(5, mastery.adaptiveLevel + (effort > 0.7 ? 1 : 0));
+    } else {
+      mastery.retentionScore = Math.max(0, mastery.retentionScore - 0.15);
+    }
+
+    masteryRecord[conceptId] = mastery;
+    return { ...user, masteryRecord };
+  },
+
+  checkAchievements: (user: User): User => {
+    const achievements = [...user.achievements];
+    if (user.xp >= 1000 && !achievements.some(a => a.id === '1000xp')) {
+      achievements.push({ id: '1000xp', title: 'Scholar Initiate', icon: '🎓', unlockedAt: Date.now(), description: 'Reached 1000 XP in the registry.' });
+    }
+    return { ...user, achievements };
+  },
+
+  getCohortStats: () => ({ avgXp: 2500 }),
+
   calculateLevel: (xp: number): 'Initiate' | 'Builder' | 'Strategist' => xp >= 5000 ? 'Strategist' : xp >= 1000 ? 'Builder' : 'Initiate',
-  getSubjects: (stream: Stream) => stream === Stream.NATURAL ? ['Mathematics', 'Physics', 'English', 'Chemistry', 'Biology', 'SAT'] : ['English', 'Mathematics', 'Geography', 'History', 'Economics', 'SAT'],
-  getUserByEmail: (email: string) => storageService.getAllUsers().find(u => u.email.toLowerCase() === email.toLowerCase()) || null,
-  getAuditLogs: (): AuditEntry[] => JSON.parse(localStorage.getItem(`${PREFIX}audit_logs`) || '[]'),
+  calculatePrestige: (xp: number): PrestigeTier => xp >= 10000 ? 'Sovereign' : 'Bronze',
+  calculateHealth: (user: User) => ({ burnoutRisk: 0, engagementScore: 1, consistencyLevel: 1, status: 'Vibrant' as const }),
+  enterSimulation: (u: User) => localStorage.setItem(`${PREFIX}sim_user`, JSON.stringify(u)),
+  exitSimulation: () => localStorage.removeItem(`${PREFIX}sim_user`),
+  isSimulating: () => !!localStorage.getItem(`${PREFIX}sim_user`)
 };

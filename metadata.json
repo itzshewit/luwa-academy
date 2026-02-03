@@ -1,8 +1,20 @@
 {
-  "name": "luwa-academy",
+  "name": "Luwa Academy",
+  "short_name": "Luwa",
   "author": "Shewit",
   "year": "2026",
-  "description": "AI-powered, gamified, and interactive educational platform for high school students in Ethiopia, developed by Shewit.",
+  "description": "Crafted Learning for Ethiopian Grade 12 Scholars.",
+  "icons": [
+    {
+      "src": "https://api.dicebear.com/7.x/initials/svg?seed=Luwa&backgroundColor=2e2e7b&fontSize=50",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#2E2E7B",
   "requestFramePermissions": [
     "camera",
     "microphone"

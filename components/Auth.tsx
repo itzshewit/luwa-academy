@@ -76,6 +76,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     const userId = Math.random().toString(36).substr(2, 9);
     
     if (storageService.validateAndUseToken(token, userId)) {
+      // Fix: Added missing properties studyGoals and bookmarks as required by User type definition in types.ts
       const newUser: User = {
         id: userId,
         email,
@@ -99,7 +100,9 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         lifecycleStage: 'Admission',
         readiness: 0,
         health: { burnoutRisk: 0, engagementScore: 1, consistencyLevel: 1, status: 'Vibrant' },
-        preferredLanguage: 'en'
+        preferredLanguage: 'en',
+        studyGoals: [],
+        bookmarks: []
       };
       storageService.saveUser(newUser);
       storageService.setSession(newUser);
