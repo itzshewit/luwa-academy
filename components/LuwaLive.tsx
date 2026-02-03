@@ -1,4 +1,3 @@
-
 /*
   Luwa Academy – AI-Powered Educational Platform
   Developed by Shewit – 2026
@@ -8,10 +7,10 @@
 */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { GlassCard } from './GlassCard';
+import { GlassCard } from './GlassCard.tsx';
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
-import { ICONS } from '../constants';
-import { decodeAudioData, decodeBase64, encodeBase64 } from '../services/audioService';
+import { ICONS } from '../constants.tsx';
+import { decodeAudioData, decodeBase64, encodeBase64 } from '../services/audioService.ts';
 
 export const LuwaLive: React.FC = () => {
   const [active, setActive] = useState(false);

@@ -4,9 +4,9 @@
 */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { GlassCard } from './GlassCard';
-import { User, ChatMessage } from '../types';
-import { ICONS } from '../constants';
+import { GlassCard } from './GlassCard.tsx';
+import { User, ChatMessage } from '../types.ts';
+import { ICONS } from '../constants.tsx';
 
 interface StudyNexusProps {
   user: User;

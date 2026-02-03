@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
-import { GlassCard } from './GlassCard';
-import { User, StudyGoal } from '../types';
-import { ICONS } from '../constants';
+import { GlassCard } from './GlassCard.tsx';
+import { User, StudyGoal } from '../types.ts';
+import { ICONS } from '../constants.tsx';
 
 interface AcademicPlannerProps {
   user: User;

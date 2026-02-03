@@ -1,4 +1,3 @@
-
 /*
   Luwa Academy – AI-Powered Educational Platform
   Developed by Shewit – 2026
@@ -8,7 +7,7 @@
 */
 
 import React from 'react';
-import { GlassCard } from './GlassCard';
+import { GlassCard } from './GlassCard.tsx';
 
 export const About: React.FC = () => {
   return (

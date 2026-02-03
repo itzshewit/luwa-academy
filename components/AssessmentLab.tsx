@@ -66,7 +66,6 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ user, onUpdateUser
     if (!finalTopic.trim()) return;
     setLoading(true);
     
-    // Determine Adaptive Difficulty
     const masteryList = Object.values(user.masteryRecord) as ConceptMastery[];
     const relevantMastery = masteryList.find(m => m.topic.toLowerCase().includes(finalTopic.toLowerCase()));
     const difficultyLevel = relevantMastery ? relevantMastery.adaptiveLevel : 3;
@@ -173,47 +172,47 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ user, onUpdateUser
   const wrongQuestions = latestResult?.results.filter(r => !r.correct) || [];
 
   return (
-    <div className="h-full flex flex-col gap-6 animate-fade-in overflow-hidden">
+    <div className="h-full flex flex-col gap-4 md:gap-6 animate-fade-in overflow-hidden">
       <div className="flex justify-between items-center shrink-0">
         <div className="flex flex-col">
-          <h2 className="text-2xl font-black flex items-center gap-3 uppercase tracking-tighter">
-            <ICONS.Zap className="luwa-gold" />
-            {showResult ? 'Correction Mode' : 'Assessment Lab'}
+          <h2 className="text-xl md:text-2xl font-black flex items-center gap-3 uppercase tracking-tighter text-luwa-purple">
+            <ICONS.Zap className="text-luwa-teal" />
+            {showResult ? 'Correction' : 'Practice Lab'}
           </h2>
           {!showResult && (
-            <span className="text-[8px] font-black text-gray-700 uppercase tracking-[0.4em] ml-9">
-              Adaptive Neural Scaling Active
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-9">
+              Adaptive Scaling Active
             </span>
           )}
         </div>
         
         {quiz && !showResult && (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             {timeLeft !== null && (
-              <div className="text-[10px] font-black text-white bg-red-500/20 border border-red-500/40 px-4 py-1.5 rounded-full uppercase tracking-widest">
-                T-Minus: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+              <div className="text-[9px] font-black text-white bg-red-500/80 px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-red-500/10">
+                {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
               </div>
             )}
-            <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] bg-white/5 px-4 py-1.5 rounded-full border border-white/5">
-              {user.currentIntent?.type} Mode
+            <div className="hidden xs:block text-[9px] font-black text-slate-400 uppercase tracking-widest bg-white px-3 py-1.5 rounded-full border border-slate-100">
+              {user.currentIntent?.type}
             </div>
           </div>
         )}
       </div>
 
       {!quiz ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-full overflow-y-auto pr-2 pb-10">
-          <GlassCard className="flex flex-col p-12 border-luwa-gold/10">
-            <div className="mb-12">
-              <ICONS.Zap className="w-12 h-12 luwa-gold mb-8" />
-              <h3 className="text-3xl font-black uppercase tracking-widest mb-3 text-white">Subject Mastery</h3>
-              <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                Initialize diagnostics across core national curriculum benchmarks. AI scales difficulty based on your history.
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 h-full overflow-y-auto pr-2 pb-10 custom-scrollbar">
+          <GlassCard className="flex flex-col p-8 md:p-12 border-luwa-teal/10 bg-white">
+            <div className="mb-8 md:mb-12">
+              <ICONS.Zap className="w-10 h-10 md:w-12 md:h-12 text-luwa-teal mb-6 md:mb-8" />
+              <h3 className="text-2xl md:text-3xl font-serif font-bold uppercase tracking-tight mb-3 text-luwa-purple">Subject Mastery</h3>
+              <p className="text-slate-500 text-xs md:text-sm leading-relaxed max-w-sm">
+                Initialize diagnostics across core national curriculum benchmarks.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-4 w-full">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 w-full">
                {subjects.map(s => (
-                 <button key={s} onClick={() => startQuiz(s)} className="p-8 text-[10px] font-black uppercase tracking-[0.4em] border border-white/5 rounded-2xl hover:bg-luwa-gold/10 hover:border-luwa-gold/30 transition-all text-left group">
+                 <button key={s} onClick={() => startQuiz(s)} className="p-4 md:p-8 text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-slate-100 rounded-2xl hover:bg-luwa-teal/5 hover:border-luwa-teal/30 transition-all text-left group">
                    <span className="block opacity-40 group-hover:opacity-100 transition-opacity mb-2">Probe</span>
                    {s}
                  </button>
@@ -221,83 +220,92 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ user, onUpdateUser
             </div>
           </GlassCard>
 
-          <GlassCard className="flex flex-col p-12 border-white/5 bg-white/[0.01]">
-            <div className="mb-12">
-              <ICONS.Brain className="w-12 h-12 text-gray-700 mb-8" />
-              <h3 className="text-3xl font-black uppercase tracking-widest mb-3 text-white">Weekly Revision</h3>
-              <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
-                AI-powered mini-tests targeting your specific weak areas from the past 7 days.
+          <GlassCard className="flex flex-col p-8 md:p-12 border-luwa-purple/5 bg-slate-50">
+            <div className="mb-8 md:mb-12">
+              <ICONS.Brain className="w-10 h-10 md:w-12 md:h-12 text-luwa-purple/30 mb-6 md:mb-8" />
+              <h3 className="text-2xl md:text-3xl font-serif font-bold uppercase tracking-tight mb-3 text-luwa-purple">Weekly Revision</h3>
+              <p className="text-slate-500 text-xs md:text-sm leading-relaxed max-w-sm">
+                AI-powered mini-tests targeting your specific weak areas.
               </p>
             </div>
             <div className="mt-auto">
               <button 
                 onClick={() => startQuiz(user.weakConcepts[0] || 'General Revision')} 
                 disabled={loading} 
-                className="w-full bg-luwa-gold text-black px-8 py-8 rounded-2xl font-black text-xs uppercase tracking-[0.5em] shadow-2xl hover:brightness-110 transition-all"
+                className="w-full bg-luwa-purple text-white px-8 py-5 md:py-8 rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-[0.4em] shadow-xl shadow-luwa-purple/20 hover:brightness-110 transition-all"
               >
-                {loading ? 'CALIBRATING...' : 'INITIALIZE REVISION CYCLE'}
+                {loading ? 'CALIBRATING...' : 'INITIALIZE REVISION'}
               </button>
             </div>
           </GlassCard>
         </div>
       ) : loading ? (
         <div className="flex-1 flex flex-col items-center justify-center">
-           <div className="w-20 h-20 border-2 border-luwa-gold/10 border-t-luwa-gold rounded-full animate-spin mb-10" />
-           <p className="text-[11px] font-black uppercase tracking-[0.6em] text-luwa-gold animate-pulse">Orchestrating Knowledge Probe</p>
+           <div className="w-16 h-16 md:w-20 md:h-20 border-2 border-luwa-teal/10 border-t-luwa-teal rounded-full animate-spin mb-10" />
+           <p className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.5em] text-luwa-teal animate-pulse">Syncing Knowledge Probe</p>
         </div>
       ) : showResult ? (
-        <div className="flex-1 flex flex-col gap-10 overflow-hidden pb-10">
-          <div className="flex flex-col md:flex-row gap-8 shrink-0">
-            <GlassCard className="flex-1 flex items-center justify-between border-white/5 py-8 px-12">
+        <div className="flex-1 flex flex-col gap-6 md:gap-10 overflow-hidden pb-10">
+          <div className="flex flex-col sm:flex-row gap-4 md:gap-8 shrink-0">
+            <GlassCard className="flex-1 flex items-center justify-between border-slate-100 py-6 md:py-8 px-8 md:px-12 bg-white">
               <div>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500 mb-2">Accuracy Rate</h3>
-                <p className="text-5xl font-black text-white leading-none">
-                  {latestResult.score} <span className="text-gray-700 text-3xl">/ {latestResult.total}</span>
+                <h3 className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Accuracy</h3>
+                <p className="text-4xl md:text-5xl font-black text-luwa-purple leading-none">
+                  {latestResult.score} <span className="text-slate-300 text-2xl md:text-3xl">/ {latestResult.total}</span>
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500 mb-2">Effort Quality</p>
-                <p className="text-3xl font-black text-luwa-gold uppercase">{Math.round(latestResult.aggregateEffort * 100)}%</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Quality</p>
+                <p className="text-2xl md:text-3xl font-black text-luwa-teal uppercase">{Math.round(latestResult.aggregateEffort * 100)}%</p>
               </div>
             </GlassCard>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-10 pr-6 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto space-y-6 md:space-y-10 pr-2 custom-scrollbar">
             {wrongQuestions.map((res, i) => (
-              <GlassCard key={i} className="border-red-500/10 bg-red-500/[0.01] p-16 animate-fade-in shadow-xl">
-                <h4 className="text-3xl font-black mb-16 leading-relaxed text-white max-w-4xl">{res.question}</h4>
-                <div className="p-10 bg-black/40 rounded-[2.5rem] border border-white/5 relative group">
-                  <div className="text-base leading-loose text-gray-300">
-                    <span className="text-luwa-gold font-black uppercase mr-4 tracking-[0.4em] text-[10px] block mb-2">Neural Breakdown:</span>
+              <GlassCard key={i} className="border-red-100 bg-white p-6 md:p-16 animate-fade-in shadow-xl">
+                <h4 className="text-lg md:text-3xl font-serif font-bold mb-8 md:mb-16 leading-relaxed text-luwa-purple max-w-4xl">{res.question}</h4>
+                <div className="p-6 md:p-10 bg-slate-50 rounded-[2rem] border border-slate-100 relative group">
+                  <div className="text-sm md:text-base leading-loose text-slate-600">
+                    <span className="text-luwa-teal font-black uppercase mr-4 tracking-widest text-[9px] block mb-3">Neural Breakdown:</span>
                     {res.explanation}
                   </div>
                 </div>
               </GlassCard>
             ))}
+            {wrongQuestions.length === 0 && (
+              <div className="text-center py-20 animate-fade-in">
+                 <div className="w-20 h-20 bg-luwa-teal/10 rounded-full flex items-center justify-center mx-auto mb-8">
+                    <ICONS.Trophy className="w-10 h-10 text-luwa-teal" />
+                 </div>
+                 <h4 className="text-3xl font-serif font-bold text-luwa-purple mb-4">Neural Harmony</h4>
+                 <p className="text-slate-500 font-medium">Full accuracy detected across all curriculum probes.</p>
+              </div>
+            )}
           </div>
 
-          <button onClick={() => setQuiz(null)} className="w-full bg-white/5 hover:bg-white/10 py-10 rounded-3xl font-black text-[11px] uppercase tracking-[0.6em] transition-all border border-white/5 shrink-0">
-            Acknowledge & Finalize
+          <button onClick={() => setQuiz(null)} className="w-full bg-luwa-purple text-white py-6 md:py-10 rounded-3xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.4em] transition-all shadow-xl shadow-luwa-purple/20 shrink-0">
+            Return to Lab
           </button>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col gap-16 animate-fade-in py-16">
-          <div className="max-w-4xl mx-auto w-full space-y-10 text-center">
-            <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-              <div className="h-full bg-luwa-gold shadow-[0_0_20px_#FFD700] transition-all duration-1000 ease-out" style={{ width: `${((currentIdx + 1) / 5) * 100}%` }} />
+        <div className="flex-1 flex flex-col gap-10 md:gap-16 animate-fade-in py-8 md:py-16">
+          <div className="max-w-4xl mx-auto w-full space-y-6 md:space-y-10 text-center">
+            <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-full bg-luwa-teal transition-all duration-700 ease-out shadow-[0_0_10px_rgba(38,142,145,0.3)]" style={{ width: `${((currentIdx + 1) / 5) * 100}%` }} />
             </div>
           </div>
 
-          <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col justify-center px-8">
-            <h3 className="text-5xl font-black mb-24 leading-tight text-white text-center tracking-tight">{quiz.questions[currentIdx].question}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col justify-center px-4 md:px-8">
+            <h3 className="text-2xl md:text-5xl font-serif font-bold mb-12 md:mb-24 leading-tight text-luwa-purple text-center tracking-tight">{quiz.questions[currentIdx].question}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
               {quiz.questions[currentIdx].options.map((opt, i) => (
-                <button key={i} onClick={() => handleSelectOption(i)} className="w-full text-left p-10 rounded-[2rem] border border-white/5 bg-white/[0.02] hover:border-luwa-gold/30 hover:bg-luwa-gold/5 transition-all group shadow-xl">
-                  <div className="flex items-center gap-10">
-                    <span className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-[12px] font-black group-hover:bg-luwa-gold group-hover:text-black transition-all border border-white/10 uppercase">
+                <button key={i} onClick={() => handleSelectOption(i)} className="w-full text-left p-6 md:p-10 rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 bg-white hover:border-luwa-teal hover:shadow-xl transition-all group">
+                  <div className="flex items-center gap-6 md:gap-10">
+                    <span className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-slate-50 flex items-center justify-center text-[10px] md:text-[12px] font-black group-hover:bg-luwa-teal group-hover:text-white transition-all border border-slate-100 uppercase">
                       {String.fromCharCode(65 + i)}
                     </span>
-                    <span className="text-lg font-bold text-gray-300">{opt}</span>
+                    <span className="text-base md:text-lg font-bold text-slate-600 group-hover:text-luwa-purple">{opt}</span>
                   </div>
                 </button>
               ))}

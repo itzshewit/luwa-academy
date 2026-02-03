@@ -1,3 +1,4 @@
+
 /*
   Luwa Academy – AI-Powered Educational Platform
   Developed by Shewit – 2026
@@ -33,6 +34,7 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
   const [exams, setExams] = useState<Exam[]>([]);
   const [submissions, setSubmissions] = useState<ExamSubmission[]>([]);
   const [activeTab, setActiveTab] = useState<AdminTab>('User Management');
+  const [copied, setCopied] = useState(false);
   
   const [confirm, setConfirm] = useState<ConfirmationState>({
     isOpen: false,
@@ -125,10 +127,19 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
       onConfirm: () => {
         const code = storageService.generateToken();
         setNewToken(code);
+        setCopied(false);
         setTokens(storageService.getTokens());
         closeConfirm();
       }
     });
+  };
+
+  const handleCopyToken = () => {
+    if (newToken) {
+      navigator.clipboard.writeText(newToken);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const handleBroadcast = (e?: React.FormEvent) => {
@@ -209,8 +220,12 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                   <div className="space-y-6">
                     <button onClick={handleGenerateToken} className="w-full bg-luwa-purple text-white font-bold py-5 rounded-xl text-[10px] uppercase tracking-widest shadow-xl shadow-luwa-purple/10 transition-all">Generate Access Key</button>
                     {newToken && (
-                      <div className="p-8 bg-slate-50 border border-luwa-purple/20 rounded-2xl text-center relative animate-fade-in">
+                      <div className="p-8 bg-slate-50 border border-luwa-purple/20 rounded-2xl text-center relative animate-fade-in group cursor-pointer overflow-hidden" onClick={handleCopyToken}>
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <ICONS.Copy className={`w-4 h-4 ${copied ? 'text-luwa-teal' : 'text-slate-400'}`} />
+                        </div>
                         <p className="text-2xl font-serif font-black text-luwa-purple tracking-widest">{newToken}</p>
+                        {copied && <p className="text-[8px] font-black uppercase text-luwa-teal absolute bottom-2 left-0 right-0 animate-bounce">Key Transferred to Clipboard</p>}
                       </div>
                     )}
                   </div>

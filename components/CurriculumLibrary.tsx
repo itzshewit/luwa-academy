@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
-import { GlassCard } from './GlassCard';
-import { storageService } from '../services/storageService';
-import { User, ConceptNode } from '../types';
-import { ICONS } from '../constants';
+import { GlassCard } from './GlassCard.tsx';
+import { storageService } from '../services/storageService.ts';
+import { User, ConceptNode } from '../types.ts';
+import { ICONS } from '../constants.tsx';
 
 interface CurriculumLibraryProps {
   user: User;
