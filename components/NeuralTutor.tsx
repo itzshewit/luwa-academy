@@ -21,9 +21,8 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [attachment, setAttachment] = useState<{data: string, mimeType: string} | null>(null);
-  const [showLedger, setShowLedger] = useState(false);
   const [lang, setLang] = useState<Language>(user.preferredLanguage || 'en');
-  const [errorType, setErrorType] = useState<string | null>(null);
+  const [errorInfo, setErrorInfo] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -32,14 +31,17 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
-  // Added toggleLanguage function to fix missing name error
   const toggleLanguage = () => {
     setLang(prev => prev === 'en' ? 'am' : 'en');
   };
 
   const handleAuthorize = async () => {
-    await (window as any).aistudio?.openSelectKey();
-    setErrorType(null);
+    try {
+      await (window as any).aistudio?.openSelectKey();
+      setErrorInfo(null);
+    } catch (e) {
+      console.error("Auth window blocked or failed", e);
+    }
   };
 
   const handleSend = async (e?: React.FormEvent, directInput?: string) => {
@@ -47,7 +49,7 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
     const messageContent = directInput || input;
     if (!messageContent.trim() && !attachment) return;
 
-    setErrorType(null);
+    setErrorInfo(null);
     const userMsg: ChatMessage = {
       id: Date.now().toString(), role: 'user', content: messageContent, image: attachment || undefined, timestamp: Date.now()
     };
@@ -61,7 +63,7 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
         messageContent, 
         user.stream, 
         mode, 
-        [...messages, userMsg].slice(-10), 
+        [...messages, userMsg].slice(-8), 
         user.currentIntent?.type,
         lang
       );
@@ -81,17 +83,21 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
       onUpdateUser(updatedUser);
 
     } catch (err: any) {
-      console.error("AI Error:", err);
-      if (err.message === "NEURAL_KEY_MISSING" || err.message?.includes("403") || err.message?.includes("401")) {
-        setErrorType("AUTH_REQUIRED");
-      } else {
-        setErrorType("GENERIC_FAILURE");
-      }
+      console.error("Luwa AI Engine Error:", err);
+      const msg = err.message || "";
+      let userFriendlyError = "Operational failure. Neural sync interrupted.";
       
+      if (msg.includes("KEY_NOT_FOUND") || msg.includes("403") || msg.includes("401")) {
+        userFriendlyError = "Access Key Missing or Unauthorized. Please re-synchronize your Neural Link.";
+        setErrorInfo("AUTH");
+      } else if (msg.includes("429")) {
+        userFriendlyError = "Cognitive Overload. Registry servers are rate-limited. Please wait a moment.";
+      }
+
       setMessages(prev => [...prev, { 
         id: Date.now().toString(), 
         role: 'assistant', 
-        content: "Neural link offline. Re-authorization required to proceed with syllabus synchronization.", 
+        content: userFriendlyError, 
         timestamp: Date.now() 
       }]);
     } finally {
@@ -108,12 +114,12 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
         </h2>
         
         <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
-          {errorType && (
+          {errorInfo === 'AUTH' && (
             <button 
               onClick={handleAuthorize}
-              className="px-4 py-2 bg-luwa-teal text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-luwa-teal/20 animate-pulse"
+              className="px-4 py-2 bg-luwa-teal text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg animate-pulse"
             >
-              Authorize Neural Link
+              Sync Neural Link
             </button>
           )}
           <button onClick={toggleLanguage} className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest hover:border-luwa-teal">
@@ -135,7 +141,7 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
             {messages.map((m) => (
               <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
                 <div className={`max-w-[90%] md:max-w-[85%] rounded-3xl p-5 md:p-8 ${m.role === 'user' ? 'bg-luwa-purple text-white font-bold shadow-lg shadow-luwa-purple/10' : 'bg-slate-50 text-slate-700 border border-slate-100'}`}>
-                  {m.image && <div className="mb-4 rounded-2xl overflow-hidden shadow-sm"><img src={`data:${m.image.mimeType};base64,${m.image.data}`} className="max-w-full" /></div>}
+                  {m.image && <div className="mb-4 rounded-2xl overflow-hidden shadow-sm"><img src={`data:${m.image.mimeType};base64,${m.image.data}`} className="max-w-full" alt="attachment" /></div>}
                   <p className="whitespace-pre-wrap leading-relaxed text-sm md:text-base">{m.content}</p>
                 </div>
               </div>

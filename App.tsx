@@ -21,8 +21,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing'>('idle');
   const [showMobileProfile, setShowMobileProfile] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [aiOnline, setAiOnline] = useState(true);
+  const [aiOnline, setAiOnline] = useState(false);
 
   useEffect(() => {
     const session = storageService.getSession();
@@ -31,17 +30,14 @@ const App: React.FC = () => {
       if (session.role === 'admin') setActiveTab('admin');
     }
 
-    // Check AI status
+    // Check AI status regularly
     const checkAI = async () => {
       const hasKey = await (window as any).aistudio?.hasSelectedApiKey();
       setAiOnline(!!process.env.API_KEY || hasKey);
     };
     checkAI();
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    });
+    const interval = setInterval(checkAI, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleUpdateUser = (updated: User) => {
@@ -60,6 +56,7 @@ const App: React.FC = () => {
 
   const handleAuthorizeAI = async () => {
     await (window as any).aistudio?.openSelectKey();
+    // Immediate state assumption after dialog open
     setAiOnline(true);
   };
 
