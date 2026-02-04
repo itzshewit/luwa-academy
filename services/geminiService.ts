@@ -1,3 +1,4 @@
+
 /*
   Luwa Academy – AI-Powered Educational Platform
   Developed by Shewit – 2026
@@ -9,7 +10,14 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Quiz, TutorMode, IntentType, Language, Exam, ExamQuestion } from "../types.ts";
 
 export const geminiService = {
-  getAI: () => new GoogleGenAI({ apiKey: process.env.API_KEY }),
+  // Use a fresh instance for every call to ensure we catch updated API keys from the browser
+  getAI: () => {
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      throw new Error("NEURAL_KEY_MISSING");
+    }
+    return new GoogleGenAI({ apiKey });
+  },
 
   async streamTutorResponse(
     prompt: string, 
@@ -22,20 +30,20 @@ export const geminiService = {
     const ai = this.getAI();
     
     const intentModifiers = {
-      'Exploration': 'Provide deep conceptual intuition and clear academic examples. Maintain a formal, exploratory tone.',
-      'Deep Study': 'Focus on mathematical rigor, structural logic, and first principles. Be exhaustive and precise.',
-      'Exam Prep': 'Be concise and direct. Focus on high-yield patterns relevant to the Ethiopian National Exam standards.',
-      'Rapid Revision': 'Provide high-level summaries and precise bullet points. Avoid unnecessary elaboration.',
-      'Recovery': 'Break down concepts into foundational components. Use clear, accessible academic language to rebuild confidence.'
+      'Exploration': 'Provide deep conceptual intuition and clear academic examples.',
+      'Deep Study': 'Focus on mathematical rigor and first principles.',
+      'Exam Prep': 'Be concise and focus on high-yield patterns for EUEE.',
+      'Rapid Revision': 'Provide high-level summaries and bullet points.',
+      'Recovery': 'Break down concepts into foundational components.'
     };
 
     const modeInstructions = {
-      'Teach': 'Focus on structured, step-by-step academic pedagogy. Use Socratic methods to lead the student to their own conclusions. Avoid casual language or emojis.',
-      'Practice': 'Present one specific conceptual problem. Do not provide immediate solutions. Evaluate the student response against rigorous curriculum standards.',
-      'Exam': 'Act as a formal institutional proctor. Be precise, strict, and purely instructional. Minimal conversational elements.'
+      'Teach': 'Act as a structured academic instructor using Socratic methods.',
+      'Practice': 'Present a specific conceptual problem and guide the student.',
+      'Exam': 'Act as a formal institutional proctor. Strict and instructional.'
     };
 
-    const langInstruction = lang === 'am' ? 'Explain primarily in formal Amharic (Ethiopic script), retaining technical scientific nomenclature in English. Maintain a professional educational tone.' : 'Use formal academic English.';
+    const langInstruction = lang === 'am' ? 'Respond in formal Amharic (Ethiopic script), keeping scientific terms in English.' : 'Use formal academic English.';
 
     const contents = history.map(h => {
       const parts: any[] = [{ text: h.content }];
@@ -51,36 +59,26 @@ export const geminiService = {
     });
 
     return await ai.models.generateContentStream({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: contents,
       config: {
-        thinkingConfig: { thinkingBudget: 32768 },
-        tools: [{ googleSearch: {} }],
-        systemInstruction: `You are The Instructor at Luwa Academy, a prestigious educational platform for Grade 11-12 Ethiopian scholars (${stream} stream). 
-        
-        TONE: Calm, professional, and institutionally authoritative. Do not use casual language, slang, or emojis. 
-        
-        KNOWLEDGE: You have deep mastery of the Ethiopian National Curriculum. Align strictly with textbook definitions and EUEE (Ethiopian University Entrance Examination) standards.
-        
+        // Reduced thinking budget for faster response in flash model
+        thinkingConfig: { thinkingBudget: 0 }, 
+        systemInstruction: `You are The Instructor at Luwa Academy for Grade 11-12 Ethiopian scholars (${stream} stream). 
+        TONE: Professional and authoritative. No slang. 
         LANGUAGE: ${langInstruction}
-        
-        Current Mode: ${mode}. ${modeInstructions[mode]}
-        Current Scholar Intent: ${intent || 'General Mastery'}. ${intent ? intentModifiers[intent] : ''}
-        
-        IDENTITY: Luwa Academy Assistant. Built by Shewit. Always refer to the user as a "scholar".`,
+        MODE: ${mode}. ${modeInstructions[mode]}
+        INTENT: ${intent || 'General Mastery'}. ${intent ? intentModifiers[intent] : ''}
+        Always refer to the user as "scholar".`,
       }
     });
   },
 
   async generateQuiz(topic: string, stream: string, intent?: IntentType, difficulty: number = 3): Promise<Quiz> {
     const ai = this.getAI();
-    const difficultyLevel = difficulty === 1 ? 'Foundational' : difficulty === 5 ? 'High-Level EUEE Mastery' : 'Standard Curriculum';
-    
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Generate a 5-question multiple choice formal diagnostic for a Grade 12 scholar (${stream} stream) based on Ethiopian National Textbooks for: ${topic}. 
-      LEVEL: ${difficultyLevel}.
-      Tone: Institutional. Format: Professional JSON.`,
+      contents: `Generate a 5-question multiple choice formal diagnostic for a Grade 12 scholar (${stream} stream) based on Ethiopian National Textbooks for: ${topic}. Difficulty: ${difficulty}/5.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -115,8 +113,7 @@ export const geminiService = {
     const ai = this.getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Parse raw institutional exam text into a formal JSON structure. Categorize by difficulty and curriculum section.
-      RAW TEXT: ${text}`,
+      contents: `Parse raw institutional exam text into formal JSON: ${text}`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -124,9 +121,6 @@ export const geminiService = {
           properties: {
             title: { type: Type.STRING },
             subject: { type: Type.STRING },
-            topic: { type: Type.STRING },
-            totalMarks: { type: Type.NUMBER },
-            durationMinutes: { type: Type.NUMBER },
             questions: {
               type: Type.ARRAY,
               items: {
@@ -143,50 +137,21 @@ export const geminiService = {
                 required: ["type", "text", "correctAnswer", "marks", "section"]
               }
             }
-          },
-          required: ["title", "subject", "questions"]
+          }
         }
       }
     });
     return JSON.parse(response.text || '{}');
   },
 
-  async getExamHint(question: string, subject: string): Promise<string> {
-    const ai = this.getAI();
-    const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview",
-      contents: `Question: ${question}. Subject: ${subject}. 
-      Provide a formal conceptual hint to scaffold reasoning without giving the final answer.`,
-    });
-    return response.text || "Hint unavailable. Trust your neural training.";
-  },
-
-  async generateChapterSummary(chapter: string, subject: string): Promise<{summary: string, formulas: string[], keyPoints: string[]}> {
-    const ai = this.getAI();
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `Synthesize a formal academic summary for Chapter: ${chapter} in Subject: ${subject}. Format: JSON.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            summary: { type: Type.STRING },
-            formulas: { type: Type.ARRAY, items: { type: Type.STRING } },
-            keyPoints: { type: Type.ARRAY, items: { type: Type.STRING } }
-          },
-          required: ["summary", "formulas", "keyPoints"]
-        }
-      }
-    });
-    return JSON.parse(response.text || '{}');
-  },
-
+  // Added generateVideo to fix CinematicConcepts.tsx error
   async generateVideo(topic: string, subject: string, grade: string): Promise<string> {
     const ai = this.getAI();
+    const prompt = `Generate a high-fidelity academic animation for ${grade} ${subject} explaining the concept of: ${topic}. The visual should be cinematic and educational.`;
+    
     let operation = await ai.models.generateVideos({
       model: 'veo-3.1-fast-generate-preview',
-      prompt: `A formal, minimalist academic animation visualizing ${topic} for Grade ${grade} ${subject}. Style: Clean motion graphics, professional educational quality.`,
+      prompt: prompt,
       config: {
         numberOfVideos: 1,
         resolution: '1080p',
@@ -200,18 +165,28 @@ export const geminiService = {
     }
 
     const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-    const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
-    const blob = await response.blob();
-    return URL.createObjectURL(blob);
+    if (!downloadLink) throw new Error("SYNTHESIS_FAILED");
+    
+    return `${downloadLink}&key=${process.env.API_KEY}`;
   },
 
+  // Added auditPerformance to fix ScholarAnalytics.tsx error
   async auditPerformance(history: any[]): Promise<string> {
     const ai = this.getAI();
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
-      contents: `Perform a formal institutional academic audit of scholar session history: ${JSON.stringify(history)}. 
-      Provide a data-driven strategic roadmap for EUEE mastery. Tone: Calm, professional, authoritative.`,
+      model: "gemini-3-flash-preview",
+      contents: `Analyze the following academic quiz performance history and provide a detailed institutional audit report with a strategic roadmap for mastery: ${JSON.stringify(history)}`,
     });
-    return response.text || "Audit cycle failed.";
+    return response.text || "Audit failed to synthesize.";
+  },
+
+  // Added getExamHint to fix ExamSystem.tsx error
+  async getExamHint(question: string, subject: string): Promise<string> {
+    const ai = this.getAI();
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Provide a subtle conceptual hint for this ${subject} question: "${question}". Do not provide the answer, only a hint to guide the scholar.`,
+    });
+    return response.text || "Hint unavailable.";
   }
 };

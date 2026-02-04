@@ -6,7 +6,6 @@ import { NeuralTutor } from './components/NeuralTutor.tsx';
 import { AssessmentLab } from './components/AssessmentLab.tsx';
 import { AdminControl } from './components/AdminControl.tsx';
 import { ScholarAnalytics } from './components/ScholarAnalytics.tsx';
-import { LuwaLive } from './components/LuwaLive.tsx';
 import { CurriculumLibrary } from './components/CurriculumLibrary.tsx';
 import { AcademicPlanner } from './components/AcademicPlanner.tsx';
 import { ExamSystem } from './components/ExamSystem.tsx';
@@ -23,6 +22,7 @@ const App: React.FC = () => {
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing'>('idle');
   const [showMobileProfile, setShowMobileProfile] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [aiOnline, setAiOnline] = useState(true);
 
   useEffect(() => {
     const session = storageService.getSession();
@@ -31,7 +31,13 @@ const App: React.FC = () => {
       if (session.role === 'admin') setActiveTab('admin');
     }
 
-    // Capture the install prompt for mobile users
+    // Check AI status
+    const checkAI = async () => {
+      const hasKey = await (window as any).aistudio?.hasSelectedApiKey();
+      setAiOnline(!!process.env.API_KEY || hasKey);
+    };
+    checkAI();
+
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -52,16 +58,9 @@ const App: React.FC = () => {
     setTimeout(() => setSyncStatus('idle'), 800);
   };
 
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null);
-      }
-    } else {
-      alert("To install, use your browser's 'Add to Home Screen' option.");
-    }
+  const handleAuthorizeAI = async () => {
+    await (window as any).aistudio?.openSelectKey();
+    setAiOnline(true);
   };
 
   const logout = () => {
@@ -85,11 +84,8 @@ const App: React.FC = () => {
     { id: 'about', icon: ICONS.Info, label: 'About', role: 'scholar' }
   ].filter(t => t.role === 'both' || t.role === user.role);
 
-  const mobileTabs = tabs.filter(t => ['home', 'library', 'tutor', 'exams', 'lab'].includes(t.id));
-
   return (
     <div className="flex h-screen overflow-hidden bg-luwa-gray font-sans select-none">
-      {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-72 flex-col bg-white border-r border-luwa-border shadow-sm">
         <div className="p-8 flex items-center gap-4">
           <div className="w-10 h-10 bg-luwa-purple rounded-xl flex items-center justify-center text-white font-serif font-black shadow-lg">L</div>
@@ -103,13 +99,7 @@ const App: React.FC = () => {
             </button>
           ))}
         </nav>
-        <div className="p-8 border-t border-luwa-border flex flex-col gap-2">
-          {deferredPrompt && (
-            <button onClick={handleInstallClick} className="w-full flex items-center gap-4 p-4 text-luwa-teal hover:bg-luwa-teal/5 rounded-xl transition-all">
-              <ICONS.Zap className="w-5 h-5" />
-              <span className="text-[11px] font-black uppercase tracking-widest">Install Desktop</span>
-            </button>
-          )}
+        <div className="p-8 border-t border-luwa-border">
           <button onClick={logout} className="w-full flex items-center gap-4 p-4 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
             <ICONS.LogOut className="w-5 h-5" />
             <span className="text-[11px] font-black uppercase tracking-widest">Logout Session</span>
@@ -117,10 +107,9 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      {/* Mobile Nav Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-luwa-border z-50 flex justify-around items-center px-4 shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
-        {mobileTabs.map(t => (
-          <button key={t.id} onClick={() => setActiveTab(t.id as Tab)} className={`flex flex-col items-center gap-1 min-w-[60px] ${activeTab === t.id ? 'text-luwa-purple' : 'text-slate-400'}`}>
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-luwa-border z-50 flex justify-around items-center px-4 shadow-lg">
+        {tabs.slice(0, 5).map(t => (
+          <button key={t.id} onClick={() => setActiveTab(t.id as Tab)} className={`flex flex-col items-center gap-1 ${activeTab === t.id ? 'text-luwa-purple' : 'text-slate-400'}`}>
             <t.icon className="w-6 h-6" />
             <span className="text-[8px] font-black uppercase tracking-tighter">{t.label}</span>
           </button>
@@ -131,62 +120,30 @@ const App: React.FC = () => {
         <header className="h-16 md:h-20 border-b border-luwa-border bg-white/80 backdrop-blur-md px-6 md:px-10 flex items-center justify-between z-30 shrink-0">
           <div className="flex items-center gap-4">
             <div className={`w-2 h-2 rounded-full ${syncStatus === 'syncing' ? 'bg-luwa-teal animate-pulse' : 'bg-luwa-teal/40'}`} />
-            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 hidden sm:inline">Registry Synchronized</span>
-            <span className="md:hidden text-lg font-serif font-bold text-luwa-purple">Luwa</span>
+            <button onClick={handleAuthorizeAI} className="flex items-center gap-2">
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Neural Link:</span>
+              <span className={`text-[9px] font-black uppercase tracking-widest ${aiOnline ? 'text-luwa-teal' : 'text-red-400 animate-pulse'}`}>
+                {aiOnline ? 'Synchronized' : 'Offline (Sync Now)'}
+              </span>
+            </button>
           </div>
           
           <div className="flex items-center gap-3">
-            {user.role === 'scholar' && (
-              <div className="bg-luwa-purple/5 px-3 py-1.5 rounded-full border border-luwa-purple/10 flex items-center gap-2">
-                <ICONS.Zap className="w-3.5 h-3.5 text-luwa-purple" />
-                <span className="text-[10px] font-black text-luwa-purple">{user.xp.toLocaleString()}</span>
-              </div>
-            )}
             <button 
               onClick={() => setShowMobileProfile(true)}
-              className="w-9 h-9 rounded-full bg-slate-100 border border-luwa-border flex items-center justify-center text-luwa-purple font-black text-xs hover:bg-slate-200 transition-colors"
+              className="w-9 h-9 rounded-full bg-slate-100 border border-luwa-border flex items-center justify-center text-luwa-purple font-black text-xs hover:bg-slate-200"
             >
               {user.name.charAt(0)}
             </button>
           </div>
         </header>
 
-        {/* Mobile Profile Menu Overlay */}
         {showMobileProfile && (
           <div className="fixed inset-0 z-[60] md:hidden">
             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowMobileProfile(false)} />
-            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[2.5rem] p-10 animate-fade-in shadow-2xl max-h-[90vh] overflow-y-auto">
-              <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-8" onClick={() => setShowMobileProfile(false)} />
-              <div className="flex items-center gap-6 mb-10">
-                <div className="w-16 h-16 rounded-3xl bg-luwa-purple text-white flex items-center justify-center text-2xl font-black">{user.name.charAt(0)}</div>
-                <div>
-                  <h3 className="text-xl font-serif font-bold text-luwa-purple">{user.name}</h3>
-                  <p className="text-[10px] text-luwa-teal font-black uppercase tracking-widest">{user.stream}</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 gap-2 mb-10">
-                {/* Install App Button - Very important for students */}
-                <button 
-                  onClick={handleInstallClick}
-                  className="w-full flex items-center gap-4 p-5 rounded-2xl bg-luwa-teal text-white shadow-xl shadow-luwa-teal/10 mb-4"
-                >
-                  <ICONS.Zap className="w-5 h-5" />
-                  <span className="text-xs font-black uppercase tracking-widest">Install App to Phone</span>
-                </button>
-
-                {tabs.filter(t => !['home', 'library', 'tutor', 'exams', 'lab'].includes(t.id)).map(t => (
-                  <button key={t.id} onClick={() => { setActiveTab(t.id as Tab); setShowMobileProfile(false); }} className={`w-full flex items-center gap-4 p-5 rounded-2xl transition-all ${activeTab === t.id ? 'bg-luwa-purple/5 text-luwa-purple' : 'text-slate-500 hover:bg-slate-50'}`}>
-                    <t.icon className="w-5 h-5" />
-                    <span className="text-xs font-black uppercase tracking-widest">{t.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              <button onClick={logout} className="w-full flex items-center justify-center gap-4 p-5 bg-red-50 text-red-500 rounded-2xl font-black text-xs uppercase tracking-[0.2em]">
-                <ICONS.LogOut className="w-5 h-5" />
-                Logout Session
-              </button>
+            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[2.5rem] p-10 animate-fade-in shadow-2xl">
+               <button onClick={handleAuthorizeAI} className="w-full bg-luwa-teal/10 text-luwa-teal py-4 rounded-xl mb-6 font-black text-[10px] uppercase tracking-widest border border-luwa-teal/20">Sync Neural Key</button>
+               <button onClick={logout} className="w-full bg-red-50 text-red-500 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest">Logout Session</button>
             </div>
           </div>
         )}
