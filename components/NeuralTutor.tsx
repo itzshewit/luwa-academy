@@ -40,6 +40,7 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
       if ((window as any).aistudio) {
         await (window as any).aistudio.openSelectKey();
         setErrorStatus(null);
+        // Assumption: Key is now available or page will refresh/re-inject
       }
     } catch (e) {
       console.error("Auth window failed", e);
@@ -98,11 +99,11 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
       const msg = err.message || "";
       let userFriendlyError = "Operational failure. Neural sync interrupted.";
       
-      if (msg.includes("AUTH_KEY_MISSING") || msg.includes("403") || msg.includes("401")) {
-        userFriendlyError = "Authentication Required. Please synchronize your Neural Link to enable AI features.";
+      if (msg.includes("AUTH_KEY_MISSING") || msg.includes("403") || msg.includes("401") || msg.includes("entity was not found")) {
+        userFriendlyError = "Neural Link not established. Please click 'Authorize Neural Link' below to enable AI features for your session.";
         setErrorStatus("AUTH");
       } else if (msg.includes("429")) {
-        userFriendlyError = "Cognitive Overload. System rate-limited. Please retry shortly.";
+        userFriendlyError = "System overload detected. Please allow a moment for the registry to stabilize.";
       }
 
       setMessages(prev => [...prev, { 

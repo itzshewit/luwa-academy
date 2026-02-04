@@ -15,10 +15,10 @@ export const geminiService = {
    */
   getAI: () => {
     const apiKey = process.env.API_KEY;
-    if (!apiKey) {
+    // Check for empty, undefined, or null strings which can occur during injection delays
+    if (!apiKey || apiKey === "undefined" || apiKey === "null") {
       throw new Error("AUTH_KEY_MISSING");
     }
-    // Create a new instance every time to ensure we pick up the most recent key from the environment/dialog
     return new GoogleGenAI({ apiKey });
   },
 

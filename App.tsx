@@ -32,9 +32,11 @@ const App: React.FC = () => {
 
     // Check AI status regularly for real-time feedback in the UI
     const checkAI = async () => {
-      const hasKey = await (window as any).aistudio?.hasSelectedApiKey();
-      // System is "online" if there is an environment key OR a user-selected key
-      setAiOnline(!!process.env.API_KEY || hasKey);
+      // System is "online" ONLY if the key is actually injected into process.env.API_KEY
+      // This prevents the "It says synchronized but doesn't work" issue.
+      const apiKey = process.env.API_KEY;
+      const isKeyValid = !!apiKey && apiKey !== "undefined" && apiKey !== "null";
+      setAiOnline(isKeyValid);
     };
     checkAI();
     const interval = setInterval(checkAI, 5000);
@@ -59,7 +61,7 @@ const App: React.FC = () => {
     try {
       if ((window as any).aistudio) {
         await (window as any).aistudio.openSelectKey();
-        setAiOnline(true);
+        // Prompted user to select a key. The environment will update upon injection.
       }
     } catch (e) {
       console.error("Authorization dialog failed to open", e);
@@ -129,7 +131,7 @@ const App: React.FC = () => {
             <button onClick={handleAuthorizeAI} className="flex items-center gap-2 group">
               <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Neural Link:</span>
               <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${aiOnline ? 'text-luwa-teal' : 'text-red-400 animate-pulse group-hover:text-luwa-purple'}`}>
-                {aiOnline ? 'Synchronized' : 'Offline (Click to Sync)'}
+                {aiOnline ? 'Synchronized' : 'Offline (Click to Establish)'}
               </span>
             </button>
           </div>
