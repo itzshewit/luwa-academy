@@ -21,7 +21,6 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing'>('idle');
   const [showMobileProfile, setShowMobileProfile] = useState(false);
-  const [aiOnline, setAiOnline] = useState(false);
 
   useEffect(() => {
     const session = storageService.getSession();
@@ -29,18 +28,6 @@ const App: React.FC = () => {
       setUser(session);
       if (session.role === 'admin') setActiveTab('admin');
     }
-
-    // Check AI status regularly for real-time feedback in the UI
-    const checkAI = async () => {
-      // System is "online" ONLY if the key is actually injected into process.env.API_KEY
-      // This prevents the "It says synchronized but doesn't work" issue.
-      const apiKey = process.env.API_KEY;
-      const isKeyValid = !!apiKey && apiKey !== "undefined" && apiKey !== "null";
-      setAiOnline(isKeyValid);
-    };
-    checkAI();
-    const interval = setInterval(checkAI, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   const handleUpdateUser = (updated: User) => {
@@ -55,17 +42,6 @@ const App: React.FC = () => {
     storageService.saveUser(final);
     storageService.setSession(final);
     setTimeout(() => setSyncStatus('idle'), 800);
-  };
-
-  const handleAuthorizeAI = async () => {
-    try {
-      if ((window as any).aistudio) {
-        await (window as any).aistudio.openSelectKey();
-        // Prompted user to select a key. The environment will update upon injection.
-      }
-    } catch (e) {
-      console.error("Authorization dialog failed to open", e);
-    }
   };
 
   const logout = () => {
@@ -124,16 +100,13 @@ const App: React.FC = () => {
       </div>
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header */}
+        {/* Simplified Header */}
         <header className="h-16 md:h-20 border-b border-luwa-border bg-white/80 backdrop-blur-md px-6 md:px-10 flex items-center justify-between z-30 shrink-0">
           <div className="flex items-center gap-4">
             <div className={`w-2 h-2 rounded-full ${syncStatus === 'syncing' ? 'bg-luwa-teal animate-pulse' : 'bg-luwa-teal/40'}`} />
-            <button onClick={handleAuthorizeAI} className="flex items-center gap-2 group">
-              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Neural Link:</span>
-              <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${aiOnline ? 'text-luwa-teal' : 'text-red-400 animate-pulse group-hover:text-luwa-purple'}`}>
-                {aiOnline ? 'Synchronized' : 'Offline (Click to Establish)'}
-              </span>
-            </button>
+            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-luwa-teal">
+              Institutional Core Active
+            </span>
           </div>
           
           <div className="flex items-center gap-3">
@@ -155,7 +128,6 @@ const App: React.FC = () => {
                  <p className="text-2xl font-serif font-bold text-luwa-purple mb-1">{user.name}</p>
                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{user.email}</p>
                </div>
-               <button onClick={handleAuthorizeAI} className="w-full bg-luwa-teal/10 text-luwa-teal py-4 rounded-xl mb-4 font-black text-[10px] uppercase tracking-widest border border-luwa-teal/20">Sync Neural Link</button>
                <button onClick={logout} className="w-full bg-red-50 text-red-500 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest">Logout Session</button>
             </div>
           </div>

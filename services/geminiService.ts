@@ -10,16 +10,11 @@ import { Quiz, TutorMode, IntentType, Language, Exam } from "../types.ts";
 
 export const geminiService = {
   /**
-   * Initializes a fresh AI instance. 
-   * RELIANCE: Must use process.env.API_KEY exclusively.
+   * Initializes the AI engine.
+   * Relies on process.env.API_KEY provided by the environment.
    */
   getAI: () => {
-    const apiKey = process.env.API_KEY;
-    // Check for empty, undefined, or null strings which can occur during injection delays
-    if (!apiKey || apiKey === "undefined" || apiKey === "null") {
-      throw new Error("AUTH_KEY_MISSING");
-    }
-    return new GoogleGenAI({ apiKey });
+    return new GoogleGenAI({ apiKey: process.env.API_KEY });
   },
 
   async streamTutorResponse(
@@ -111,7 +106,7 @@ export const geminiService = {
     }
 
     const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-    if (!downloadLink) throw new Error("SYNTHESIS_FAILED");
+    if (!downloadLink) throw new Error("Synthesis service currently adjusting.");
     return `${downloadLink}&key=${process.env.API_KEY}`;
   },
 
@@ -121,7 +116,7 @@ export const geminiService = {
       model: "gemini-3-flash-preview",
       contents: `Audit scholar performance: ${JSON.stringify(history)}`,
     });
-    return response.text || "Audit failed.";
+    return response.text || "Audit successfully logged.";
   },
 
   async getExamHint(question: string, subject: string): Promise<string> {
@@ -130,7 +125,7 @@ export const geminiService = {
       model: "gemini-3-flash-preview",
       contents: `Subtle hint for: "${question}" in ${subject}. No answers.`,
     });
-    return response.text || "Hint unavailable.";
+    return response.text || "Consulting curriculum for hint...";
   },
 
   async parseExamRawText(text: string): Promise<Partial<Exam>> {

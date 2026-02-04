@@ -16,13 +16,12 @@ interface NeuralTutorProps {
 export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, onClearContext, onUpdateUser }) => {
   const [mode, setMode] = useState<TutorMode>('Teach');
   const [messages, setMessages] = useState<ChatMessage[]>([{
-    id: '1', role: 'assistant', content: `Greetings, scholar. Intent: ${user.currentIntent?.type || 'General Study'}. How shall we refine your cognitive framework?`, timestamp: Date.now()
+    id: '1', role: 'assistant', content: `Greetings, scholar. My focus is your academic advancement. How shall we refine your cognitive framework?`, timestamp: Date.now()
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [attachment, setAttachment] = useState<{data: string, mimeType: string} | null>(null);
   const [lang, setLang] = useState<Language>(user.preferredLanguage || 'en');
-  const [errorStatus, setErrorStatus] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,24 +34,11 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
     setLang(prev => prev === 'en' ? 'am' : 'en');
   };
 
-  const handleAuthorize = async () => {
-    try {
-      if ((window as any).aistudio) {
-        await (window as any).aistudio.openSelectKey();
-        setErrorStatus(null);
-        // Assumption: Key is now available or page will refresh/re-inject
-      }
-    } catch (e) {
-      console.error("Auth window failed", e);
-    }
-  };
-
   const handleSend = async (e?: React.FormEvent, directInput?: string) => {
     if (e) e.preventDefault();
     const messageContent = (directInput || input).trim();
     if (!messageContent && !attachment) return;
 
-    setErrorStatus(null);
     const userMsg: ChatMessage = {
       id: Date.now().toString(), 
       role: 'user', 
@@ -96,20 +82,10 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
 
     } catch (err: any) {
       console.error("Luwa AI Engine Error:", err);
-      const msg = err.message || "";
-      let userFriendlyError = "Operational failure. Neural sync interrupted.";
-      
-      if (msg.includes("AUTH_KEY_MISSING") || msg.includes("403") || msg.includes("401") || msg.includes("entity was not found")) {
-        userFriendlyError = "Neural Link not established. Please click 'Authorize Neural Link' below to enable AI features for your session.";
-        setErrorStatus("AUTH");
-      } else if (msg.includes("429")) {
-        userFriendlyError = "System overload detected. Please allow a moment for the registry to stabilize.";
-      }
-
       setMessages(prev => [...prev, { 
         id: (Date.now() + 2).toString(), 
         role: 'assistant', 
-        content: userFriendlyError, 
+        content: "Operational frequency currently fluctuating. Please refine your query or retry.", 
         timestamp: Date.now() 
       }]);
     } finally {
@@ -126,14 +102,6 @@ export const NeuralTutor: React.FC<NeuralTutorProps> = ({ user, initialMessage, 
         </h2>
         
         <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
-          {errorStatus === 'AUTH' && (
-            <button 
-              onClick={handleAuthorize}
-              className="px-4 py-2 bg-luwa-teal text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg animate-pulse"
-            >
-              Authorize Neural Link
-            </button>
-          )}
           <button onClick={toggleLanguage} className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest hover:border-luwa-teal">
             {lang === 'en' ? 'EN' : 'አማ'}
           </button>
