@@ -30,9 +30,10 @@ const App: React.FC = () => {
       if (session.role === 'admin') setActiveTab('admin');
     }
 
-    // Check AI status regularly
+    // Check AI status regularly for real-time feedback in the UI
     const checkAI = async () => {
       const hasKey = await (window as any).aistudio?.hasSelectedApiKey();
+      // System is "online" if there is an environment key OR a user-selected key
       setAiOnline(!!process.env.API_KEY || hasKey);
     };
     checkAI();
@@ -55,9 +56,14 @@ const App: React.FC = () => {
   };
 
   const handleAuthorizeAI = async () => {
-    await (window as any).aistudio?.openSelectKey();
-    // Immediate state assumption after dialog open
-    setAiOnline(true);
+    try {
+      if ((window as any).aistudio) {
+        await (window as any).aistudio.openSelectKey();
+        setAiOnline(true);
+      }
+    } catch (e) {
+      console.error("Authorization dialog failed to open", e);
+    }
   };
 
   const logout = () => {
@@ -83,6 +89,7 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-luwa-gray font-sans select-none">
+      {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-72 flex-col bg-white border-r border-luwa-border shadow-sm">
         <div className="p-8 flex items-center gap-4">
           <div className="w-10 h-10 bg-luwa-purple rounded-xl flex items-center justify-center text-white font-serif font-black shadow-lg">L</div>
@@ -104,6 +111,7 @@ const App: React.FC = () => {
         </div>
       </aside>
 
+      {/* Bottom Nav - Mobile */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-luwa-border z-50 flex justify-around items-center px-4 shadow-lg">
         {tabs.slice(0, 5).map(t => (
           <button key={t.id} onClick={() => setActiveTab(t.id as Tab)} className={`flex flex-col items-center gap-1 ${activeTab === t.id ? 'text-luwa-purple' : 'text-slate-400'}`}>
@@ -114,13 +122,14 @@ const App: React.FC = () => {
       </div>
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Header */}
         <header className="h-16 md:h-20 border-b border-luwa-border bg-white/80 backdrop-blur-md px-6 md:px-10 flex items-center justify-between z-30 shrink-0">
           <div className="flex items-center gap-4">
             <div className={`w-2 h-2 rounded-full ${syncStatus === 'syncing' ? 'bg-luwa-teal animate-pulse' : 'bg-luwa-teal/40'}`} />
-            <button onClick={handleAuthorizeAI} className="flex items-center gap-2">
+            <button onClick={handleAuthorizeAI} className="flex items-center gap-2 group">
               <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Neural Link:</span>
-              <span className={`text-[9px] font-black uppercase tracking-widest ${aiOnline ? 'text-luwa-teal' : 'text-red-400 animate-pulse'}`}>
-                {aiOnline ? 'Synchronized' : 'Offline (Sync Now)'}
+              <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${aiOnline ? 'text-luwa-teal' : 'text-red-400 animate-pulse group-hover:text-luwa-purple'}`}>
+                {aiOnline ? 'Synchronized' : 'Offline (Click to Sync)'}
               </span>
             </button>
           </div>
@@ -135,22 +144,28 @@ const App: React.FC = () => {
           </div>
         </header>
 
+        {/* Mobile Profile Overlay */}
         {showMobileProfile && (
           <div className="fixed inset-0 z-[60] md:hidden">
             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowMobileProfile(false)} />
             <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[2.5rem] p-10 animate-fade-in shadow-2xl">
-               <button onClick={handleAuthorizeAI} className="w-full bg-luwa-teal/10 text-luwa-teal py-4 rounded-xl mb-6 font-black text-[10px] uppercase tracking-widest border border-luwa-teal/20">Sync Neural Key</button>
+               <div className="text-center mb-8">
+                 <p className="text-2xl font-serif font-bold text-luwa-purple mb-1">{user.name}</p>
+                 <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{user.email}</p>
+               </div>
+               <button onClick={handleAuthorizeAI} className="w-full bg-luwa-teal/10 text-luwa-teal py-4 rounded-xl mb-4 font-black text-[10px] uppercase tracking-widest border border-luwa-teal/20">Sync Neural Link</button>
                <button onClick={logout} className="w-full bg-red-50 text-red-500 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest">Logout Session</button>
             </div>
           </div>
         )}
 
+        {/* Dynamic Content Area */}
         <div className="flex-1 overflow-y-auto p-4 md:p-10 pb-20 md:pb-10 custom-scrollbar">
           {activeTab === 'home' && <Dashboard user={user} onNavigate={setActiveTab} onUpdateUser={handleUpdateUser} />}
           {activeTab === 'library' && <CurriculumLibrary user={user} />}
           {activeTab === 'tutor' && <NeuralTutor user={user} onUpdateUser={handleUpdateUser} />}
           {activeTab === 'exams' && <ExamSystem user={user} />}
-          {activeTab === 'lab' && <AssessmentLab user={user} onUpdateUser={handleUpdateUser} onConsultTutor={() => {}} />}
+          {activeTab === 'lab' && <AssessmentLab user={user} onUpdateUser={handleUpdateUser} onConsultTutor={() => setActiveTab('tutor')} />}
           {activeTab === 'planner' && <AcademicPlanner user={user} onUpdateUser={handleUpdateUser} />}
           {activeTab === 'analytics' && <ScholarAnalytics user={user} />}
           {activeTab === 'admin' && <AdminControl onSimulate={(u) => { storageService.enterSimulation(u); setUser(u); setActiveTab('home'); }} />}

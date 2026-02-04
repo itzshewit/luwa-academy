@@ -18,11 +18,8 @@ export const geminiService = {
     if (!apiKey) {
       throw new Error("AUTH_KEY_MISSING");
     }
-    try {
-      return new GoogleGenAI({ apiKey });
-    } catch (e) {
-      throw new Error("INITIALIZATION_FAILED");
-    }
+    // Create a new instance every time to ensure we pick up the most recent key from the environment/dialog
+    return new GoogleGenAI({ apiKey });
   },
 
   async streamTutorResponse(
@@ -80,7 +77,7 @@ export const geminiService = {
                 type: Type.OBJECT,
                 properties: {
                   question: { type: Type.STRING },
-                  options: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  options: { type: Type.ARRAY, items: { type: Type.STRING }, minItems: 4, maxItems: 4 },
                   correctIndex: { type: Type.INTEGER },
                   explanation: { type: Type.STRING },
                   conceptTag: { type: Type.STRING }
