@@ -6,17 +6,23 @@
 */
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Quiz, TutorMode, IntentType, Language, Exam, ExamQuestion } from "../types.ts";
+import { Quiz, TutorMode, IntentType, Language, Exam } from "../types.ts";
 
 export const geminiService = {
+  /**
+   * Initializes a fresh AI instance. 
+   * RELIANCE: Must use process.env.API_KEY exclusively.
+   */
   getAI: () => {
-    // Rely exclusively on process.env.API_KEY as per core instructions.
-    // In many environments, this is injected by the aistudio key selector.
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
-      throw new Error("NEURAL_LINK_KEY_NOT_FOUND");
+      throw new Error("AUTH_KEY_MISSING");
     }
-    return new GoogleGenAI({ apiKey });
+    try {
+      return new GoogleGenAI({ apiKey });
+    } catch (e) {
+      throw new Error("INITIALIZATION_FAILED");
+    }
   },
 
   async streamTutorResponse(
@@ -28,7 +34,6 @@ export const geminiService = {
     lang: Language = 'en'
   ) {
     const ai = this.getAI();
-    
     const langInstruction = lang === 'am' ? 'Respond in formal Amharic (Ethiopic script), keeping scientific terms in English.' : 'Use formal academic English.';
 
     const contents = history.map(h => {
@@ -44,14 +49,12 @@ export const geminiService = {
       return { role: h.role === 'user' ? 'user' : 'model', parts };
     });
 
-    // Using gemini-3-flash-preview for general tutoring for maximum speed and reliability.
     return await ai.models.generateContentStream({
       model: 'gemini-3-flash-preview',
       contents: contents,
       config: {
-        // Removing thinkingConfig for flash models to prevent potential "interrupted" errors
         systemInstruction: `You are The Instructor at Luwa Academy for Grade 11-12 Ethiopian scholars (${stream} stream). 
-        TONE: Professional, authoritative, and helpful. 
+        TONE: Professional, authoritative, yet encouraging. 
         LANGUAGE: ${langInstruction}
         MODE: ${mode}.
         INTENT: ${intent || 'General Mastery'}.
@@ -77,7 +80,7 @@ export const geminiService = {
                 type: Type.OBJECT,
                 properties: {
                   question: { type: Type.STRING },
-                  options: { type: Type.ARRAY, items: { type: Type.STRING }, minItems: 4, maxItems: 4 },
+                  options: { type: Type.ARRAY, items: { type: Type.STRING } },
                   correctIndex: { type: Type.INTEGER },
                   explanation: { type: Type.STRING },
                   conceptTag: { type: Type.STRING }
@@ -95,14 +98,12 @@ export const geminiService = {
 
   async generateVideo(topic: string, subject: string, grade: string): Promise<string> {
     const ai = this.getAI();
-    const prompt = `Generate a high-fidelity academic animation for ${grade} ${subject} explaining the concept of: ${topic}.`;
-    
     let operation = await ai.models.generateVideos({
       model: 'veo-3.1-fast-generate-preview',
-      prompt: prompt,
+      prompt: `High-fidelity academic animation for ${grade} ${subject}: ${topic}.`,
       config: {
         numberOfVideos: 1,
-        resolution: '720p', // Using 720p for faster generation stability
+        resolution: '720p',
         aspectRatio: '16:9'
       }
     });
@@ -114,7 +115,6 @@ export const geminiService = {
 
     const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
     if (!downloadLink) throw new Error("SYNTHESIS_FAILED");
-    
     return `${downloadLink}&key=${process.env.API_KEY}`;
   },
 
@@ -122,18 +122,18 @@ export const geminiService = {
     const ai = this.getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Analyze academic performance: ${JSON.stringify(history)}`,
+      contents: `Audit scholar performance: ${JSON.stringify(history)}`,
     });
-    return response.text || "Audit incomplete.";
+    return response.text || "Audit failed.";
   },
 
   async getExamHint(question: string, subject: string): Promise<string> {
     const ai = this.getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Provide a hint for: "${question}" in ${subject}.`,
+      contents: `Subtle hint for: "${question}" in ${subject}. No answers.`,
     });
-    return response.text || "Hint not available.";
+    return response.text || "Hint unavailable.";
   },
 
   async parseExamRawText(text: string): Promise<Partial<Exam>> {
