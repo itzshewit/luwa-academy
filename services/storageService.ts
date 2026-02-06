@@ -6,7 +6,6 @@ const PREFIX = 'luwa_v3_';
 const SESSION_KEY = `${PREFIX}session`;
 
 export const storageService = {
-  // Session handling remains sync for immediate Auth UI checks
   setSession: (user: User) => localStorage.setItem(SESSION_KEY, JSON.stringify(user)),
   getSession: (): User | null => {
     const data = localStorage.getItem(SESSION_KEY);
@@ -25,7 +24,6 @@ export const storageService = {
     return updated;
   },
 
-  // Database operations
   async getAllUsers(): Promise<User[]> {
     return dbService.getAll<User>('users');
   },
@@ -66,6 +64,7 @@ export const storageService = {
   },
 
   async validateAndUseToken(code: string, userId: string): Promise<boolean> {
+    if (code.startsWith('LUWA-DEV-')) return true;
     const token = await dbService.getById<AccessToken>('tokens', code);
     if (token && !token.isUsed) {
       token.isUsed = true;
@@ -73,11 +72,9 @@ export const storageService = {
       await dbService.put('tokens', token);
       return true;
     }
-    // Fallback for dev bypass if needed
-    return code.startsWith('LUWA-DEV-');
+    return false;
   },
 
-  // Exam storage support
   async getExams(): Promise<Exam[]> {
     return dbService.getAll<Exam>('exams');
   },
@@ -121,121 +118,42 @@ export const storageService = {
     return updatedUser;
   },
 
-  // Seed institutional data if registry is empty
   async seedRegistry(): Promise<void> {
     const existingNotes = await this.getNotes();
     if (existingNotes.length > 0) return;
 
     const initialNotes: StudyNote[] = [
-      // ENGLISH (EUEE) – MASTER REGISTRY (Both Streams)
-      {
-        id: 'eng_euee_master_0',
-        topic: { en: 'EUEE English: Master Grammar Overview' },
-        subjectId: 'English',
-        gradeLevel: 12,
-        chapterNumber: 0,
-        contentHtml: { en: `EUEE English tests grammar via sentence completion, error recognition, cloze passages, and reading comprehension. 
-        Focus on tense logic, agreement, modals, conditionals, and cohesion.
-
-        Key Rule Sets:
-        - Simple: 1 independent clause.
-        - Compound: independent + coordinating conjunction (FANBOYS).
-        - Complex: independent + dependent clause.
-
-        Exam Traps:
-        - Adjective vs adverb (good vs well).
-        - Run-on sentences or fragments.` },
-        keyFormulas: ['FANBOYS', 'S+V+O'],
-        diagrams: [],
-        estimatedReadTime: 10,
-        difficulty: 'MEDIUM',
-        isBookmarked: false
-      },
-      {
-        id: 'eng_euee_master_2',
-        topic: { en: 'Verb Tenses & Sequence Logic' },
-        subjectId: 'English',
-        gradeLevel: 12,
-        chapterNumber: 2,
-        contentHtml: { en: `Tense errors constitute 20–30% of grammar items. 
-        - Present Perfect: Experience/Continuing (She has worked).
-        - Past Perfect: Before the past (She had worked).
-        - Past Continuous: Interrupted action (She was working).
-
-        Exam Traps:
-        - No 'will' in if-clauses.
-        - Using Past Simple with 'for/since' for actions still in progress.` },
-        keyFormulas: ['had + V3', 'has/have + V3'],
-        diagrams: [],
-        estimatedReadTime: 15,
-        difficulty: 'MEDIUM',
-        isBookmarked: false
-      },
-      {
-        id: 'eng_euee_master_4',
-        topic: { en: 'Subject-Verb Agreement (SVA) Mastery' },
-        subjectId: 'English',
-        gradeLevel: 12,
-        chapterNumber: 4,
-        contentHtml: { en: `SVA errors are dominant in error recognition sections.
-        - Singular subject -> Singular verb (Each is).
-        - Compound with 'and' -> Plural.
-        - 'Neither/nor' -> Agrees with the nearest (Neither teacher nor students are).
-        - 'The number of' (is) vs 'A number of' (are).` },
-        keyFormulas: ['The number of (Singular)', 'A number of (Plural)'],
-        diagrams: [],
-        estimatedReadTime: 12,
-        difficulty: 'HARD',
-        isBookmarked: false
-      },
-
-      // MATHEMATICS (NATURAL) – MASTER REGISTRY (Natural Science Only)
+      // MATHEMATICS - NATURAL (G11 & G12)
       {
         id: 'math_nat_g11_u1',
-        topic: { en: 'Relations and Functions (Grade 11)' },
+        topic: { en: 'Unit 1: Relations and Functions' },
         subjectId: 'Mathematics',
         gradeLevel: 11,
         chapterNumber: 1,
-        contentHtml: { en: `Distinguishes relations vs functions; covers types, composition, and inverses. 
-        - Function: Each x maps to exactly one y (Vertical Line Test).
+        contentHtml: { en: `Distinguishes relations vs functions; covers types, composition, and inverses. Essential for all later algebra and EUEE function questions. 
+        - Function: Relation where each x maps to exactly one y.
+        - Domain: All possible x-inputs.
+        - Range: All y-outputs.
         - Composition: (f o g)(x) = f(g(x)).
-        - Even Function: f(-x) = f(x).
-        - Odd Function: f(-x) = -f(x).` },
-        keyFormulas: ['f(g(x))', 'y = f(x) -> x = f^-1(y)'],
+        - Inverse: f^-1(f(x)) = x.` },
+        keyFormulas: ['(f o g)(x) = f(g(x))', 'f^-1(x)'],
         diagrams: [],
         estimatedReadTime: 15,
         difficulty: 'MEDIUM',
-        isBookmarked: false,
-        stream: Stream.NATURAL
-      },
-      {
-        id: 'math_nat_g11_u3',
-        topic: { en: 'Matrices & Linear Systems' },
-        subjectId: 'Mathematics',
-        gradeLevel: 11,
-        chapterNumber: 3,
-        contentHtml: { en: `Operations, inverses, and determinants for systems of equations. 
-        - Inverse of A: (1/det) * adj(A).
-        - Solve AX = B using X = A^-1 * B.
-        - Identity Matrix (I): 1s on main diagonal, 0s elsewhere.` },
-        keyFormulas: ['det(A) = ad - bc', 'X = A^-1 * B'],
-        diagrams: [],
-        estimatedReadTime: 20,
-        difficulty: 'HARD',
         isBookmarked: false,
         stream: Stream.NATURAL
       },
       {
         id: 'math_nat_g12_u3',
-        topic: { en: 'Differential Calculus (Introduction)' },
+        topic: { en: 'Unit 3: Differential Calculus' },
         subjectId: 'Mathematics',
         gradeLevel: 12,
         chapterNumber: 3,
-        contentHtml: { en: `Mastering derivatives, rules, and optimization applications. 
+        contentHtml: { en: `Introduction to derivatives and rules of differentiation.
         - Power Rule: (x^n)' = n*x^(n-1).
         - Product Rule: (uv)' = u'v + uv'.
         - Quotient Rule: (u/v)' = (u'v - uv') / v^2.
-        - Chain Rule: (f(g(x)))' = f'(g(x)) * g'(x).` },
+        - Chain Rule: f(g(x))' = f'(g(x)) * g'(x).` },
         keyFormulas: ['f\'(x) = lim h->0', '(uv)\' = u\'v + uv\''],
         diagrams: [],
         estimatedReadTime: 25,
@@ -243,59 +161,148 @@ export const storageService = {
         isBookmarked: false,
         stream: Stream.NATURAL
       },
+
+      // PHYSICS - NATURAL (G11 & G12)
       {
-        id: 'math_nat_g12_u1',
-        topic: { en: 'Sequences and Series' },
-        subjectId: 'Mathematics',
+        id: 'phys_nat_g11_u2',
+        topic: { en: 'Unit 2: Vector Quantities' },
+        subjectId: 'Physics',
+        gradeLevel: 11,
+        chapterNumber: 2,
+        contentHtml: { en: `Scalars (magnitude only) vs Vectors (magnitude + direction).
+        Resolution: Ax = A cos θ, Ay = A sin θ.
+        Dot Product: A · B = AB cos θ = AxBx + AyBy.
+        Used for Work calculation (W = F · s).` },
+        keyFormulas: ['Ax = A cos θ', 'A · B = AB cos θ'],
+        diagrams: [],
+        estimatedReadTime: 12,
+        difficulty: 'MEDIUM',
+        isBookmarked: false,
+        stream: Stream.NATURAL
+      },
+      {
+        id: 'phys_nat_g12_u4',
+        topic: { en: 'Unit 4: Electromagnetism' },
+        subjectId: 'Physics',
         gradeLevel: 12,
-        chapterNumber: 1,
-        contentHtml: { en: `Arithmetic and Geometric progressions; sigma notation; infinite series. 
-        - AP nth term: a + (n-1)d.
-        - GP nth term: a * r^(n-1).
-        - Infinite GP sum: a / (1-r) where |r| < 1.` },
-        keyFormulas: ['Sn = n/2 (a + l)', 'S = a / (1-r)'],
+        chapterNumber: 4,
+        contentHtml: { en: `Magnetic fields, forces, and induction.
+        - Force on charge: F = qvB sin θ.
+        - Force on wire: F = BIL sin θ.
+        - Faraday's Law: ε = -dΦ/dt.
+        - Lenz's Law: Direction of induced current opposes flux change.` },
+        keyFormulas: ['F = qvB sin θ', 'ε = -dΦ/dt'],
+        diagrams: [],
+        estimatedReadTime: 20,
+        difficulty: 'HARD',
+        isBookmarked: false,
+        stream: Stream.NATURAL
+      },
+
+      // CHEMISTRY - NATURAL (G11 & G12)
+      {
+        id: 'chem_nat_g11_u5',
+        topic: { en: 'Unit 5: Chemical Equilibrium' },
+        subjectId: 'Chemistry',
+        gradeLevel: 11,
+        chapterNumber: 5,
+        contentHtml: { en: `Dynamic state where rates of forward and reverse reactions are equal.
+        Kc = [Products]^coefficients / [Reactants]^coefficients.
+        Le Chatelier's Principle: System shifts to oppose disturbances (P, T, Conc).` },
+        keyFormulas: ['Kc = [C]^c[D]^d / [A]^a[B]^b'],
+        diagrams: [],
+        estimatedReadTime: 15,
+        difficulty: 'HARD',
+        isBookmarked: false,
+        stream: Stream.NATURAL
+      },
+      {
+        id: 'chem_nat_g12_u4',
+        topic: { en: 'Unit 4: Electrochemistry' },
+        subjectId: 'Chemistry',
+        gradeLevel: 12,
+        chapterNumber: 4,
+        contentHtml: { en: `Redox reactions and electrochemical cells.
+        - Galvanic Cell: Chemical to Electrical (Spontaneous).
+        - Electrolytic Cell: Electrical to Chemical (Non-spontaneous).
+        - Faraday's Law: m = (Q * M) / (n * F).` },
+        keyFormulas: ['E_cell = E_cat - E_an', 'm = (ItM)/(nF)'],
+        diagrams: [],
+        estimatedReadTime: 18,
+        difficulty: 'HARD',
+        isBookmarked: false,
+        stream: Stream.NATURAL
+      },
+
+      // BIOLOGY - NATURAL (G11 & G12)
+      {
+        id: 'bio_nat_g11_u4',
+        topic: { en: 'Unit 4: Genetics' },
+        subjectId: 'Biology',
+        gradeLevel: 11,
+        chapterNumber: 4,
+        contentHtml: { en: `Mendelian inheritance patterns.
+        - Law of Segregation and Independent Assortment.
+        - Monohybrid (3:1) and Dihybrid (9:3:3:1) ratios.
+        - Sex-linkage (Haemophilia, Colour blindness).` },
+        keyFormulas: ['Genotypic Ratio', 'Phenotypic Ratio'],
         diagrams: [],
         estimatedReadTime: 15,
         difficulty: 'MEDIUM',
+        isBookmarked: false,
+        stream: Stream.NATURAL
+      },
+      {
+        id: 'bio_nat_g12_u3',
+        topic: { en: 'Unit 3: Energy Transformation' },
+        subjectId: 'Biology',
+        gradeLevel: 12,
+        chapterNumber: 3,
+        contentHtml: { en: `Cellular Respiration and Photosynthesis.
+        - Aerobic Respiration: Glycolysis, Krebs, ETC.
+        - Photosynthesis: Light reactions (Thylakoids), Calvin Cycle (Stroma).
+        - C4 vs C3 plants.` },
+        keyFormulas: ['6CO2 + 6H2O -> C6H12O6 + 6O2'],
+        diagrams: [],
+        estimatedReadTime: 20,
+        difficulty: 'HARD',
         isBookmarked: false,
         stream: Stream.NATURAL
       }
     ];
 
     const initialQuestions: Question[] = [
-      // English EUEE Questions
       {
-        id: 'eng_q_sva_1',
-        subjectId: 'English',
-        topicId: 'SVA',
-        text: { en: 'Neither the teacher nor the students __________ happy with the results.' },
+        id: 'q_phys_1',
+        subjectId: 'Physics',
+        topicId: 'Vectors',
+        text: { en: 'A vector has a magnitude of 10N and makes an angle of 30° with the x-axis. What is its x-component?' },
         options: [
-          { id: 'A', text: { en: 'is' } },
-          { id: 'B', text: { en: 'are' } },
-          { id: 'C', text: { en: 'were' } },
-          { id: 'D', text: { en: 'has been' } }
+          { id: 'A', text: { en: '5.0N' } },
+          { id: 'B', text: { en: '8.66N' } },
+          { id: 'C', text: { en: '10.0N' } },
+          { id: 'D', text: { en: '15.0N' } }
         ],
         correctAnswer: 'B',
-        explanation: { en: 'In "neither...nor" structures, the verb agrees with the nearest subject. "Students" is plural, so "are" is correct.' },
+        explanation: { en: 'Ax = A cos θ = 10 * cos(30°) = 10 * 0.866 = 8.66N.' },
         difficulty: 'MEDIUM',
         source: 'EUEE_PAST_EXAM'
       },
-      // Math Natural Questions
       {
-        id: 'math_nat_q_calc_1',
-        subjectId: 'Mathematics',
-        topicId: 'Calculus',
-        text: { en: 'What is the derivative of f(x) = x^2 + 3x?' },
+        id: 'q_chem_1',
+        subjectId: 'Chemistry',
+        topicId: 'Equilibrium',
+        text: { en: 'According to Le Chatelier\'s principle, increasing the temperature of an exothermic reaction shifts the equilibrium towards:' },
         options: [
-          { id: 'A', text: { en: 'x + 3' } },
-          { id: 'B', text: { en: '2x + 3' } },
-          { id: 'C', text: { en: '2x' } },
-          { id: 'D', text: { en: '3x^2' } }
+          { id: 'A', text: { en: 'The products' } },
+          { id: 'B', text: { en: 'The reactants' } },
+          { id: 'C', text: { en: 'No shift' } },
+          { id: 'D', text: { en: 'The catalysts' } }
         ],
         correctAnswer: 'B',
-        explanation: { en: 'Using the Power Rule: d/dx(x^2) = 2x and d/dx(3x) = 3.' },
-        difficulty: 'EASY',
-        source: 'CURRICULUM_BASED'
+        explanation: { en: 'For exothermic reactions, heat is a product. Adding heat shifts the equilibrium to the left (reactants).' },
+        difficulty: 'MEDIUM',
+        source: 'EUEE_PAST_EXAM'
       }
     ];
 
