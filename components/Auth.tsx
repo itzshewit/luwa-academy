@@ -1,10 +1,10 @@
+
 /*
-  Module: Authentication Module
-  Purpose: Manages scholar admission registry, identity verification, and initial session orchestration.
+  Luwa Academy – Authentication & Registration Module
+  V6.0 - Secure Token-Based Enrollment
 */
 
 import React, { useState } from 'react';
-import { GlassCard } from './GlassCard.tsx';
 import { storageService } from '../services/storageService.ts';
 import { User, Stream } from '../types.ts';
 
@@ -13,231 +13,238 @@ interface AuthProps {
 }
 
 export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [step, setStep] = useState(1);
-  
+  const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [stream, setStream] = useState<Stream>(Stream.NATURAL);
-  const [grade, setGrade] = useState('Grade 12');
+  const [fullName, setFullName] = useState('');
   const [token, setToken] = useState('');
+  const [stream, setStream] = useState<Stream>(Stream.NATURAL);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    if (email === "admin@luwa.academy" && password === "admin123") {
-      const adminUser = storageService.getAllUsers().find(u => u.role === 'admin');
-      if (adminUser) {
-        storageService.setSession(adminUser);
+    try {
+      // Admin Hard-coded Bypass
+      if (email === "admin@luwa.academy" && password === "admin123") {
+        let adminUser = await storageService.getUserByEmail(email);
+        if (!adminUser) {
+          adminUser = {
+             id: 'admin-root',
+             email: 'admin@luwa.academy',
+             fullName: 'System Administrator',
+             role: 'admin',
+             stream: Stream.NATURAL,
+             grade: 12,
+             xp: 99999,
+             prestige: 'Root',
+             streak: 0,
+             readiness: 100,
+             preferredLanguage: 'en',
+             dailyGoal: 0,
+             studyGoals: [],
+             bookmarks: [],
+             masteryRecord: {},
+             quizHistory: [],
+             weakConcepts: [],
+             currentObjective: 'Platform Governance',
+             subscriptionTier: 'PRO',
+             badges: [],
+             privacySettings: { analyticsEnabled: true, cloudBackupEnabled: true, marketingConsent: false }
+          };
+          await storageService.saveUser(adminUser);
+        }
+        storageService.setSession(storageService.updateSessionActivity(adminUser));
         onLogin(adminUser);
         return;
       }
-    }
 
-    const user = storageService.getUserByEmail(email);
-    const hash = storageService.hashPassword(password);
+      const user = await storageService.getUserByEmail(email);
+      const hash = storageService.hashPassword(password);
 
-    if (user && user.passwordHash === hash) {
-      if (user.deactivated) {
-        setError('Registry Terminated. Contact Institutional Registry.');
-        return;
+      if (user && user.passwordHash === hash) {
+        storageService.setSession(storageService.updateSessionActivity(user));
+        onLogin(user);
+      } else {
+        setError('Credentials not recognized in registry.');
       }
-      storageService.setSession(user);
-      onLogin(user);
-    } else {
-      setError('Identity Mismatch. Verification Denied.');
-      setTimeout(() => setError(''), 3000);
+    } catch (err) {
+      setError('Institutional Registry Sync Error. Please retry.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSignupNext = () => {
-    if (step === 1) {
-      if (!name || !email || !password) {
-        setError('Profile markers incomplete.');
-        return;
-      }
-      if (storageService.getUserByEmail(email)) {
-        setError('Identity Conflict. Email already indexed.');
-        return;
-      }
-      setStep(2);
-    } else if (step === 2) {
-      setStep(3);
-    }
-    setError('');
-  };
-
-  const handleSignupFinal = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    const userId = Math.random().toString(36).substr(2, 9);
-    
-    if (storageService.validateAndUseToken(token, userId)) {
+    setError('');
+    setLoading(true);
+
+    try {
+      // 1. Validate Token First
+      const tempId = `scholar_${Date.now()}`;
+      const isValidToken = await storageService.validateAndUseToken(token, tempId);
+      
+      if (!isValidToken) {
+        setError('Invalid or Expired Institutional Token.');
+        setLoading(false);
+        return;
+      }
+
+      // 2. Check for duplicate email
+      const existing = await storageService.getUserByEmail(email);
+      if (existing) {
+        setError('Email already exists in registry.');
+        setLoading(false);
+        return;
+      }
+
+      // 3. Create User
       const newUser: User = {
-        id: userId,
-        email,
+        id: tempId,
+        email: email,
         passwordHash: storageService.hashPassword(password),
-        token,
-        name,
+        fullName: fullName,
         role: 'scholar',
-        stream,
-        grade,
-        targetYear: '2025',
+        stream: stream,
+        grade: 12,
         xp: 0,
-        level: 'Initiate',
-        prestige: 'Bronze',
-        weakConcepts: [],
-        currentObjective: 'Establish baseline proficiency.',
-        quizHistory: [],
-        questionLedger: [],
-        achievements: [],
-        streak: 1,
-        masteryRecord: {},
-        lifecycleStage: 'Admission',
+        prestige: 'Novice',
+        streak: 0,
         readiness: 0,
-        health: { burnoutRisk: 0, engagementScore: 1, consistencyLevel: 1, status: 'Vibrant' },
         preferredLanguage: 'en',
+        dailyGoal: 100,
         studyGoals: [],
-        bookmarks: []
+        bookmarks: [],
+        masteryRecord: {},
+        quizHistory: [],
+        weakConcepts: [],
+        currentObjective: 'Core Foundation',
+        subscriptionTier: 'BASIC',
+        badges: [],
+        privacySettings: { analyticsEnabled: true, cloudBackupEnabled: true, marketingConsent: false }
       };
-      storageService.saveUser(newUser);
-      storageService.setSession(newUser);
+
+      await storageService.saveUser(newUser);
+      storageService.setSession(storageService.updateSessionActivity(newUser));
       onLogin(newUser);
-    } else {
-      setError('Access Token Denied. Verify code integrity.');
+    } catch (err) {
+      setError('Registration Error: Neural Registry link failed.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-luwa-gray relative overflow-hidden">
-      <div className="absolute top-0 right-0 p-24 opacity-[0.03] pointer-events-none">
-        <h1 className="text-[240px] font-black font-serif text-luwa-purple select-none">Luwa</h1>
-      </div>
-
-      <GlassCard className="max-w-md w-full animate-fade-in border-luwa-border p-12 relative z-10 shadow-2xl bg-white/90 backdrop-blur-md">
-        <div className="text-center mb-12">
-          <div className="flex justify-center mb-4">
-             <div className="w-16 h-16 bg-luwa-purple rounded-2xl flex items-center justify-center text-white shadow-xl rotate-3">
-                <span className="text-2xl font-serif font-black">L</span>
-             </div>
-          </div>
-          <h1 className="text-3xl font-serif font-bold text-luwa-purple mb-1">Luwa Academy</h1>
-          <p className="text-luwa-teal text-[10px] font-black uppercase tracking-[0.3em]">
-            {isLogin ? 'Identity Authentication' : 'Admission Registry'}
-          </p>
+    <div className="min-h-[100dvh] flex items-center justify-center p-6 bg-white relative overflow-y-auto">
+      <div className="max-w-md w-full py-10">
+        <div className="text-center mb-10">
+           <div className="w-16 h-16 bg-luwa-primary text-white rounded-m3-xl flex items-center justify-center font-serif font-black text-3xl mx-auto mb-6 shadow-m3-2 animate-float">L</div>
+           <h1 className="text-3xl font-serif font-black text-luwa-onSurface mb-2 tracking-tight uppercase">Luwa Academy</h1>
+           <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">Institutional Scholar Node</p>
         </div>
 
-        {isLogin ? (
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 tracking-widest">Credential Email</label>
-                <input 
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium focus:ring-2 focus:ring-luwa-purple/10 focus:border-luwa-purple outline-none transition-all"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 tracking-widest">Neural Passcode</label>
-                <input 
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium focus:ring-2 focus:ring-luwa-purple/10 focus:border-luwa-purple outline-none transition-all"
-                  required
-                />
-              </div>
-            </div>
-            
-            {error && <p className="text-red-500 text-[10px] font-bold text-center uppercase tracking-widest">{error}</p>}
+        <div className="bg-white p-8 md:p-10 rounded-m3-2xl border border-slate-100 shadow-m3-3 animate-m3-fade">
+          <form onSubmit={isRegistering ? handleRegister : handleLogin} className="space-y-6">
+            <h2 className="label-large font-black uppercase tracking-widest text-luwa-primary border-b border-slate-50 pb-4">
+              {isRegistering ? 'Scholar Registration' : 'Scholar Authorization'}
+            </h2>
 
-            <button type="submit" className="w-full bg-luwa-purple text-white font-bold py-4 rounded-xl text-sm uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-luwa-purple/20">
-              Initialize Session
-            </button>
-            
-            <div className="text-center pt-4">
-              <button 
-                type="button"
-                onClick={() => { setIsLogin(false); setStep(1); }}
-                className="text-[10px] text-slate-400 hover:text-luwa-purple font-bold uppercase tracking-widest transition-colors"
-              >
-                Apply for Admission
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="space-y-6">
-            <div className="flex justify-center gap-2 mb-8">
-              {[1, 2, 3].map(s => (
-                <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${step === s ? 'w-8 bg-luwa-teal' : 'w-2 bg-slate-200'}`} />
-              ))}
-            </div>
-
-            {step === 1 && (
-              <div className="space-y-4 animate-fade-in">
-                <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 tracking-widest">Full Name</label>
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium focus:border-luwa-purple outline-none transition-all" />
-                </div>
-                <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 tracking-widest">Email</label>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium focus:border-luwa-purple outline-none transition-all" />
-                </div>
-                <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 tracking-widest">Passcode</label>
-                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium focus:border-luwa-purple outline-none transition-all" />
-                </div>
-                <button onClick={handleSignupNext} className="w-full bg-luwa-purple text-white font-bold py-4 rounded-xl text-sm uppercase tracking-widest hover:brightness-110 transition-all shadow-lg">Next Step</button>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="space-y-8 animate-fade-in">
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-4 text-center">Academic Stream</label>
-                  <div className="grid grid-cols-2 gap-4">
-                     {[Stream.NATURAL, Stream.SOCIAL].map(s => (
-                       <button
-                        key={s}
-                        onClick={() => setStream(s)}
-                        className={`p-6 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${stream === s ? 'bg-white border-luwa-teal text-luwa-teal shadow-xl' : 'border-slate-100 text-slate-400 bg-slate-50'}`}
-                       >
-                         {s.split(' ')[0]}
-                       </button>
-                     ))}
+            <div className="space-y-3">
+              {isRegistering && (
+                <>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      value={token} 
+                      onChange={(e) => setToken(e.target.value.toUpperCase())} 
+                      className="w-full bg-slate-50 border-b-2 border-slate-100 px-5 py-4 text-sm font-bold focus:bg-white focus:border-luwa-tertiary outline-none transition-all" 
+                      placeholder="Institutional Access Token" 
+                      required 
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-luwa-tertiary animate-pulse" />
                   </div>
-                </div>
-                <button onClick={handleSignupNext} className="w-full bg-luwa-purple text-white font-bold py-4 rounded-xl text-sm uppercase tracking-widest hover:brightness-110 transition-all shadow-lg">Confirm Stream</button>
+                  <input 
+                    type="text" 
+                    value={fullName} 
+                    onChange={(e) => setFullName(e.target.value)} 
+                    className="w-full bg-slate-50 border-b-2 border-slate-100 px-5 py-4 text-sm font-bold focus:bg-white focus:border-luwa-primary outline-none transition-all" 
+                    placeholder="Full Scholar Name" 
+                    required 
+                  />
+                  <div className="py-2">
+                    <p className="text-[9px] font-black uppercase text-slate-400 mb-2 tracking-widest">Select Academic Stream</p>
+                    <div className="flex gap-2">
+                      <button 
+                        type="button" 
+                        onClick={() => setStream(Stream.NATURAL)}
+                        className={`flex-1 py-3 rounded-m3-m text-[10px] font-black uppercase tracking-widest transition-all ${stream === Stream.NATURAL ? 'bg-luwa-primary text-white shadow-sm' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}
+                      >
+                        Natural Science
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => setStream(Stream.SOCIAL)}
+                        className={`flex-1 py-3 rounded-m3-m text-[10px] font-black uppercase tracking-widest transition-all ${stream === Stream.SOCIAL ? 'bg-luwa-primary text-white shadow-sm' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}
+                      >
+                        Social Science
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+              <input 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                className="w-full bg-slate-50 border-b-2 border-slate-100 px-5 py-4 text-sm font-bold focus:bg-white focus:border-luwa-primary outline-none transition-all" 
+                placeholder="Institutional Email" 
+                required 
+              />
+              <input 
+                type="password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                className="w-full bg-slate-50 border-b-2 border-slate-100 px-5 py-4 text-sm font-bold focus:bg-white focus:border-luwa-primary outline-none transition-all" 
+                placeholder="Registry Password" 
+                required 
+              />
+            </div>
+
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-100 rounded-m3-m text-red-500 text-[10px] font-black uppercase text-center animate-pulse">
+                {error}
               </div>
             )}
 
-            {step === 3 && (
-              <form onSubmit={handleSignupFinal} className="space-y-8 animate-fade-in text-center">
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-4 tracking-widest">Access Token</label>
-                <input 
-                  type="text"
-                  placeholder="LUWA-XXXX-XXXX"
-                  value={token}
-                  onChange={(e) => setToken(e.target.value.toUpperCase())}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-6 text-center tracking-[0.3em] text-xl font-black text-luwa-purple focus:border-luwa-teal outline-none transition-all"
-                  required
-                />
-                {error && <p className="text-red-500 text-[10px] font-bold uppercase">{error}</p>}
-                <button type="submit" className="w-full bg-luwa-purple text-white font-bold py-4 rounded-xl text-sm uppercase tracking-widest shadow-lg shadow-luwa-purple/20">Finalize Admission</button>
-              </form>
-            )}
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className="w-full py-5 bg-luwa-primary text-white rounded-m3-xl label-large font-black uppercase tracking-[0.2em] shadow-m3-2 transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
+            >
+              {loading ? 'Authorizing Node...' : isRegistering ? 'Finalize Enrollment' : 'Authorize Access'}
+            </button>
+          </form>
 
-            <div className="text-center pt-4">
-              <button onClick={() => setIsLogin(true)} className="text-[10px] text-slate-400 hover:text-luwa-purple font-bold uppercase tracking-widest transition-colors">Back to Login</button>
-            </div>
+          <div className="mt-8 pt-8 border-t border-slate-100 text-center">
+            <button 
+              onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
+              className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-luwa-primary transition-colors"
+            >
+              {isRegistering ? 'Already Enrolled? Authorize Access' : 'New Scholar? Register with Token'}
+            </button>
           </div>
-        )}
-      </GlassCard>
+        </div>
+
+        <div className="mt-10 text-center">
+          <p className="text-[9px] text-slate-300 font-medium uppercase tracking-[0.2em]">
+            This registry is for exclusive use by authorized Luwa scholars.
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,9 +1,9 @@
+
 /*
   Luwa Academy – AI-Powered Educational Platform
   Developed by Shewit – 2026
   Purpose: Interactive, gamified, and AI-assisted learning for high school students.
   Module: Direct Sync Live Interaction
-  Author: Shewit – 2026
 */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -15,6 +15,7 @@ import { decodeAudioData, decodeBase64, encodeBase64 } from '../services/audioSe
 export const LuwaLive: React.FC = () => {
   const [active, setActive] = useState(false);
   const [status, setStatus] = useState('Standby');
+  const [error, setError] = useState<string | null>(null);
   const [volume, setVolume] = useState(0);
   
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -55,6 +56,7 @@ export const LuwaLive: React.FC = () => {
 
   const startLive = async () => {
     try {
+      setError(null);
       setActive(true);
       setStatus('Initializing Neural Link...');
 
@@ -63,7 +65,9 @@ export const LuwaLive: React.FC = () => {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
       outputContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch(err => {
+         throw new Error("Microphone Access Denied. Verify hardware permissions in browser settings.");
+      });
       
       const sessionPromise = ai.live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-12-2025',
@@ -127,7 +131,7 @@ export const LuwaLive: React.FC = () => {
           },
           onerror: (e) => { 
             console.error(e); 
-            setStatus('Link Failed'); 
+            setError('Neural synchronization failed. Resetting link.');
             stopLive(); 
           },
           onclose: () => { 
@@ -144,9 +148,8 @@ export const LuwaLive: React.FC = () => {
       
       sessionRef.current = sessionPromise;
 
-    } catch (err) {
-      console.error(err);
-      setStatus('Hardware Access Denied');
+    } catch (err: any) {
+      setError(err.message || 'Institutional hardware link failed.');
       setActive(false);
     }
   };
@@ -181,10 +184,12 @@ export const LuwaLive: React.FC = () => {
           ))}
         </div>
 
-        <div className="text-center relative z-10">
-          <h3 className="text-2xl font-black mb-2 uppercase tracking-[0.3em] text-white">{status}</h3>
-          <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-12 max-w-xs mx-auto leading-relaxed">
-            Bi-directional neural dialogue.<br/>Zero-latency cognitive synchronization.
+        <div className="text-center relative z-10 px-8">
+          <h3 className="text-2xl font-black mb-2 uppercase tracking-[0.3em] text-white">
+            {error ? 'Link Failure' : status}
+          </h3>
+          <p className={`${error ? 'text-red-400' : 'text-gray-500'} text-[10px] font-black uppercase tracking-widest mb-12 max-w-xs mx-auto leading-relaxed`}>
+            {error || 'Bi-directional neural dialogue.\nZero-latency cognitive synchronization.'}
           </p>
         </div>
 
@@ -202,7 +207,7 @@ export const LuwaLive: React.FC = () => {
           )}
         </button>
 
-        {active && (
+        {active && !error && (
            <div className="mt-12 flex gap-4 animate-fade-in relative z-10">
               <div className="px-4 py-2 bg-luwa-gold/10 rounded-full border border-luwa-gold/20 flex items-center gap-2">
                  <div className="w-1.5 h-1.5 bg-luwa-gold rounded-full animate-pulse" />

@@ -1,52 +1,55 @@
+
 /*
-  Luwa Academy – AI-Powered Educational Platform
-  Developed by Shewit – 2026
-  Purpose: Interactive, gamified, and AI-assisted learning for high school students.
-  Module: About Page
-  Author: Shewit – 2026
+  Luwa Academy – Strategic Roadmap & Vision (12.1 Phase 2 & 3)
+  Purpose: Outlines institutional growth from MVP to Full Scale Deployment.
 */
 
 import React from 'react';
 import { GlassCard } from './GlassCard.tsx';
+import { APP_FULL_VERSION, SOCIAL_LINKS, ATTRIBUTIONS } from '../constants.tsx';
 
 export const About: React.FC = () => {
   return (
-    <div className="h-full flex flex-col items-center justify-start animate-fade-in max-w-4xl mx-auto overflow-y-auto custom-scrollbar pb-10">
-      <GlassCard className="w-full p-16 border-luwa-gold/10 text-center relative overflow-hidden mb-10">
-        <h1 className="text-6xl font-black luwa-gold mb-4 tracking-tighter">Luwa Academy</h1>
-        <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.6em] mb-12">Registry Version 2.0.26</p>
+    <div className="h-full flex flex-col items-center justify-start animate-m3-fade max-w-4xl mx-auto overflow-y-auto custom-scrollbar pb-20">
+      <GlassCard className="w-full p-16 border-none bg-white text-center relative overflow-hidden mb-10" variant="elevated">
+        <h1 className="display-large font-serif font-black text-luwa-primary mb-4 tracking-tighter uppercase">Strategic Roadmap</h1>
+        <p className="label-small text-luwa-onSurfaceVariant font-black uppercase tracking-[0.6em] mb-12">Registry Node Integrity Protocol • {APP_FULL_VERSION}</p>
         
-        <div className="space-y-12 max-w-2xl mx-auto">
-          <section>
-            <h3 className="text-xs font-black uppercase tracking-widest text-white mb-4">Developed by Shewit – 2026</h3>
-            <p className="text-gray-500 text-sm leading-loose">
-              Empowering Ethiopian high school students with interactive, gamified, and AI-driven learning.
-            </p>
-          </section>
-
-          <div className="h-[1px] w-24 bg-white/5 mx-auto" />
-
+        <div className="space-y-16 max-w-2xl mx-auto">
           <section className="text-left">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-luwa-gold mb-6 text-center">Institutional Intelligence</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               <div className="space-y-2">
-                  <h4 className="text-[9px] font-black text-white uppercase tracking-widest">Question Ledger</h4>
-                  <p className="text-[11px] text-gray-500 leading-relaxed">Every conceptual probe is indexed. Scholars can revisit previous synchronization cycles or purge local identity fragments via the Ledger toggle.</p>
+            <h3 className="label-large font-black uppercase tracking-[0.4em] text-luwa-primary mb-10 text-center">Institutional Pipeline (12.1)</h3>
+            <div className="space-y-10">
+               <div className="p-10 bg-luwa-primaryContainer rounded-m3-xl border border-luwa-primary/10">
+                  <h4 className="label-large font-black text-luwa-onPrimaryContainer uppercase mb-4 tracking-widest">Phase 2: Cognitive Enrichment (3-6 Months)</h4>
+                  <ul className="text-sm font-medium text-luwa-onPrimaryContainer space-y-4 opacity-80 leading-relaxed">
+                     <li className="flex items-start gap-4"><div className="w-2 h-2 rounded-full bg-luwa-primary mt-1.5" /> Neural Voice Synthesis: High-fidelity audio briefs for all curriculum nodes.</li>
+                     <li className="flex items-start gap-4"><div className="w-2 h-2 rounded-full bg-luwa-primary mt-1.5" /> Social Gamification: Global leaderboards, badges, and scholar prestige challenges.</li>
+                     <li className="flex items-start gap-4"><div className="w-2 h-2 rounded-full bg-luwa-primary mt-1.5" /> Peer Direct Sync: Real-time study groups with AI moderation.</li>
+                  </ul>
                </div>
-               <div className="space-y-2">
-                  <h4 className="text-[9px] font-black text-white uppercase tracking-widest">National Knowledge Base</h4>
-                  <p className="text-[11px] text-gray-500 leading-relaxed">The Instructor is specifically synchronized with Grade 11 and 12 Ethiopian National Textbooks, ensuring absolute alignment with EUEE standards.</p>
+
+               <div className="p-10 bg-luwa-surfaceVariant rounded-m3-xl border border-luwa-outline/10">
+                  <h4 className="label-large font-black text-luwa-onSurfaceVariant uppercase mb-4 tracking-widest">Phase 3: National Expansion (6-12 Months)</h4>
+                  <ul className="text-sm font-medium text-luwa-onSurfaceVariant space-y-4 opacity-80 leading-relaxed">
+                     <li className="flex items-start gap-4"><div className="w-2 h-2 rounded-full bg-luwa-outline mt-1.5" /> Curriculum Portability: Grade 10 & 11 nodes, TVET, and COC modules.</li>
+                     <li className="flex items-start gap-4"><div className="w-2 h-2 rounded-full bg-luwa-outline mt-1.5" /> University Navigator: Automated guidance based on mock exam performance.</li>
+                     <li className="flex items-start gap-4"><div className="w-2 h-2 rounded-full bg-luwa-outline mt-1.5" /> Multi-Lingual Engine: Oromiffa and Tigrinya cognitive support nodes.</li>
+                  </ul>
                </div>
             </div>
           </section>
 
-          <section>
-             <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-600 mb-6">Sovereign Community Hubs</h3>
-             <div className="flex justify-center gap-6">
-                <a href="https://t.me/eurekahs" target="_blank" className="px-6 py-3 bg-white/5 border border-white/5 rounded-xl text-[9px] font-black uppercase tracking-widest text-luwa-gold hover:bg-luwa-gold/10 transition-all">Telegram Channel</a>
-                <a href="https://t.me/eurekahsgroup" target="_blank" className="px-6 py-3 bg-white/5 border border-white/5 rounded-xl text-[9px] font-black uppercase tracking-widest text-luwa-gold hover:bg-luwa-gold/10 transition-all">Scholar Group</a>
-             </div>
+          <section className="text-left p-10 bg-luwa-surfaceVariant/20 rounded-m3-xl border border-luwa-surfaceVariant">
+             <h3 className="label-small font-black uppercase tracking-[0.4em] text-luwa-primary mb-6">Monetization Statement (12.2)</h3>
+             <p className="text-[11px] text-luwa-onSurfaceVariant mb-4 leading-relaxed font-medium">
+               Luwa Academy utilizes a **Freemium Registry Model**. Core educational assets remain freely accessible to ensure academic equity. Premium features (Unlimited AI Tutoring, Neural Voice, and Detailed Audits) support operational sustainability.
+             </p>
           </section>
+
+          <div className="flex flex-wrap justify-center gap-4 pt-10 border-t border-luwa-surfaceVariant">
+             <a href={SOCIAL_LINKS.TELEGRAM_CHANNEL} target="_blank" className="px-8 py-4 bg-luwa-primary text-white rounded-m3-xl label-small font-black uppercase shadow-m3-1 m3-ripple">Roadmap Telegram</a>
+             <a href={SOCIAL_LINKS.BLOG} target="_blank" className="px-8 py-4 border border-luwa-primary text-luwa-primary rounded-m3-xl label-small font-black uppercase m3-ripple">Engineering Blog</a>
+          </div>
         </div>
       </GlassCard>
     </div>

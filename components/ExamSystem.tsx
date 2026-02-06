@@ -1,3 +1,4 @@
+
 /*
   Luwa Academy – AI-Powered Educational Platform
   Developed by Shewit – 2026
@@ -33,9 +34,14 @@ export const ExamSystem: React.FC<ExamSystemProps> = ({ user }) => {
     refreshPortal();
   }, []);
 
-  const refreshPortal = () => {
-    setExams(storageService.getExams());
-    setSubmissions(storageService.getSubmissions().filter(s => s.userId === user.id));
+  const refreshPortal = async () => {
+    // Correctly await asynchronous storage methods
+    const [fetchedExams, fetchedSubmissions] = await Promise.all([
+      storageService.getExams(),
+      storageService.getSubmissions()
+    ]);
+    setExams(fetchedExams);
+    setSubmissions(fetchedSubmissions.filter(s => s.userId === user.id));
   };
 
   useEffect(() => {
@@ -53,7 +59,7 @@ export const ExamSystem: React.FC<ExamSystemProps> = ({ user }) => {
     setActiveSubmission({
       examId: exam.id,
       userId: user.id,
-      userName: user.name,
+      userName: user.fullName || user.name,
       answers: {},
       startTime: Date.now()
     });
@@ -81,7 +87,7 @@ export const ExamSystem: React.FC<ExamSystemProps> = ({ user }) => {
     }
   };
 
-  const handleSubmitExam = () => {
+  const handleSubmitExam = async () => {
     const score = activeExam!.questions.reduce((acc, q) => {
       const ans = activeSubmission?.answers?.[q.id];
       return acc + (ans === q.correctAnswer ? q.marks : 0);
@@ -97,7 +103,8 @@ export const ExamSystem: React.FC<ExamSystemProps> = ({ user }) => {
       status: 'Pending'
     };
 
-    storageService.saveSubmission(submission);
+    // Await async submission saving
+    await storageService.saveSubmission(submission);
     alert("Exam Transmitted. Awaiting Institutional Approval.");
     setView('portal');
     setActiveExam(null);

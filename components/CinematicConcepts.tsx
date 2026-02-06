@@ -29,10 +29,11 @@ export const CinematicConcepts: React.FC = () => {
     setLoading(true);
     setVideoUrl(null);
     try {
+      // Fixed: activeSession?.grade cast to string
       const url = await geminiService.generateVideo(
         topic, 
         selectedSubject, 
-        activeSession?.grade || 'Grade 12'
+        String(activeSession?.grade || 'Grade 12')
       );
       setVideoUrl(url);
     } catch (err: any) {
