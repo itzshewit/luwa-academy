@@ -29,7 +29,15 @@ export const CinematicConcepts: React.FC = () => {
     setLoading(true);
     setVideoUrl(null);
     try {
-      // Fixed: activeSession?.grade cast to string
+      // Fix: Requirement check for API key selection for Veo models.
+      if (typeof window !== 'undefined' && (window as any).aistudio) {
+        const hasKey = await (window as any).aistudio.hasSelectedApiKey();
+        if (!hasKey) {
+          await (window as any).aistudio.openSelectKey();
+          // Proceed immediately after calling openSelectKey to avoid race condition as per guidelines.
+        }
+      }
+
       const url = await geminiService.generateVideo(
         topic, 
         selectedSubject, 
@@ -38,6 +46,12 @@ export const CinematicConcepts: React.FC = () => {
       setVideoUrl(url);
     } catch (err: any) {
       console.error(err);
+      // Fix: If the request fails with "Requested entity was not found.", prompt for key selection again.
+      if (err.message?.includes("Requested entity was not found")) {
+        if (typeof window !== 'undefined' && (window as any).aistudio) {
+          await (window as any).aistudio.openSelectKey();
+        }
+      }
       alert("Synthesis engine busy. Re-initializing buffers...");
     } finally {
       setLoading(false);

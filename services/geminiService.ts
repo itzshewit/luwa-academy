@@ -6,13 +6,9 @@
 */
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Quiz, TutorMode, IntentType, Language, Exam, User, Question, QuizHistoryEntry } from "../types.ts";
+import { Quiz, TutorMode, IntentType, Language, Exam, User, Question, QuizHistoryEntry, ExamSubmission } from "../types.ts";
 
 export const geminiService = {
-  /**
-   * Initializes the AI engine.
-   * Relies on process.env.API_KEY provided by the environment.
-   */
   getAI: () => {
     return new GoogleGenAI({ apiKey: process.env.API_KEY });
   },
@@ -108,6 +104,31 @@ export const geminiService = {
       return JSON.parse(response.text || '{}');
     } catch (e) {
       throw new Error(this.handleError(e));
+    }
+  },
+
+  async generateExamFeedback(submission: ExamSubmission, exam: Exam): Promise<string> {
+    try {
+      const ai = this.getAI();
+      const missedTopics = exam.questions
+        .filter(q => submission.answers[q.id] !== q.correctAnswer)
+        .map(q => q.topicTag || 'General Subject Area');
+
+      const prompt = `Analyze this scholar's exam performance:
+      Subject: ${exam.subject}
+      Score: ${submission.score}/${exam.totalMarks}
+      Missed Topics: ${missedTopics.join(', ')}
+      
+      Provide a concise, encouraging, and highly technical remediation roadmap for this Grade 12 Ethiopian scholar. Highlight specific curriculum nodes they should revisit.`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt
+      });
+
+      return response.text || "Continue focusing on core principles.";
+    } catch (e) {
+      return "Feedback engine busy. Focus on topics missed during review.";
     }
   },
 
@@ -231,26 +252,14 @@ export const geminiService = {
     }
   },
 
-  async auditPerformance(history: QuizHistoryEntry[]): Promise<string> {
-    try {
-      const ai = this.getAI();
-      const summary = history.map(h => `${h.topic}: ${h.score}/${h.total} (Effort: ${h.aggregateEffort})`).join('\n');
-      const response = await ai.models.generateContent({
-        model: "gemini-3-pro-preview",
-        contents: `Analyze the following academic history of a Grade 12 scholar and provide a strategic roadmap for improvement. Highlight specific cognitive gaps and suggested remedial focus areas. History:\n${summary}`,
-      });
-      return response.text || "No audit available. Continue practicing to generate data.";
-    } catch (e) {
-      throw new Error(this.handleError(e));
-    }
-  },
-
   async generateVideo(topic: string, subject: string, grade: string): Promise<string> {
     try {
       const ai = this.getAI();
-      const operation = await ai.models.generateVideos({
+      const prompt = `A cinematic educational animation about ${topic} for a ${grade} ${subject} student. High fidelity, scholarly visualization.`;
+      
+      let operation = await ai.models.generateVideos({
         model: 'veo-3.1-fast-generate-preview',
-        prompt: `A high-quality 3D academic animation for ${grade} ${subject} explaining the concept of ${topic}. The style should be clean, professional, and educational like a high-end science documentary.`,
+        prompt: prompt,
         config: {
           numberOfVideos: 1,
           resolution: '720p',
@@ -258,15 +267,17 @@ export const geminiService = {
         }
       });
 
-      let currentOp = operation;
-      while (!currentOp.done) {
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        currentOp = await ai.operations.getVideosOperation({ operation: currentOp });
+      while (!operation.done) {
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        operation = await ai.operations.getVideosOperation({ operation: operation });
       }
 
-      const downloadLink = currentOp.response?.generatedVideos?.[0]?.video?.uri;
+      const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+      if (!downloadLink) throw new Error("Video synthesis failed - no output URI.");
+
       const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
-      if (!response.ok) throw new Error("Failed to download synthesized asset.");
+      if (!response.ok) throw new Error("Failed to download synthesized video.");
+      
       const blob = await response.blob();
       return URL.createObjectURL(blob);
     } catch (e) {

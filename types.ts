@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – AI-Powered Educational Platform
-  Global Type Definitions - V3.8 (Stream Visibility Update)
+  Global Type Definitions - V3.9 (Exam System Update)
 */
 
 export enum Grade {
@@ -38,7 +38,7 @@ export interface StudyNote {
   isBookmarked: boolean;
   userNotes?: string;
   rating?: number;
-  stream?: Stream; // If defined, only scholars in this stream can access this note.
+  stream?: Stream; 
 }
 
 export interface Question {
@@ -137,7 +137,7 @@ export interface User {
   passwordHash?: string;
   fullName: string;
   name?: string;
-  phone?: string; // 12.1 Requirement
+  phone?: string;
   role: UserRole;
   dob?: string;
   stream: Stream;
@@ -168,6 +168,7 @@ export interface User {
     marketingConsent: boolean;
   };
   deactivated?: boolean;
+  avgCompletionRatio?: number; // Historical timing performance
 }
 
 export interface StudyGoal {
@@ -195,6 +196,7 @@ export interface ExamQuestion {
   correctAnswer: any;
   marks: number;
   section: string;
+  topicTag?: string;
 }
 
 export interface Exam {
@@ -207,6 +209,7 @@ export interface Exam {
   status: 'Scheduled' | 'Live' | 'Closed';
   isApproved: boolean;
   totalMarks: number;
+  subsetSize?: number; // Number of questions to pick for randomization
 }
 
 export interface ExamSubmission {
@@ -221,6 +224,8 @@ export interface ExamSubmission {
   sectionScores: Record<string, number>;
   isGraded: boolean;
   status: 'Pending' | 'Approved';
+  aiFeedback?: string; // Neural remediation analysis
+  actualDurationMinutes?: number;
 }
 
 export interface AccessToken {
