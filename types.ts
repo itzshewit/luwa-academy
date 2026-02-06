@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – AI-Powered Educational Platform
-  Global Type Definitions - V4.0 (Static Quiz Update)
+  Global Type Definitions - V4.2 (Assignment System Update)
 */
 
 export enum Grade {
@@ -74,6 +74,60 @@ export interface StaticQuiz {
   totalQuestions: number;
   description: string;
   questions: StaticQuestion[];
+}
+
+export interface StudyTask {
+  id: string;
+  title: string;
+  description?: string;
+  date: string; // YYYY-MM-DD
+  time: string;
+  duration: number;
+  subject: string;
+  priority: 'low' | 'medium' | 'high';
+  color: string;
+  reminder: number;
+  completed: boolean;
+  createdAt: number;
+}
+
+// Assignment System Types
+export type AssignmentQuestionType = 'multiple-choice' | 'true-false' | 'short-answer' | 'essay';
+
+export interface AssignmentQuestion {
+  id: number;
+  type: AssignmentQuestionType;
+  text: string;
+  points: number;
+  options?: string[];
+  correctAnswer?: any;
+}
+
+export interface Assignment {
+  id: string | number;
+  title: string;
+  description: string;
+  subject: string;
+  totalPoints: number;
+  dueDate: string;
+  status: 'draft' | 'active' | 'closed';
+  questions: AssignmentQuestion[];
+  createdAt: string;
+}
+
+export interface AssignmentSubmission {
+  id: string | number;
+  assignmentId: string | number;
+  userId: string;
+  studentName: string;
+  studentId: string;
+  answers: Record<number, any>;
+  submittedAt: string;
+  grade: number | null;
+  earnedPoints: number | null;
+  totalPoints: number | null;
+  feedback: string;
+  gradedAt?: string;
 }
 
 export interface PastPaper {

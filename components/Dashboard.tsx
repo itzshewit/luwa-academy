@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – Scholar Home Dashboard
-  Integrated Mockup Logic - V6.1 (Quiz Center Entry)
+  Integrated Mockup Logic - V6.2 (Assignment Node Entry)
 */
 
 import React, { useMemo } from 'react';
@@ -104,14 +104,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onUpdate
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
-        <div className="xl:col-span-8 space-y-8">
+        <div className="xl:col-span-12 space-y-8">
           <h3 className="label-large text-luwa-onSurface uppercase font-black tracking-[0.3em]">
             Registry Terminal
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
             {[
               { id: 'library', label: 'Study Nodes', icon: ICONS.Layout, color: 'text-blue-500' },
               { id: 'quizzes', label: 'Unit Quiz', icon: ICONS.Zap, color: 'text-amber-500' },
+              { id: 'assignments', label: 'Task Unit', icon: ICONS.Copy, color: 'text-pink-500' },
               { id: 'lab', label: 'AI Lab', icon: ICONS.Award, color: 'text-green-500' },
               { id: 'mock', label: 'Simulation', icon: ICONS.Brain, color: 'text-purple-500' },
               { id: 'analytics', label: 'Insights', icon: ICONS.Trophy, color: 'text-orange-500' },
@@ -128,25 +129,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onUpdate
               </button>
             ))}
           </div>
-        </div>
-
-        <div className="xl:col-span-4">
-          <GlassCard className="p-8 bg-slate-50 border border-slate-100 flex flex-col h-full">
-            <h3 className="text-[10px] text-slate-400 uppercase font-black tracking-[0.3em] mb-8">Daily Directive</h3>
-            <div className="space-y-4 flex-1">
-              <div className="p-5 bg-white border border-slate-100 rounded-xl">
-                <p className="text-[8px] font-black uppercase text-luwa-primary mb-1">Priority Node</p>
-                <p className="text-sm font-black text-luwa-onSurface">Organic Chemistry Review</p>
-              </div>
-              <div className="p-5 bg-white border border-slate-100 rounded-xl">
-                <p className="text-[8px] font-black uppercase text-luwa-secondary mb-1">Recommended</p>
-                <p className="text-sm font-black text-luwa-onSurface">EUEE Math 2017 Simulation</p>
-              </div>
-            </div>
-            <button onClick={() => onNavigate('mock')} className="w-full mt-8 py-4 bg-luwa-primary text-white rounded-xl label-small font-black uppercase tracking-widest shadow-m3-2 hover:brightness-110 transition-all">
-              Initialize Plan
-            </button>
-          </GlassCard>
         </div>
       </div>
     </div>

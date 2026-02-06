@@ -1,5 +1,5 @@
 
-import { User, Stream, StudyNote, Question, PastPaper, AccessToken, AuditEntry, UserRole, Exam, ExamSubmission, StaticQuiz } from '../types.ts';
+import { User, Stream, StudyNote, Question, PastPaper, AccessToken, AuditEntry, UserRole, Exam, ExamSubmission, StaticQuiz, StudyTask, Assignment, AssignmentSubmission } from '../types.ts';
 import { dbService } from './db.ts';
 
 const PREFIX = 'luwa_v3_';
@@ -59,6 +59,39 @@ export const storageService = {
 
   async saveStaticQuizzes(quizzes: StaticQuiz[]): Promise<void> {
     await dbService.bulkPut('static_quizzes', quizzes);
+  },
+
+  async getStudyTasks(): Promise<StudyTask[]> {
+    return dbService.getAll<StudyTask>('tasks');
+  },
+
+  async saveStudyTask(task: StudyTask): Promise<void> {
+    await dbService.put('tasks', task);
+  },
+
+  async deleteStudyTask(id: string): Promise<void> {
+    await dbService.delete('tasks', id);
+  },
+
+  // Assignment System Integration
+  async getAssignments(): Promise<Assignment[]> {
+    return dbService.getAll<Assignment>('assignments');
+  },
+
+  async saveAssignment(assignment: Assignment): Promise<void> {
+    await dbService.put('assignments', assignment);
+  },
+
+  async deleteAssignment(id: string | number): Promise<void> {
+    await dbService.delete('assignments', id);
+  },
+
+  async getAssignmentSubmissions(): Promise<AssignmentSubmission[]> {
+    return dbService.getAll<AssignmentSubmission>('assignment_submissions');
+  },
+
+  async saveAssignmentSubmission(submission: AssignmentSubmission): Promise<void> {
+    await dbService.put('assignment_submissions', submission);
   },
 
   async getTokens(): Promise<AccessToken[]> {
@@ -185,67 +218,6 @@ export const storageService = {
           { type: "multiple-select", question: "Which of the following are geometric sequences? (Select all that apply)", options: ["2, 4, 8, 16...", "3, 6, 9, 12...", "1, -2, 4, -8...", "5, 10, 20, 40..."], correctAnswers: [0, 2, 3] },
           { type: "true-false", question: "An arithmetic sequence has a constant ratio between consecutive terms.", correctAnswer: false }
         ]
-      },
-      {
-        id: 3,
-        title: "Physics - Newton's Laws of Motion",
-        subject: "Physics",
-        stream: "natural",
-        icon: "⚛️",
-        color: "#10b981",
-        duration: "12 min",
-        totalQuestions: 7,
-        description: "Test your knowledge of Newton's three laws of motion.",
-        questions: [
-          { type: "multiple-choice", question: "According to Newton's First Law, an object at rest will:", options: ["Stay at rest unless acted upon by a force", "Always move", "Accelerate constantly", "Decelerate over time"], correctAnswer: 0 },
-          { type: "true-false", question: "Newton's Second Law states that F = ma.", correctAnswer: true },
-          { type: "fill-blank", question: "If a 5 kg object accelerates at 2 m/s², the net force is ___ N.", correctAnswer: "10" },
-          { type: "multiple-choice", question: "Newton's Third Law states:", options: ["Force equals mass times acceleration", "For every action, there is an equal and opposite reaction", "Objects at rest stay at rest", "Energy is conserved"], correctAnswer: 1 },
-          { type: "multiple-select", question: "Which of the following are examples of Newton's Third Law? (Select all that apply)", options: ["Rocket propulsion", "Walking on the ground", "Swimming", "Falling objects"], correctAnswers: [0, 1, 2] },
-          { type: "true-false", question: "A larger mass requires more force to achieve the same acceleration.", correctAnswer: true },
-          { type: "multiple-choice", question: "What is the unit of force in the SI system?", options: ["Joule", "Newton", "Watt", "Pascal"], correctAnswer: 1 }
-        ]
-      },
-      {
-        id: 5,
-        title: "Chemistry - Periodic Table",
-        subject: "Chemistry",
-        stream: "natural",
-        icon: "🧪",
-        color: "#8b5cf6",
-        duration: "10 min",
-        totalQuestions: 7,
-        description: "Test your knowledge of the periodic table and element properties.",
-        questions: [
-          { type: "multiple-choice", question: "Which element has the atomic number 6?", options: ["Oxygen", "Carbon", "Nitrogen", "Helium"], correctAnswer: 1 },
-          { type: "true-false", question: "Noble gases are highly reactive elements.", correctAnswer: false },
-          { type: "fill-blank", question: "The chemical symbol for Gold is ___.", correctAnswer: "Au" },
-          { type: "multiple-select", question: "Which of the following are alkali metals? (Select all that apply)", options: ["Sodium (Na)", "Potassium (K)", "Calcium (Ca)", "Lithium (Li)"], correctAnswers: [0, 1, 3] },
-          { type: "multiple-choice", question: "Elements in the same group have similar:", options: ["Atomic mass", "Chemical properties", "Number of protons", "Physical state"], correctAnswer: 1 },
-          { type: "true-false", question: "The atomic number represents the number of protons in an atom.", correctAnswer: true },
-          { type: "fill-blank", question: "The number of electron shells increases as you move ___ the periodic table.", correctAnswer: "down" }
-        ]
-      },
-      {
-        id: 10,
-        title: "SAT - Analytical Reasoning",
-        subject: "SAT/Aptitude",
-        stream: "both",
-        icon: "🎯",
-        color: "#ef4444",
-        duration: "20 min",
-        totalQuestions: 8,
-        description: "Test your logical reasoning and problem-solving abilities.",
-        questions: [
-          { type: "multiple-choice", question: "If 2x + 5 = 15, what is x?", options: ["5", "10", "7.5", "20"], correctAnswer: 0 },
-          { type: "multiple-choice", question: "Complete the sequence: 2, 4, 8, 16, ___", options: ["24", "32", "20", "30"], correctAnswer: 1 },
-          { type: "true-false", question: "If A is taller than B, and B is taller than C, then A is taller than C.", correctAnswer: true },
-          { type: "multiple-choice", question: "What is 20% of 80?", options: ["12", "16", "18", "20"], correctAnswer: 1 },
-          { type: "fill-blank", question: "If a car travels 60 km in 1 hour, it travels ___ km in 30 minutes.", correctAnswer: "30" },
-          { type: "multiple-choice", question: "Which word is the odd one out?", options: ["Apple", "Banana", "Carrot", "Orange"], correctAnswer: 2 },
-          { type: "true-false", question: "All squares are rectangles, but not all rectangles are squares.", correctAnswer: true },
-          { type: "multiple-choice", question: "If today is Monday, what day will it be in 10 days?", options: ["Monday", "Tuesday", "Thursday", "Wednesday"], correctAnswer: 2 }
-        ]
       }
     ];
 
@@ -253,16 +225,9 @@ export const storageService = {
 
     const initialNotes: StudyNote[] = [
       { id: 'sat_overview', topic: { en: 'EUEE SAT: Overview' }, subjectId: 'SAT', gradeLevel: 12, chapterNumber: 0, contentHtml: { en: "The Scholastic Aptitude Test (SAT) is mandatory. 60 Qs: 35 Verbal, 25 Quantitative. 120 minutes." }, keyFormulas: [], diagrams: [], estimatedReadTime: 10, difficulty: 'MEDIUM', isBookmarked: false },
-      { id: 'hist_g11_u1', topic: { en: 'G11 History U1: Historiography' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 1, contentHtml: { en: "History is study of past human events based on evidence. Historiography is historical writing. Sources are primary and secondary." }, keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g12_u3', topic: { en: 'G12 History U3: Ethiopia 19th C to 1941' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 3, contentHtml: { en: "Menelik II. Battle of Adwa. Italian Occupation." }, keyFormulas: [], diagrams: [], estimatedReadTime: 22, difficulty: 'HARD', isBookmarked: false, stream: Stream.SOCIAL }
-    ];
-
-    const initialQuestions: Question[] = [
-      { id: 'q_mock_math_1', subjectId: 'Mathematics', topicId: 'Functions', text: { en: 'If f(x) = 3x - 2 and g(x) = x² + 1, what is (g ∘ f)(2)?' }, options: [{ id: 'A', text: { en: '17' } }, { id: 'B', text: { en: '19' } }, { id: 'C', text: { en: '21' } }, { id: 'D', text: { en: '23' } }], correctAnswer: 'A', explanation: { en: 'f(2)=4. g(4)=16+1=17.' }, difficulty: 'MEDIUM', source: 'MOCK' },
-      { id: 'q_mock_phys_1', subjectId: 'Physics', topicId: 'Kinematics', text: { en: 'A car accelerates from rest at 2 m/s². What is its velocity after 5 seconds?' }, options: [{ id: 'A', text: { en: '5 m/s' } }, { id: 'B', text: { en: '10 m/s' } }, { id: 'C', text: { en: '15 m/s' } }, { id: 'D', text: { en: '20 m/s' } }], correctAnswer: 'B', explanation: { en: 'v = u + at = 0 + 2(5) = 10.' }, difficulty: 'EASY', source: 'MOCK' }
+      { id: 'hist_g11_u1', topic: { en: 'G11 History U1: Historiography' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 1, contentHtml: { en: "History is study of past human events based on evidence. Historiography is historical writing. Sources are primary and secondary." }, keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL }
     ];
 
     await this.saveNotes(initialNotes);
-    await this.saveQuestions(initialQuestions);
   }
 };

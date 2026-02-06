@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – Core Application Shell
-  V6.5 - Standard Quiz Center Integration
+  V6.6 - Assignment Manager Integration
 */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -17,11 +17,12 @@ import { OnboardingTutorial } from './components/OnboardingTutorial.tsx';
 import { LuwaLive } from './components/LuwaLive.tsx';
 import { LessonViewer } from './components/LessonViewer.tsx';
 import { QuizCenter } from './components/QuizCenter.tsx';
+import { AssignmentManager } from './components/AssignmentManager.tsx';
 import { storageService } from './services/storageService.ts';
 import { User, StudyNote } from './types.ts';
 import { ICONS } from './constants.tsx';
 
-type Tab = 'home' | 'tutor' | 'lab' | 'analytics' | 'admin' | 'library' | 'planner' | 'mock' | 'papers' | 'cinematic' | 'about' | 'settings' | 'live' | 'viewer' | 'quizzes';
+type Tab = 'home' | 'tutor' | 'lab' | 'analytics' | 'admin' | 'library' | 'planner' | 'mock' | 'papers' | 'cinematic' | 'about' | 'settings' | 'live' | 'viewer' | 'quizzes' | 'assignments';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -95,12 +96,14 @@ const App: React.FC = () => {
   const currentTabs = isAdmin 
     ? [
         { id: 'admin', icon: ICONS.Home, label: 'Control', desc: 'System Administration' },
+        { id: 'assignments', icon: ICONS.Copy, label: 'Assignments', desc: 'Registry Management' },
         { id: 'settings', icon: ICONS.Layout, label: 'Settings', desc: 'Registry Config' }
       ]
     : [
         { id: 'home', icon: ICONS.Home, label: 'Home', desc: 'Scholar Overview' },
         { id: 'library', icon: ICONS.Layout, label: 'Library', desc: 'Study Nodes' },
         { id: 'quizzes', icon: ICONS.Zap, label: 'Quizzes', desc: 'Unit Assessment' },
+        { id: 'assignments', icon: ICONS.Copy, label: 'Assignments', desc: 'Scholar Tasks' },
         { id: 'tutor', icon: ICONS.Brain, label: 'Neural Tutor', desc: 'AI Instruction' },
         { id: 'live', icon: ICONS.Mic, label: 'Live Link', desc: 'Vocal Co-pilot' },
         { id: 'lab', icon: ICONS.Award, label: 'AI Lab', desc: 'Adaptive Practice' },
@@ -207,6 +210,7 @@ const App: React.FC = () => {
             {activeTab === 'tutor' && <NeuralTutor user={user} onUpdateUser={handleUpdateUser} />}
             {activeTab === 'live' && <LuwaLive />}
             {activeTab === 'quizzes' && <QuizCenter user={user} onUpdateUser={handleUpdateUser} onExit={() => setActiveTab('home')} />}
+            {activeTab === 'assignments' && <AssignmentManager user={user} onUpdateUser={handleUpdateUser} onNavigate={navigateTo as any} />}
             {activeTab === 'lab' && <AssessmentLab user={user} onUpdateUser={handleUpdateUser} onConsultTutor={() => navigateTo('tutor')} targetNodeId={targetSubject || undefined} />}
             {activeTab === 'mock' && <MockSimulator user={user} onComplete={(s) => { handleUpdateUser({ ...user, xp: user.xp + (s * 10) }); navigateTo('analytics'); }} onExit={() => navigateTo('home')} />}
             {activeTab === 'library' && <CurriculumLibrary user={user} onUpdateUser={handleUpdateUser} onOpenViewer={(note) => navigateTo('viewer', undefined, note)} />}
