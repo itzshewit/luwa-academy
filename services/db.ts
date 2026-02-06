@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – Neural Registry Database
-  V1.0 - IndexedDB Implementation
+  V1.1 - IndexedDB Implementation
 */
 
 const DB_NAME = 'LuwaAcademy_Institutional_Registry';
@@ -26,9 +26,8 @@ export const dbService = {
         if (!db.objectStoreNames.contains('tokens')) db.createObjectStore('tokens', { keyPath: 'code' });
         if (!db.objectStoreNames.contains('results')) db.createObjectStore('results', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('audits')) db.createObjectStore('audits', { keyPath: 'id' });
-        
-        // Added store for exams
         if (!db.objectStoreNames.contains('exams')) db.createObjectStore('exams', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('static_quizzes')) db.createObjectStore('static_quizzes', { keyPath: 'id' });
         
         // Indices for faster querying
         const noteStore = request.transaction?.objectStore('notes');

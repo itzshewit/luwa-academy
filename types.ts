@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – AI-Powered Educational Platform
-  Global Type Definitions - V3.9 (Exam System Update)
+  Global Type Definitions - V4.0 (Static Quiz Update)
 */
 
 export enum Grade {
@@ -52,6 +52,28 @@ export interface Question {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   source: 'EUEE_PAST_EXAM' | 'CURRICULUM_BASED' | 'MOCK';
   year?: number;
+}
+
+export interface StaticQuestion {
+  type: 'multiple-choice' | 'true-false' | 'fill-blank' | 'multiple-select';
+  question: string;
+  options?: string[];
+  correctAnswer?: number | boolean | string;
+  correctAnswers?: number[];
+  explanation?: string;
+}
+
+export interface StaticQuiz {
+  id: number;
+  title: string;
+  subject: string;
+  stream: string;
+  icon: string;
+  color: string;
+  duration: string;
+  totalQuestions: number;
+  description: string;
+  questions: StaticQuestion[];
 }
 
 export interface PastPaper {

@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – Core Application Shell
-  V6.3 - Global Responsive Hamburger Navigation
+  V6.5 - Standard Quiz Center Integration
 */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -15,16 +15,19 @@ import { CurriculumLibrary } from './components/CurriculumLibrary.tsx';
 import { MockSimulator } from './components/MockSimulator.tsx';
 import { OnboardingTutorial } from './components/OnboardingTutorial.tsx';
 import { LuwaLive } from './components/LuwaLive.tsx';
+import { LessonViewer } from './components/LessonViewer.tsx';
+import { QuizCenter } from './components/QuizCenter.tsx';
 import { storageService } from './services/storageService.ts';
-import { User } from './types.ts';
+import { User, StudyNote } from './types.ts';
 import { ICONS } from './constants.tsx';
 
-type Tab = 'home' | 'tutor' | 'lab' | 'analytics' | 'admin' | 'library' | 'planner' | 'mock' | 'papers' | 'cinematic' | 'about' | 'settings' | 'live';
+type Tab = 'home' | 'tutor' | 'lab' | 'analytics' | 'admin' | 'library' | 'planner' | 'mock' | 'papers' | 'cinematic' | 'about' | 'settings' | 'live' | 'viewer' | 'quizzes';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [targetSubject, setTargetSubject] = useState<string | null>(null);
+  const [activeNote, setActiveNote] = useState<StudyNote | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -60,9 +63,10 @@ const App: React.FC = () => {
     initApp();
   }, []);
 
-  const navigateTo = (tab: Tab, subject?: string) => {
+  const navigateTo = (tab: Tab, subject?: string, note?: StudyNote) => {
     setActiveTab(tab);
     if (subject) setTargetSubject(subject);
+    if (note) setActiveNote(note);
     setIsMobileNavOpen(false);
   };
 
@@ -96,9 +100,10 @@ const App: React.FC = () => {
     : [
         { id: 'home', icon: ICONS.Home, label: 'Home', desc: 'Scholar Overview' },
         { id: 'library', icon: ICONS.Layout, label: 'Library', desc: 'Study Nodes' },
+        { id: 'quizzes', icon: ICONS.Zap, label: 'Quizzes', desc: 'Unit Assessment' },
         { id: 'tutor', icon: ICONS.Brain, label: 'Neural Tutor', desc: 'AI Instruction' },
         { id: 'live', icon: ICONS.Mic, label: 'Live Link', desc: 'Vocal Co-pilot' },
-        { id: 'lab', icon: ICONS.Zap, label: 'Practice', desc: 'Diagnostic Lab' },
+        { id: 'lab', icon: ICONS.Award, label: 'AI Lab', desc: 'Adaptive Practice' },
         { id: 'mock', icon: ICONS.Trophy, label: 'Mock Exam', desc: 'Simulation Node' },
         { id: 'analytics', icon: ICONS.Layout, label: 'Insights', desc: 'Scholar Pulse' }
       ];
@@ -168,42 +173,46 @@ const App: React.FC = () => {
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <header className="h-20 bg-white/80 backdrop-blur-xl px-8 flex items-center justify-between z-30 border-b border-slate-100 shrink-0">
-          <div className="flex items-center gap-6">
-             {/* Global Hamburger Icon */}
-             <button 
-               onClick={() => setIsMobileNavOpen(true)}
-               className="md:hidden p-4 bg-luwa-primaryContainer text-luwa-primary rounded-m3-l active:scale-95 transition-all shadow-sm"
-               aria-label="Toggle Global Navigation"
-             >
-                <ICONS.Menu className="w-6 h-6" />
-             </button>
-             <span className="text-[10px] text-slate-400 uppercase tracking-[0.4em] font-black hidden sm:inline-block">
-                {isAdmin ? 'Administrative Cluster' : 'Scholar Node Active'}
-             </span>
-          </div>
+        {activeTab !== 'viewer' && (
+          <header className="h-20 bg-white/80 backdrop-blur-xl px-8 flex items-center justify-between z-30 border-b border-slate-100 shrink-0">
+            <div className="flex items-center gap-6">
+              {/* Global Hamburger Icon */}
+              <button 
+                onClick={() => setIsMobileNavOpen(true)}
+                className="md:hidden p-4 bg-luwa-primaryContainer text-luwa-primary rounded-m3-l active:scale-95 transition-all shadow-sm"
+                aria-label="Toggle Global Navigation"
+              >
+                  <ICONS.Menu className="w-6 h-6" />
+              </button>
+              <span className="text-[10px] text-slate-400 uppercase tracking-[0.4em] font-black hidden sm:inline-block">
+                  {isAdmin ? 'Administrative Cluster' : 'Scholar Node Active'}
+              </span>
+            </div>
 
-          <div className="flex items-center gap-4">
-             <div className="text-right hidden sm:block">
-                <p className="text-[10px] font-black uppercase text-luwa-onSurface">{user.fullName}</p>
-                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Level {Math.floor(user.xp / 100) + 1} Scholar</p>
-             </div>
-             <div className="w-10 h-10 bg-luwa-surfaceVariant rounded-full border border-slate-100 flex items-center justify-center font-black text-xs text-luwa-primary">
-                {user.fullName.charAt(0)}
-             </div>
-          </div>
-        </header>
+            <div className="flex items-center gap-4">
+              <div className="text-right hidden sm:block">
+                  <p className="text-[10px] font-black uppercase text-luwa-onSurface">{user.fullName}</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Level {Math.floor(user.xp / 100) + 1} Scholar</p>
+              </div>
+              <div className="w-10 h-10 bg-luwa-surfaceVariant rounded-full border border-slate-100 flex items-center justify-center font-black text-xs text-luwa-primary">
+                  {user.fullName.charAt(0)}
+              </div>
+            </div>
+          </header>
+        )}
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scrollbar bg-white">
-          <div className="max-w-6xl mx-auto h-full accelerated">
+        <div className={`flex-1 overflow-y-auto ${activeTab === 'viewer' ? 'p-0' : 'p-4 md:p-10'} custom-scrollbar bg-white`}>
+          <div className={`${activeTab === 'viewer' ? 'w-full h-full' : 'max-w-6xl mx-auto h-full'} accelerated`}>
             {activeTab === 'home' && <Dashboard user={user} onNavigate={navigateTo as any} onUpdateUser={handleUpdateUser} />}
             {activeTab === 'tutor' && <NeuralTutor user={user} onUpdateUser={handleUpdateUser} />}
             {activeTab === 'live' && <LuwaLive />}
+            {activeTab === 'quizzes' && <QuizCenter user={user} onUpdateUser={handleUpdateUser} onExit={() => setActiveTab('home')} />}
             {activeTab === 'lab' && <AssessmentLab user={user} onUpdateUser={handleUpdateUser} onConsultTutor={() => navigateTo('tutor')} targetNodeId={targetSubject || undefined} />}
             {activeTab === 'mock' && <MockSimulator user={user} onComplete={(s) => { handleUpdateUser({ ...user, xp: user.xp + (s * 10) }); navigateTo('analytics'); }} onExit={() => navigateTo('home')} />}
-            {activeTab === 'library' && <CurriculumLibrary user={user} onUpdateUser={handleUpdateUser} />}
+            {activeTab === 'library' && <CurriculumLibrary user={user} onUpdateUser={handleUpdateUser} onOpenViewer={(note) => navigateTo('viewer', undefined, note)} />}
             {activeTab === 'analytics' && <ScholarAnalytics user={user} />}
             {activeTab === 'admin' && isAdmin && <AdminControl onSimulate={(u) => { setUser(u); navigateTo('home'); }} />}
+            {activeTab === 'viewer' && activeNote && <LessonViewer user={user} note={activeNote} onClose={() => navigateTo('library')} onUpdateUser={handleUpdateUser} />}
           </div>
         </div>
       </main>

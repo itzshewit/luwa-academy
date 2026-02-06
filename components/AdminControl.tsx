@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – Institutional Mission Control
-  V8.0 - Enhanced User Management & Access Tracking
+  V9.0 - Enhanced Admission & Token Registry Oversight
 */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -57,6 +57,7 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
     const code = await storageService.generateToken();
     const updated = await storageService.getTokens();
     setTokens(updated.sort((a, b) => b.createdAt - a.createdAt));
+    alert(`Institutional Code Generated: ${code}`);
   };
 
   const handleParseExam = async () => {
@@ -114,7 +115,7 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
     { id: 'Users', icon: ICONS.Users, label: 'Scholar Registry' },
     { id: 'Assessments', icon: ICONS.Zap, label: 'Assessment Hub' },
     { id: 'Curriculum', icon: ICONS.Layout, label: 'Curriculum Master' },
-    { id: 'Tokens', icon: ICONS.Shield, label: 'Registry Codes' },
+    { id: 'Tokens', icon: ICONS.Shield, label: 'Admission Hub' },
     { id: 'Settings', icon: ICONS.Layout, label: 'Platform Config' }
   ];
 
@@ -149,7 +150,7 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                   <h1 className="display-small font-serif font-black text-luwa-onSurface">Admin Dashboard</h1>
                   <p className="label-medium text-slate-400 font-black uppercase tracking-widest mt-1">Institutional Telemetry Active</p>
                </div>
-               <button onClick={handleGenerateToken} className="px-6 py-3 bg-luwa-primary text-white rounded-xl label-small font-black uppercase tracking-widest shadow-m3-2 m3-ripple">+ New Registry Code</button>
+               <button onClick={handleGenerateToken} className="px-6 py-3 bg-luwa-primary text-white rounded-xl label-small font-black uppercase tracking-widest shadow-m3-2 m3-ripple">+ New Admission Code</button>
             </header>
 
             {/* Stats Grid */}
@@ -213,7 +214,7 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                    <p className="label-small text-slate-400 font-black uppercase tracking-widest mt-1">Global User Database</p>
                 </div>
                 <div className="flex gap-3">
-                   <button onClick={handleGenerateToken} className="px-6 py-3 bg-luwa-primaryContainer text-luwa-primary rounded-xl text-[10px] font-black uppercase tracking-widest m3-ripple">Admission Control</button>
+                   <button onClick={handleGenerateToken} className="px-6 py-3 bg-luwa-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest m3-ripple shadow-m3-1">+ Code</button>
                    <button className="text-[10px] font-black uppercase tracking-widest px-6 py-3 border border-slate-200 rounded-xl hover:bg-slate-50">Export CSV</button>
                 </div>
              </header>
@@ -223,7 +224,7 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                     <thead className="bg-slate-50 border-b border-slate-100">
                         <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                           <th className="px-8 py-5">Full Name</th>
-                          <th className="px-8 py-5">Academic Stream</th>
+                          <th className="px-8 py-5">Admission Source</th>
                           <th className="px-8 py-5 text-center">Progression</th>
                           <th className="px-8 py-5 text-right">Node Protocol</th>
                         </tr>
@@ -240,7 +241,12 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                                   </div>
                                 </div>
                             </td>
-                            <td className="px-8 py-5 text-xs font-medium text-slate-500">{u.stream === 'NATURAL_SCIENCE' ? 'Natural Science' : 'Social Science'}</td>
+                            <td className="px-8 py-5">
+                               <div className="flex flex-col">
+                                  <span className="text-xs font-medium text-slate-500">{u.stream === 'NATURAL_SCIENCE' ? 'Natural Science' : 'Social Science'}</span>
+                                  <span className="text-[9px] font-bold text-luwa-primary uppercase">Code: {tokens.find(t => t.usedBy === u.id)?.code || 'Institutional (Admin)'}</span>
+                               </div>
+                            </td>
                             <td className="px-8 py-5 text-center">
                                 <span className="px-3 py-1 bg-luwa-primaryContainer text-luwa-primary rounded-full text-[10px] font-black">{u.xp} XP</span>
                             </td>
@@ -260,30 +266,30 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
           <div className="space-y-10 animate-m3-fade">
              <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-m3-2xl border border-slate-100 shadow-sm">
                 <div>
-                   <h2 className="display-small font-serif font-black text-luwa-primary uppercase">Institutional Codes</h2>
-                   <p className="label-small text-slate-400 font-black uppercase tracking-widest mt-1">Authorized Registry Authorization</p>
+                   <h2 className="display-small font-serif font-black text-luwa-primary uppercase">Admission Hub</h2>
+                   <p className="label-small text-slate-400 font-black uppercase tracking-widest mt-1">Authorized Registry Activation Codes</p>
                 </div>
                 <button 
                   onClick={handleGenerateToken} 
                   className="w-full md:w-auto px-10 py-5 bg-luwa-primary text-white rounded-m3-xl label-large font-black uppercase tracking-widest shadow-m3-2 m3-ripple transition-all active:scale-95 flex items-center justify-center gap-3"
                 >
-                  <ICONS.Zap className="w-5 h-5" /> Generate Admission Code
+                  <ICONS.Zap className="w-5 h-5" /> Generate New Admission Code
                 </button>
              </header>
 
              <div className="grid grid-cols-1 gap-4">
                 <div className="hidden lg:grid lg:grid-cols-12 px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                   <div className="col-span-3">Token Code</div>
+                   <div className="col-span-3">Registry Token</div>
                    <div className="col-span-2 text-center">Status</div>
-                   <div className="col-span-3">Sync Date</div>
+                   <div className="col-span-3">Authorization Date</div>
                    <div className="col-span-3">Consumed By</div>
-                   <div className="col-span-1 text-right">Registry</div>
+                   <div className="col-span-1 text-right">Actions</div>
                 </div>
 
                 {tokens.length === 0 && (
                    <div className="p-20 text-center bg-slate-50 rounded-m3-2xl border border-dashed border-slate-200">
                       <ICONS.Shield className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Registry code buffer empty</p>
+                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Admission Registry Empty</p>
                    </div>
                 )}
 
@@ -297,7 +303,7 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                           </div>
                           <div className="col-span-2 text-center">
                              <span className={`inline-flex px-4 py-1.5 rounded-full text-[9px] font-black uppercase ${t.isUsed ? 'bg-slate-100 text-slate-400' : 'bg-green-50 text-green-600 animate-pulse'}`}>
-                                {t.isUsed ? 'Consumed' : 'Available'}
+                                {t.isUsed ? 'Consumed' : 'Ready'}
                              </span>
                           </div>
                           <div className="col-span-3">
@@ -309,18 +315,18 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                                    <div className="w-8 h-8 rounded-full bg-luwa-primaryContainer flex items-center justify-center text-[10px] font-black text-luwa-primary">{consumer?.fullName?.charAt(0) || 'U'}</div>
                                    <div className="min-w-0">
                                       <p className="text-xs font-black text-luwa-onSurface truncate">{consumer?.fullName || 'Unknown Scholar'}</p>
-                                      <p className="text-[8px] text-slate-400 font-bold uppercase truncate">{t.usedBy}</p>
+                                      <p className="text-[8px] text-slate-400 font-bold uppercase truncate">{consumer?.email || 'N/A'}</p>
                                    </div>
                                 </div>
                              ) : (
-                                <span className="text-[10px] text-slate-300 font-black uppercase italic tracking-widest">Awaiting Scholar...</span>
+                                <span className="text-[10px] text-slate-300 font-black uppercase italic tracking-widest">Awaiting Admission...</span>
                              )}
                           </div>
                           <div className="col-span-1 text-right flex justify-end gap-2">
                              <button 
-                               onClick={() => { navigator.clipboard.writeText(t.code); alert("Node Code Copied"); }} 
+                               onClick={() => { navigator.clipboard.writeText(t.code); alert("Admission Code Copied to Clipboard"); }} 
                                className="p-3 bg-slate-50 text-slate-300 hover:text-luwa-primary hover:bg-luwa-primaryContainer rounded-full transition-all"
-                               title="Copy to Clipboard"
+                               title="Copy Code"
                              >
                                 <ICONS.Copy className="w-4 h-4" />
                              </button>
@@ -356,17 +362,6 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                        </button>
                     </div>
                  </GlassCard>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {existingExams.map(e => (
-                       <div key={e.id} className="p-6 bg-white border border-slate-100 rounded-m3-xl shadow-sm flex justify-between items-center group">
-                          <div>
-                             <p className="text-[10px] font-black text-luwa-primary uppercase mb-1">{e.subject}</p>
-                             <p className="text-sm font-black text-luwa-onSurface">{e.title}</p>
-                          </div>
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{e.questions.length} Nodes</span>
-                       </div>
-                    ))}
-                 </div>
                </div>
              ) : (
                <div className="space-y-10">
@@ -379,7 +374,7 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                         <button onClick={() => setParsedExam(null)} className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-all"><ICONS.X className="w-5 h-5" /></button>
                      </div>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-                        <input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-m3-xl p-4 text-white placeholder-white/50 outline-none" placeholder="Deploy Date" />
+                        <input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-m3-xl p-4 text-white placeholder-white/50 outline-none" />
                         <input type="time" value={examTime} onChange={(e) => setExamTime(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-m3-xl p-4 text-white placeholder-white/50 outline-none" />
                      </div>
                      <button onClick={handleDeployExam} className="w-full py-6 bg-white text-luwa-primary rounded-m3-xl label-large font-black uppercase tracking-[0.2em] shadow-m3-3 m3-ripple">Authorize and Deploy Node</button>

@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – Curriculum Library & Voice Synthesis
-  V6.4 - Stream-Specific Content Filtering Patch
+  V6.5 - Interactive Lesson Viewer Integration
 */
 
 import React, { useState, useEffect } from 'react';
@@ -16,9 +16,10 @@ import { decodeBase64, decodeAudioData } from '../services/audioService.ts';
 interface CurriculumLibraryProps {
   user: User;
   onUpdateUser: (user: User) => void;
+  onOpenViewer: (note: StudyNote) => void;
 }
 
-export const CurriculumLibrary: React.FC<CurriculumLibraryProps> = ({ user, onUpdateUser }) => {
+export const CurriculumLibrary: React.FC<CurriculumLibraryProps> = ({ user, onUpdateUser, onOpenViewer }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [activeNote, setActiveNote] = useState<StudyNote | null>(null);
@@ -147,6 +148,12 @@ export const CurriculumLibrary: React.FC<CurriculumLibraryProps> = ({ user, onUp
                       </div>
                     </div>
                     <div className="flex gap-3">
+                      <button 
+                        onClick={() => onOpenViewer(activeNote)}
+                        className="px-6 py-3 bg-luwa-primary text-white rounded-xl label-small font-black uppercase tracking-widest shadow-m3-1 hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
+                      >
+                         <ICONS.Layout className="w-4 h-4" /> Interactive Viewer
+                      </button>
                       <button onClick={synthesizeVoiceBrief} disabled={isSynthesizing} className={`p-4 rounded-full border border-luwa-primary transition-all shadow-sm ${isSynthesizing ? 'animate-pulse bg-luwa-primary text-white' : 'text-luwa-primary hover:bg-luwa-primaryContainer'}`} title="Voice Brief">
                         <ICONS.Mic className="w-5 h-5" />
                       </button>

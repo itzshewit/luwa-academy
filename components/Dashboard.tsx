@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – Scholar Home Dashboard
-  Integrated Mockup Logic - V6.0
+  Integrated Mockup Logic - V6.1 (Quiz Center Entry)
 */
 
 import React, { useMemo } from 'react';
@@ -108,10 +108,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onUpdate
           <h3 className="label-large text-luwa-onSurface uppercase font-black tracking-[0.3em]">
             Registry Terminal
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
             {[
               { id: 'library', label: 'Study Nodes', icon: ICONS.Layout, color: 'text-blue-500' },
-              { id: 'lab', label: 'Assessment', icon: ICONS.Zap, color: 'text-green-500' },
+              { id: 'quizzes', label: 'Unit Quiz', icon: ICONS.Zap, color: 'text-amber-500' },
+              { id: 'lab', label: 'AI Lab', icon: ICONS.Award, color: 'text-green-500' },
               { id: 'mock', label: 'Simulation', icon: ICONS.Brain, color: 'text-purple-500' },
               { id: 'analytics', label: 'Insights', icon: ICONS.Trophy, color: 'text-orange-500' },
             ].map(action => (

@@ -1,5 +1,5 @@
 
-import { User, Stream, StudyNote, Question, PastPaper, AccessToken, AuditEntry, UserRole, Exam, ExamSubmission } from '../types.ts';
+import { User, Stream, StudyNote, Question, PastPaper, AccessToken, AuditEntry, UserRole, Exam, ExamSubmission, StaticQuiz } from '../types.ts';
 import { dbService } from './db.ts';
 
 const PREFIX = 'luwa_v3_';
@@ -51,6 +51,14 @@ export const storageService = {
 
   async saveQuestions(questions: Question[]): Promise<void> {
     await dbService.bulkPut('questions', questions);
+  },
+
+  async getStaticQuizzes(): Promise<StaticQuiz[]> {
+    return dbService.getAll<StaticQuiz>('static_quizzes');
+  },
+
+  async saveStaticQuizzes(quizzes: StaticQuiz[]): Promise<void> {
+    await dbService.bulkPut('static_quizzes', quizzes);
   },
 
   async getTokens(): Promise<AccessToken[]> {
@@ -134,34 +142,119 @@ export const storageService = {
   },
 
   async seedRegistry(): Promise<void> {
-    const existingNotes = await this.getNotes();
-    if (existingNotes.length > 0) return;
+    const existingQuizzes = await this.getStaticQuizzes();
+    if (existingQuizzes.length > 0) return;
+
+    const initialQuizzes: StaticQuiz[] = [
+      {
+        id: 1,
+        title: "Mathematics - Relations & Functions",
+        subject: "Mathematics",
+        stream: "both",
+        icon: "📐",
+        color: "#2563eb",
+        duration: "15 min",
+        totalQuestions: 8,
+        description: "Test your understanding of relations, functions, domain and range.",
+        questions: [
+          { type: "multiple-choice", question: "What is the domain of f(x) = √(x - 4)?", options: ["x ≥ 4", "x > 4", "x ≤ 4", "All real numbers"], correctAnswer: 0 },
+          { type: "true-false", question: "A function is a relation where each input has exactly one output.", correctAnswer: true },
+          { type: "multiple-choice", question: "Which of the following represents a function?", options: ["{(1,2), (2,3), (1,4)}", "{(1,2), (2,2), (3,2)}", "{(1,2), (1,3), (2,4)}", "None of the above"], correctAnswer: 1 },
+          { type: "fill-blank", question: "If f(x) = 3x + 5 and f(2) = k, what is the value of k?", correctAnswer: "11" },
+          { type: "multiple-select", question: "Which of the following are properties of equivalence relations? (Select all that apply)", options: ["Reflexive", "Symmetric", "Transitive", "Associative"], correctAnswers: [0, 1, 2] },
+          { type: "multiple-choice", question: "What is the range of f(x) = x²?", options: ["All real numbers", "x ≥ 0", "y ≥ 0", "y ≤ 0"], correctAnswer: 2 },
+          { type: "true-false", question: "The relation {(1,1), (2,2), (3,3)} is reflexive on the set {1, 2, 3}.", correctAnswer: true },
+          { type: "multiple-choice", question: "If f(x) = 2x - 1, what is f⁻¹(x)?", options: ["(x + 1)/2", "(x - 1)/2", "2x + 1", "Cannot be determined"], correctAnswer: 0 }
+        ]
+      },
+      {
+        id: 2,
+        title: "Mathematics - Sequences & Series",
+        subject: "Mathematics",
+        stream: "both",
+        icon: "📐",
+        color: "#2563eb",
+        duration: "12 min",
+        totalQuestions: 6,
+        description: "Test your knowledge of arithmetic and geometric sequences.",
+        questions: [
+          { type: "multiple-choice", question: "What is the 10th term of the arithmetic sequence 3, 7, 11, 15...?", options: ["39", "43", "47", "51"], correctAnswer: 0 },
+          { type: "fill-blank", question: "In a geometric sequence, if a = 2 and r = 3, the 4th term is ___.", correctAnswer: "54" },
+          { type: "true-false", question: "The sum of an infinite geometric series converges when |r| < 1.", correctAnswer: true },
+          { type: "multiple-choice", question: "The formula for the nth term of an arithmetic sequence is:", options: ["a_n = a + nd", "a_n = a + (n-1)d", "a_n = ar^n", "a_n = ar^(n-1)"], correctAnswer: 1 },
+          { type: "multiple-select", question: "Which of the following are geometric sequences? (Select all that apply)", options: ["2, 4, 8, 16...", "3, 6, 9, 12...", "1, -2, 4, -8...", "5, 10, 20, 40..."], correctAnswers: [0, 2, 3] },
+          { type: "true-false", question: "An arithmetic sequence has a constant ratio between consecutive terms.", correctAnswer: false }
+        ]
+      },
+      {
+        id: 3,
+        title: "Physics - Newton's Laws of Motion",
+        subject: "Physics",
+        stream: "natural",
+        icon: "⚛️",
+        color: "#10b981",
+        duration: "12 min",
+        totalQuestions: 7,
+        description: "Test your knowledge of Newton's three laws of motion.",
+        questions: [
+          { type: "multiple-choice", question: "According to Newton's First Law, an object at rest will:", options: ["Stay at rest unless acted upon by a force", "Always move", "Accelerate constantly", "Decelerate over time"], correctAnswer: 0 },
+          { type: "true-false", question: "Newton's Second Law states that F = ma.", correctAnswer: true },
+          { type: "fill-blank", question: "If a 5 kg object accelerates at 2 m/s², the net force is ___ N.", correctAnswer: "10" },
+          { type: "multiple-choice", question: "Newton's Third Law states:", options: ["Force equals mass times acceleration", "For every action, there is an equal and opposite reaction", "Objects at rest stay at rest", "Energy is conserved"], correctAnswer: 1 },
+          { type: "multiple-select", question: "Which of the following are examples of Newton's Third Law? (Select all that apply)", options: ["Rocket propulsion", "Walking on the ground", "Swimming", "Falling objects"], correctAnswers: [0, 1, 2] },
+          { type: "true-false", question: "A larger mass requires more force to achieve the same acceleration.", correctAnswer: true },
+          { type: "multiple-choice", question: "What is the unit of force in the SI system?", options: ["Joule", "Newton", "Watt", "Pascal"], correctAnswer: 1 }
+        ]
+      },
+      {
+        id: 5,
+        title: "Chemistry - Periodic Table",
+        subject: "Chemistry",
+        stream: "natural",
+        icon: "🧪",
+        color: "#8b5cf6",
+        duration: "10 min",
+        totalQuestions: 7,
+        description: "Test your knowledge of the periodic table and element properties.",
+        questions: [
+          { type: "multiple-choice", question: "Which element has the atomic number 6?", options: ["Oxygen", "Carbon", "Nitrogen", "Helium"], correctAnswer: 1 },
+          { type: "true-false", question: "Noble gases are highly reactive elements.", correctAnswer: false },
+          { type: "fill-blank", question: "The chemical symbol for Gold is ___.", correctAnswer: "Au" },
+          { type: "multiple-select", question: "Which of the following are alkali metals? (Select all that apply)", options: ["Sodium (Na)", "Potassium (K)", "Calcium (Ca)", "Lithium (Li)"], correctAnswers: [0, 1, 3] },
+          { type: "multiple-choice", question: "Elements in the same group have similar:", options: ["Atomic mass", "Chemical properties", "Number of protons", "Physical state"], correctAnswer: 1 },
+          { type: "true-false", question: "The atomic number represents the number of protons in an atom.", correctAnswer: true },
+          { type: "fill-blank", question: "The number of electron shells increases as you move ___ the periodic table.", correctAnswer: "down" }
+        ]
+      },
+      {
+        id: 10,
+        title: "SAT - Analytical Reasoning",
+        subject: "SAT/Aptitude",
+        stream: "both",
+        icon: "🎯",
+        color: "#ef4444",
+        duration: "20 min",
+        totalQuestions: 8,
+        description: "Test your logical reasoning and problem-solving abilities.",
+        questions: [
+          { type: "multiple-choice", question: "If 2x + 5 = 15, what is x?", options: ["5", "10", "7.5", "20"], correctAnswer: 0 },
+          { type: "multiple-choice", question: "Complete the sequence: 2, 4, 8, 16, ___", options: ["24", "32", "20", "30"], correctAnswer: 1 },
+          { type: "true-false", question: "If A is taller than B, and B is taller than C, then A is taller than C.", correctAnswer: true },
+          { type: "multiple-choice", question: "What is 20% of 80?", options: ["12", "16", "18", "20"], correctAnswer: 1 },
+          { type: "fill-blank", question: "If a car travels 60 km in 1 hour, it travels ___ km in 30 minutes.", correctAnswer: "30" },
+          { type: "multiple-choice", question: "Which word is the odd one out?", options: ["Apple", "Banana", "Carrot", "Orange"], correctAnswer: 2 },
+          { type: "true-false", question: "All squares are rectangles, but not all rectangles are squares.", correctAnswer: true },
+          { type: "multiple-choice", question: "If today is Monday, what day will it be in 10 days?", options: ["Monday", "Tuesday", "Thursday", "Wednesday"], correctAnswer: 2 }
+        ]
+      }
+    ];
+
+    await this.saveStaticQuizzes(initialQuizzes);
 
     const initialNotes: StudyNote[] = [
       { id: 'sat_overview', topic: { en: 'EUEE SAT: Overview' }, subjectId: 'SAT', gradeLevel: 12, chapterNumber: 0, contentHtml: { en: "The Scholastic Aptitude Test (SAT) is mandatory. 60 Qs: 35 Verbal, 25 Quantitative. 120 minutes." }, keyFormulas: [], diagrams: [], estimatedReadTime: 10, difficulty: 'MEDIUM', isBookmarked: false },
-      // Full History G11
       { id: 'hist_g11_u1', topic: { en: 'G11 History U1: Historiography' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 1, contentHtml: { en: "History is study of past human events based on evidence. Historiography is historical writing. Sources are primary and secondary." }, keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g11_u2', topic: { en: 'G11 History U2: Ancient Civilizations' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 2, contentHtml: { en: "Mesopotamia, Egypt, Indus Valley, China. Nubia/Kush and Carthage in Africa." }, keyFormulas: [], diagrams: [], estimatedReadTime: 20, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g11_u3', topic: { en: 'G11 History U3: Ethiopia to 13th C' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 3, contentHtml: { en: "Aksumite Kingdom adoption of Christianity under Ezana. Ge'ez script. Red Sea trade." }, keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g11_u4', topic: { en: 'G11 History U4: Middle Ages' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 4, contentHtml: { en: "Feudalism. Rise of Islam. Renaissance and Enlightenment transitions." }, keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g11_u5', topic: { en: 'G11 History U5: States of Africa to 1500' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 5, contentHtml: { en: "West Africa: Ghana, Mali (Mansa Musa), Songhai. Zimbabwe and Kongo." }, keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g11_u6', topic: { en: 'G11 History U6: Africa & Outside World' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 6, contentHtml: { en: "Atlantic Slave Trade. Triangular trade impact. Early European exploration." }, keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g11_u7', topic: { en: 'G11 History U7: Medieval Ethiopia' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 7, contentHtml: { en: "Solomonic Restoration (1270). Ifat and Adal Sultanates." }, keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g11_u8', topic: { en: 'G11 History U8: Ethiopia 16th-19th C' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 8, contentHtml: { en: "Wars of Ahmad Gragn. Oromo Migrations. Zemene Mesafint." }, keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g11_u9', topic: { en: 'G11 History U9: Age of Revolutions' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 9, contentHtml: { en: "American and French Revolutions. Napoleonic era." }, keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      // Full History G12
-      { id: 'hist_g12_u1', topic: { en: 'G12 History U1: Capitalism/Nationalism' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 1, contentHtml: { en: "Industrial Revolution. Italian/German Unifications." }, keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g12_u2', topic: { en: 'G12 History U2: Africa Colonialism' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 2, contentHtml: { en: "Berlin Conference. Resistance: Adwa, Samori Toure." }, keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g12_u3', topic: { en: 'G12 History U3: Ethiopia 19th C to 1941' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 3, contentHtml: { en: "Menelik II. Battle of Adwa. Italian Occupation." }, keyFormulas: [], diagrams: [], estimatedReadTime: 22, difficulty: 'HARD', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g12_u4', topic: { en: 'G12 History U4: World Wars' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 4, contentHtml: { en: "WWI and WWII triggers. Versailles. Founding of UN." }, keyFormulas: [], diagrams: [], estimatedReadTime: 20, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g12_u5', topic: { en: 'G12 History U5: Global Post-1945' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 5, contentHtml: { en: "Cold War. Decolonization. Globalization." }, keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g12_u6', topic: { en: 'G12 History U6: Ethiopia 1941-1991' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 6, contentHtml: { en: "Haile Selassie. 1974 Revolution. Derg Regime." }, keyFormulas: [], diagrams: [], estimatedReadTime: 20, difficulty: 'HARD', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g12_u7', topic: { en: 'G12 History U7: Africa since 1960s' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 7, contentHtml: { en: "OAU/AU transition. Agenda 2063." }, keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g12_u8', topic: { en: 'G12 History U8: Post-1991 Ethiopia' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 8, contentHtml: { en: "FDRE. Federalism. 1995 Constitution." }, keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'hist_g12_u9', topic: { en: 'G12 History U9: Indigenous Knowledge' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 9, contentHtml: { en: "Cultural Heritage. IKS in agri and health." }, keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'EASY', isBookmarked: false, stream: Stream.SOCIAL },
-      // Full Economics G11-12
-      { id: 'econ_g11_u1', topic: { en: 'G11 Econ U1: Basic Concepts' }, subjectId: 'Economics', gradeLevel: 11, chapterNumber: 1, contentHtml: { en: "Scarcity, Choice, Opportunity Cost. Economic Systems." }, keyFormulas: ['Opp Cost'], diagrams: [], estimatedReadTime: 15, difficulty: 'EASY', isBookmarked: false, stream: Stream.SOCIAL },
-      { id: 'econ_g12_u8', topic: { en: 'G12 Econ U8: Economy & Environment' }, subjectId: 'Economics', gradeLevel: 12, chapterNumber: 8, contentHtml: { en: "Sustainable development. Green economy policies." }, keyFormulas: [], diagrams: [], estimatedReadTime: 12, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL }
+      { id: 'hist_g12_u3', topic: { en: 'G12 History U3: Ethiopia 19th C to 1941' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 3, contentHtml: { en: "Menelik II. Battle of Adwa. Italian Occupation." }, keyFormulas: [], diagrams: [], estimatedReadTime: 22, difficulty: 'HARD', isBookmarked: false, stream: Stream.SOCIAL }
     ];
 
     const initialQuestions: Question[] = [
