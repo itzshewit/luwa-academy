@@ -123,186 +123,240 @@ export const storageService = {
     if (existingNotes.length > 0) return;
 
     const initialNotes: StudyNote[] = [
-      // MATHEMATICS - NATURAL (G11 & G12)
+      // ==========================================
+      // SHARED SUBJECTS
+      // ==========================================
       {
-        id: 'math_nat_g11_u1',
-        topic: { en: 'Unit 1: Relations and Functions' },
-        subjectId: 'Mathematics',
-        gradeLevel: 11,
-        chapterNumber: 1,
-        contentHtml: { en: `Distinguishes relations vs functions; covers types, composition, and inverses. Essential for all later algebra and EUEE function questions. 
-        - Function: Relation where each x maps to exactly one y.
-        - Domain: All possible x-inputs.
-        - Range: All y-outputs.
-        - Composition: (f o g)(x) = f(g(x)).
-        - Inverse: f^-1(f(x)) = x.` },
-        keyFormulas: ['(f o g)(x) = f(g(x))', 'f^-1(x)'],
-        diagrams: [],
-        estimatedReadTime: 15,
-        difficulty: 'MEDIUM',
-        isBookmarked: false,
-        stream: Stream.NATURAL
+        id: 'sat_overview', topic: { en: 'EUEE SAT: Overview' }, subjectId: 'SAT', gradeLevel: 12, chapterNumber: 0,
+        contentHtml: { en: "SAT is mandatory for all students. 60 Qs total: 35 Verbal, 25 Quantitative. 120 minutes." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 10, difficulty: 'MEDIUM', isBookmarked: false
       },
       {
-        id: 'math_nat_g12_u3',
-        topic: { en: 'Unit 3: Differential Calculus' },
-        subjectId: 'Mathematics',
-        gradeLevel: 12,
-        chapterNumber: 3,
-        contentHtml: { en: `Introduction to derivatives and rules of differentiation.
-        - Power Rule: (x^n)' = n*x^(n-1).
-        - Product Rule: (uv)' = u'v + uv'.
-        - Quotient Rule: (u/v)' = (u'v - uv') / v^2.
-        - Chain Rule: f(g(x))' = f'(g(x)) * g'(x).` },
-        keyFormulas: ['f\'(x) = lim h->0', '(uv)\' = u\'v + uv\''],
-        diagrams: [],
-        estimatedReadTime: 25,
-        difficulty: 'HARD',
-        isBookmarked: false,
-        stream: Stream.NATURAL
+        id: 'eng_grammar_master', topic: { en: 'English: Grammar Master' }, subjectId: 'English', gradeLevel: 12, chapterNumber: 0,
+        contentHtml: { en: "Focus on Tenses, Conditional Sentences, Modals, and Reading Comprehension strategies." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false
       },
 
-      // PHYSICS - NATURAL (G11 & G12)
+      // ==========================================
+      // HISTORY (SOCIAL STREAM ONLY)
+      // ==========================================
       {
-        id: 'phys_nat_g11_u2',
-        topic: { en: 'Unit 2: Vector Quantities' },
-        subjectId: 'Physics',
-        gradeLevel: 11,
-        chapterNumber: 2,
-        contentHtml: { en: `Scalars (magnitude only) vs Vectors (magnitude + direction).
-        Resolution: Ax = A cos θ, Ay = A sin θ.
-        Dot Product: A · B = AB cos θ = AxBx + AyBy.
-        Used for Work calculation (W = F · s).` },
-        keyFormulas: ['Ax = A cos θ', 'A · B = AB cos θ'],
-        diagrams: [],
-        estimatedReadTime: 12,
-        difficulty: 'MEDIUM',
-        isBookmarked: false,
-        stream: Stream.NATURAL
+        id: 'hist_g11_u1', topic: { en: 'G11 History U1: Historiography and Evolution' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 1,
+        contentHtml: { en: "1.1 What is History? Meaning, Use, and Scope. History is study of past human events based on evidence. Historiography is the writing of history. Sources are primary (original) and secondary. 1.3 Human Evolution: Theories of human origin, biological evolution from hominids to Homo sapiens. East Africa as 'cradle of humankind' (Lucy/Australopithecus afarensis)." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
       },
       {
-        id: 'phys_nat_g12_u4',
-        topic: { en: 'Unit 4: Electromagnetism' },
-        subjectId: 'Physics',
-        gradeLevel: 12,
-        chapterNumber: 4,
-        contentHtml: { en: `Magnetic fields, forces, and induction.
-        - Force on charge: F = qvB sin θ.
-        - Force on wire: F = BIL sin θ.
-        - Faraday's Law: ε = -dΦ/dt.
-        - Lenz's Law: Direction of induced current opposes flux change.` },
-        keyFormulas: ['F = qvB sin θ', 'ε = -dΦ/dt'],
-        diagrams: [],
-        estimatedReadTime: 20,
-        difficulty: 'HARD',
-        isBookmarked: false,
-        stream: Stream.NATURAL
+        id: 'hist_g11_u2', topic: { en: 'G11 History U2: Ancient Civilizations' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 2,
+        contentHtml: { en: "Mesopotamia (Cuneiform, Hammurabi), Egypt (Hieroglyphics, Pyramids), Indus Valley (Mohenjo-Daro), Ancient China (Confucianism, Paper/Silk). African: Nubia/Kush (Meroë iron centre), Carthage (Punic Wars)." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 20, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g11_u3', topic: { en: 'G11 History U3: Ethiopia & Horn to 13th Century' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 3,
+        contentHtml: { en: "Ethno-linguistic groups: Afro-Asiatic and Nilo-Saharan. Aksumite Kingdom (1st-7th c. AD): Red Sea trade, Ge'ez script, Christianity adoption under Ezana. Decline due to trade route shifts." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g11_u4', topic: { en: 'G11 History U4: Middle Ages and Early Modern' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 4,
+        contentHtml: { en: "European Feudalism (Lords/Serfs/Church). Byzantine Empire. Rise of Islam (7th c.) and cultural achievements. Transition: Renaissance, Reformation, Scientific Revolution, Enlightenment." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g11_u5', topic: { en: 'G11 History U5: Peoples and States of Africa to 1500' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 5,
+        contentHtml: { en: "West Africa: Ghana, Mali (Mansa Musa), Songhai. East Africa: Swahili city-states. Southern Africa: Great Zimbabwe." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g11_u6', topic: { en: 'G11 History U6: Africa and Outside World 1500-1880' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 6,
+        contentHtml: { en: "Transition to Atlantic trade. Atlantic Slave Trade: Triangular trade, demographic impact. Early European penetration (Livingstone, Stanley)." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g11_u7', topic: { en: 'G11 History U7: Medieval Ethiopia 13th-16th Century' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 7,
+        contentHtml: { en: "Restoration of Solomonic Dynasty (1270). Muslim states (Ifat, Adal). Omotic states. Christian-Muslim interactions and tensions." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g11_u8', topic: { en: 'G11 History U8: Ethiopia mid-16th to mid-19th Century' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 8,
+        contentHtml: { en: "Wars of Ahmad Gragn. Oromo Migrations and impact. Zemene Mesafint (Era of Princes): decentralization and regionalism." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g11_u9', topic: { en: 'G11 History U9: Age of Revolutions 1789-1815' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 9,
+        contentHtml: { en: "American Revolution (British policies/Taxation). French Revolution (Social inequality, Enlightenment Stage: Monarchy -> Republic -> Napoleon). Impact: spread of nationalism." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g12_u1', topic: { en: 'G12 History U1: Capitalism & Nationalism 1815-1914' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 1,
+        contentHtml: { en: "Industrial Revolution (Britain). Ideologies: Liberalism, Marxism, Nationalism. Unifications: Italy (Cavour/Garibaldi) and Germany (Bismarck)." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g12_u2', topic: { en: 'G12 History U2: Africa and Colonial Experience' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 2,
+        contentHtml: { en: "Partition (Berlin Conference 1884-85). Modes: Direct vs Indirect rule. Impact: Artificial borders, economic dependency. Resistance: Adwa, Samori Toure, Maji Maji." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g12_u3', topic: { en: 'G12 History U3: Ethiopia mid-19th C to 1941' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 3,
+        contentHtml: { en: "Unification: Tewodros II, Yohannes IV, Menelik II. Battle of Adwa (1896): Victory over Italy. Italian Aggression and Occupation (1935-1941) and resistance (Arbegnoch)." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 22, difficulty: 'HARD', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g12_u4', topic: { en: 'G12 History U4: World Wars 1914-1945' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 4,
+        contentHtml: { en: "WWI Causes (Alliances, Sarajevo trigger). Consequences: Versailles Treaty, League of Nations. WWII Causes (Nazism/Fascism). Founding of UN." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 20, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g12_u5', topic: { en: 'G12 History U5: Global Developments since 1945' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 5,
+        contentHtml: { en: "Cold War (USA vs USSR). Decolonization wave in Asia/Africa. Non-Aligned Movement (NAM). Globalization and International Orgs (AU, World Bank, UN)." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g12_u6', topic: { en: 'G12 History U6: Ethiopia 1941-1991' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 6,
+        contentHtml: { en: "Post-liberation reforms (Haile Selassie). 1974 Revolution: Overthrow of monarchy, establishment of Derg. Socialist policies: Land reform, Red Terror. Fall of Derg (1991)." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 20, difficulty: 'HARD', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g12_u7', topic: { en: 'G12 History U7: Africa since 1960s' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 7,
+        contentHtml: { en: "Independence challenges: State-building, ethnic diversity. African Unity: OAU (1963) to AU transition. Reform efforts (Agenda 2063)." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g12_u8', topic: { en: 'G12 History U8: Post-1991 Ethiopia' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 8,
+        contentHtml: { en: "New Political Order: FDRE, ethnic-based federalism, new constitution. Socio-economic changes: Education, health, infrastructure expansion." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'hist_g12_u9', topic: { en: 'G12 History U9: Indigenous Knowledge and Heritage' }, subjectId: 'History', gradeLevel: 12, chapterNumber: 9,
+        contentHtml: { en: "IKS in agri, health, conflict resolution. Cultural Heritage: Tangible (Lalibela, Gondar, Aksum, Harar) and Intangible (Languages, music, rituals)." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'EASY', isBookmarked: false, stream: Stream.SOCIAL
       },
 
-      // CHEMISTRY - NATURAL (G11 & G12)
+      // ==========================================
+      // ECONOMICS (SOCIAL STREAM ONLY)
+      // ==========================================
       {
-        id: 'chem_nat_g11_u5',
-        topic: { en: 'Unit 5: Chemical Equilibrium' },
-        subjectId: 'Chemistry',
-        gradeLevel: 11,
-        chapterNumber: 5,
-        contentHtml: { en: `Dynamic state where rates of forward and reverse reactions are equal.
-        Kc = [Products]^coefficients / [Reactants]^coefficients.
-        Le Chatelier's Principle: System shifts to oppose disturbances (P, T, Conc).` },
-        keyFormulas: ['Kc = [C]^c[D]^d / [A]^a[B]^b'],
-        diagrams: [],
-        estimatedReadTime: 15,
-        difficulty: 'HARD',
-        isBookmarked: false,
-        stream: Stream.NATURAL
+        id: 'econ_g11_u1', topic: { en: 'G11 Economics U1: Concepts of Economics' }, subjectId: 'Economics', gradeLevel: 11, chapterNumber: 1,
+        contentHtml: { en: "1.1 Meaning: study of scarcity, choice, allocation. Opportunity cost = next best alternative foregone. 1.2 PPC shows maximum efficient output. Points on/inside/outside curve. 1.4 Economic Systems: Traditional, Capitalist (Market), Socialist (Command), Mixed (Ethiopia current)." },
+        keyFormulas: ['Opportunity Cost'], diagrams: [], estimatedReadTime: 15, difficulty: 'EASY', isBookmarked: false, stream: Stream.SOCIAL
       },
       {
-        id: 'chem_nat_g12_u4',
-        topic: { en: 'Unit 4: Electrochemistry' },
-        subjectId: 'Chemistry',
-        gradeLevel: 12,
-        chapterNumber: 4,
-        contentHtml: { en: `Redox reactions and electrochemical cells.
-        - Galvanic Cell: Chemical to Electrical (Spontaneous).
-        - Electrolytic Cell: Electrical to Chemical (Non-spontaneous).
-        - Faraday's Law: m = (Q * M) / (n * F).` },
-        keyFormulas: ['E_cell = E_cat - E_an', 'm = (ItM)/(nF)'],
-        diagrams: [],
-        estimatedReadTime: 18,
-        difficulty: 'HARD',
-        isBookmarked: false,
-        stream: Stream.NATURAL
+        id: 'econ_g11_u2', topic: { en: 'G11 Economics U2: Demand, Supply and Elasticity' }, subjectId: 'Economics', gradeLevel: 11, chapterNumber: 2,
+        contentHtml: { en: "Law of Demand (P down, Q up). Law of Supply (P up, Q up). Market Equilibrium (D=S). Elasticity: Ed = (% change Q)/(% change P). PED > 1 (Elastic), < 1 (Inelastic). Cross elasticity: Positive for substitutes." },
+        keyFormulas: ['Ed = (%ΔQd)/(%ΔP)'], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'econ_g11_u3', topic: { en: 'G11 Economics U3: Theory of Consumer Behavior' }, subjectId: 'Economics', gradeLevel: 11, chapterNumber: 3,
+        contentHtml: { en: "Utility concepts (Cardinal vs Ordinal). Cardinal: MU = change TU / change Q. Equi-marginal utility (MUx/Px = MUy/Py). Ordinal: Indifference Curves (IC) and Budget Lines. Equilibrium at IC tangent to Budget Line." },
+        keyFormulas: ['MUx/Px = MUy/Py'], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'econ_g11_u4', topic: { en: 'G11 Economics U4: Theory of Production and Cost' }, subjectId: 'Economics', gradeLevel: 11, chapterNumber: 4,
+        contentHtml: { en: "Short run (fixed factor) vs Long run (variable factors). Law of Diminishing Returns (Variable proportions). Costs: TC = TFC + TVC. MC = change TC / change Q. AC = TC/Q. U-shaped curves." },
+        keyFormulas: ['TC = TFC + TVC'], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'econ_g11_u5', topic: { en: 'G11 Economics U5: Market Structures' }, subjectId: 'Economics', gradeLevel: 11, chapterNumber: 5,
+        contentHtml: { en: "Perfect Competition (many firms, price takers, normal profit in long run). Monopoly (single seller, price maker). Monopolistic Competition (differentiation). Oligopoly (interdependence, collusion)." },
+        keyFormulas: ['MR = MC'], diagrams: [], estimatedReadTime: 18, difficulty: 'HARD', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'econ_g11_u6', topic: { en: 'G11 Economics U6: Fundamental Concerns of Macroeconomics' }, subjectId: 'Economics', gradeLevel: 11, chapterNumber: 6,
+        contentHtml: { en: "Growth, Inflation, Unemployment, BoP. Indicators monitoring. Macro targets vs problems." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 12, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'econ_g11_u7', topic: { en: 'G11 Economics U7: National Income Accounting' }, subjectId: 'Economics', gradeLevel: 11, chapterNumber: 7,
+        contentHtml: { en: "GDP = value final goods within country. GNP = GDP + net factor income abroad. Methods: Output, Income, Expenditure (C+I+G+X-M). Real vs Nominal (inflation adjusted)." },
+        keyFormulas: ['GDP = C + I + G + (X - M)'], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'econ_g12_u1', topic: { en: 'G12 Economics U1: Fundamental Concepts (Revisit)' }, subjectId: 'Economics', gradeLevel: 12, chapterNumber: 1,
+        contentHtml: { en: "Review variables: GDP, GNP, CPI. Business cycles: Expansion, Peak, Recession, Trough. Philips curve (Inflation-Unemployment tradeoff)." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'econ_g12_u2', topic: { en: 'G12 Economics U2: AD and AS Analysis' }, subjectId: 'Economics', gradeLevel: 12, chapterNumber: 2,
+        contentHtml: { en: "AD = C+I+G+NX. SRAS (upward) vs LRAS (vertical at full employment). Equilibrium gaps: Inflationary (AD > AS) vs Recessionary (AD < AS)." },
+        keyFormulas: ['AD = C + I + G + NX'], diagrams: [], estimatedReadTime: 20, difficulty: 'HARD', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'econ_g12_u3', topic: { en: 'G12 Economics U3: Market Failure and Consumer Protection' }, subjectId: 'Economics', gradeLevel: 12, chapterNumber: 3,
+        contentHtml: { en: "Externalities (pollution), Public goods, Information failure, Market power. Consumer rights: safety, info, choice." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'econ_g12_u4', topic: { en: 'G12 Economics U4: Macroeconomic Policy Instruments' }, subjectId: 'Economics', gradeLevel: 12, chapterNumber: 4,
+        contentHtml: { en: "Fiscal (G and T): Expansionary vs Contractionary. Monetary (MS and rates): Open market ops, Reserve requirements, Discount rate. Exchange rate policy." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'econ_g12_u5', topic: { en: 'G12 Economics U5: Tax Theory and Practice' }, subjectId: 'Economics', gradeLevel: 12, chapterNumber: 5,
+        contentHtml: { en: "Direct (Income) vs Indirect (VAT, Excise). Canons: Equity, Certainty, Economy. Structure: Progressive (rate up with income), Proportional, Regressive." },
+        keyFormulas: ['VAT'], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'econ_g12_u6', topic: { en: 'G12 Economics U6: Poverty and Inequality' }, subjectId: 'Economics', gradeLevel: 12, chapterNumber: 6,
+        contentHtml: { en: "Absolute vs Relative poverty. Headcount ratio. Inequality measurement: Lorenz Curve and Gini Coefficient (0=perfect equality, 1=max inequality)." },
+        keyFormulas: ['Gini Coefficient'], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'econ_g12_u7', topic: { en: 'G12 Economics U7: Macroeconomic Reforms in Ethiopia' }, subjectId: 'Economics', gradeLevel: 12, chapterNumber: 7,
+        contentHtml: { en: "Sectors: Agri, Industry, Services. Structural transformation. Reforms: Imperial (feudal), Derg (Socialist), Post-1991 (Market-oriented, ADLI)." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+      {
+        id: 'econ_g12_u8', topic: { en: 'G12 Economics U8: Economy, Environment and Climate Change' }, subjectId: 'Economics', gradeLevel: 12, chapterNumber: 8,
+        contentHtml: { en: "Interactions: environment as resource provider and sink. Sustainable Development. Green Economy (low-carbon). Vulnerability of rain-fed agri in Ethiopia." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 12, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
       },
 
-      // BIOLOGY - NATURAL (G11 & G12)
+      // ==========================================
+      // GEOGRAPHY (SOCIAL STREAM ONLY)
+      // ==========================================
       {
-        id: 'bio_nat_g11_u4',
-        topic: { en: 'Unit 4: Genetics' },
-        subjectId: 'Biology',
-        gradeLevel: 11,
-        chapterNumber: 4,
-        contentHtml: { en: `Mendelian inheritance patterns.
-        - Law of Segregation and Independent Assortment.
-        - Monohybrid (3:1) and Dihybrid (9:3:3:1) ratios.
-        - Sex-linkage (Haemophilia, Colour blindness).` },
-        keyFormulas: ['Genotypic Ratio', 'Phenotypic Ratio'],
-        diagrams: [],
-        estimatedReadTime: 15,
-        difficulty: 'MEDIUM',
-        isBookmarked: false,
-        stream: Stream.NATURAL
+        id: 'geo_g11_u1', topic: { en: 'G11 Geography U1: Formation of Continents' }, subjectId: 'Geography', gradeLevel: 11, chapterNumber: 1,
+        contentHtml: { en: "Plate Tectonics, Continental Drift. Layers: Crust, Mantle, Core. East African Rift System." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 18, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL
+      },
+
+      // ==========================================
+      // MATHEMATICS (SHARED - SOCIAL STREAM MAPS TO SOCIAL TEXTBOOKS)
+      // ==========================================
+      {
+        id: 'math_soc_g11_u10', topic: { en: 'Math Social G11 U10: Linear Programming' }, subjectId: 'Mathematics', gradeLevel: 11, chapterNumber: 10,
+        contentHtml: { en: "Optimization models. Feasible region. Corner point theorem: Max/Min occurs at a vertex." },
+        keyFormulas: ['Z = ax + by'], diagrams: [], estimatedReadTime: 15, difficulty: 'HARD', isBookmarked: false, stream: Stream.SOCIAL
+      },
+
+      // ==========================================
+      // NATURAL SCIENCE STREAM (LOCKED)
+      // ==========================================
+      {
+        id: 'phys_nat_g11_u2', topic: { en: 'Physics G11 U2: Vector Quantities' }, subjectId: 'Physics', gradeLevel: 11, chapterNumber: 2,
+        contentHtml: { en: "Vector resolution, resolution into components. Dot Product (Work calculation), Cross Product (Torque)." },
+        keyFormulas: ['Ax = A cos θ'], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.NATURAL
       },
       {
-        id: 'bio_nat_g12_u3',
-        topic: { en: 'Unit 3: Energy Transformation' },
-        subjectId: 'Biology',
-        gradeLevel: 12,
-        chapterNumber: 3,
-        contentHtml: { en: `Cellular Respiration and Photosynthesis.
-        - Aerobic Respiration: Glycolysis, Krebs, ETC.
-        - Photosynthesis: Light reactions (Thylakoids), Calvin Cycle (Stroma).
-        - C4 vs C3 plants.` },
-        keyFormulas: ['6CO2 + 6H2O -> C6H12O6 + 6O2'],
-        diagrams: [],
-        estimatedReadTime: 20,
-        difficulty: 'HARD',
-        isBookmarked: false,
-        stream: Stream.NATURAL
+        id: 'bio_nat_g11_u4', topic: { en: 'Biology G11 U4: Genetics' }, subjectId: 'Biology', gradeLevel: 11, chapterNumber: 4,
+        contentHtml: { en: "Mendelian inheritance. Ratios: 3:1 (Mono), 9:3:3:1 (Di). DNA structure and protein synthesis." },
+        keyFormulas: [], diagrams: [], estimatedReadTime: 20, difficulty: 'HARD', isBookmarked: false, stream: Stream.NATURAL
       }
     ];
 
     const initialQuestions: Question[] = [
       {
-        id: 'q_phys_1',
-        subjectId: 'Physics',
-        topicId: 'Vectors',
-        text: { en: 'A vector has a magnitude of 10N and makes an angle of 30° with the x-axis. What is its x-component?' },
-        options: [
-          { id: 'A', text: { en: '5.0N' } },
-          { id: 'B', text: { en: '8.66N' } },
-          { id: 'C', text: { en: '10.0N' } },
-          { id: 'D', text: { en: '15.0N' } }
-        ],
-        correctAnswer: 'B',
-        explanation: { en: 'Ax = A cos θ = 10 * cos(30°) = 10 * 0.866 = 8.66N.' },
-        difficulty: 'MEDIUM',
-        source: 'EUEE_PAST_EXAM'
+        id: 'q_hist_partition', subjectId: 'History', topicId: 'Colonialism',
+        text: { en: 'Which agreement formally established the principles for the partition of Africa?' },
+        options: [{ id: 'A', text: { en: 'Versailles' } }, { id: 'B', text: { en: 'Berlin Conference' } }, { id: 'C', text: { en: 'Treaty of Wuchale' } }, { id: 'D', text: { en: 'Yalta' } }],
+        correctAnswer: 'B', explanation: { en: 'Berlin Conference 1884-85 established rules for effective occupation.' },
+        difficulty: 'MEDIUM', source: 'MOCK'
       },
       {
-        id: 'q_chem_1',
-        subjectId: 'Chemistry',
-        topicId: 'Equilibrium',
-        text: { en: 'According to Le Chatelier\'s principle, increasing the temperature of an exothermic reaction shifts the equilibrium towards:' },
-        options: [
-          { id: 'A', text: { en: 'The products' } },
-          { id: 'B', text: { en: 'The reactants' } },
-          { id: 'C', text: { en: 'No shift' } },
-          { id: 'D', text: { en: 'The catalysts' } }
-        ],
-        correctAnswer: 'B',
-        explanation: { en: 'For exothermic reactions, heat is a product. Adding heat shifts the equilibrium to the left (reactants).' },
-        difficulty: 'MEDIUM',
-        source: 'EUEE_PAST_EXAM'
+        id: 'q_econ_opp', subjectId: 'Economics', topicId: 'Concepts',
+        text: { en: 'The next best alternative foregone when a choice is made is called:' },
+        options: [{ id: 'A', text: { en: 'Scarcity' } }, { id: 'B', text: { en: 'Opportunity Cost' } }, { id: 'C', text: { en: 'Economic Cost' } }, { id: 'D', text: { en: 'Marginal Cost' } }],
+        correctAnswer: 'B', explanation: { en: 'Opportunity cost represents the sacrifice made in making a choice.' },
+        difficulty: 'EASY', source: 'MOCK'
       }
     ];
 
