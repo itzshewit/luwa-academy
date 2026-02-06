@@ -1,10 +1,10 @@
 
 /*
-  Luwa Academy – Administrative Mission Control
-  V6.4 Comprehensive Restoration & Registry Fix
+  Luwa Academy – Institutional Mission Control
+  V8.0 - Enhanced User Management & Access Tracking
 */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { GlassCard } from './GlassCard.tsx';
 import { storageService } from '../services/storageService.ts';
 import { geminiService } from '../services/geminiService.ts';
@@ -15,18 +15,17 @@ interface AdminControlProps {
   onSimulate: (user: User) => void;
 }
 
-type AdminTab = 'Overview' | 'Exams' | 'Content' | 'Users' | 'Registry' | 'Settings';
+type AdminTab = 'Dashboard' | 'Users' | 'Assessments' | 'Curriculum' | 'Tokens' | 'Settings';
 
 export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
-  const [activeTab, setActiveTab] = useState<AdminTab>('Overview');
+  const [activeTab, setActiveTab] = useState<AdminTab>('Dashboard');
   const [tokens, setTokens] = useState<AccessToken[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [notes, setNotes] = useState<StudyNote[]>([]);
   const [existingExams, setExistingExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  // Exam Creator States
+  // Exam Synthesis States
   const [rawExamText, setRawExamText] = useState('');
   const [isParsing, setIsParsing] = useState(false);
   const [parsedExam, setParsedExam] = useState<Partial<Exam> | null>(null);
@@ -34,28 +33,30 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
   const [examTime, setExamTime] = useState('');
 
   useEffect(() => {
-    const loadData = async () => {
+    const syncRegistry = async () => {
       setLoading(true);
-      const [t, u, e, n] = await Promise.all([
-        storageService.getTokens(),
-        storageService.getAllUsers(),
-        storageService.getExams(),
-        storageService.getNotes()
-      ]);
-      setTokens(t.sort((a,b) => b.createdAt - a.createdAt));
-      setUsers(u);
-      setExistingExams(e);
-      setNotes(n);
-      setLoading(false);
+      try {
+        const [t, u, e, n] = await Promise.all([
+          storageService.getTokens(),
+          storageService.getAllUsers(),
+          storageService.getExams(),
+          storageService.getNotes()
+        ]);
+        setTokens(t.sort((a, b) => b.createdAt - a.createdAt));
+        setUsers(u);
+        setExistingExams(e);
+        setNotes(n);
+      } finally {
+        setLoading(false);
+      }
     };
-    loadData();
+    syncRegistry();
   }, [activeTab]);
 
   const handleGenerateToken = async () => {
     const code = await storageService.generateToken();
     const updated = await storageService.getTokens();
-    setTokens(updated.sort((a,b) => b.createdAt - a.createdAt));
-    alert(`Institutional Token Generated: ${code}`);
+    setTokens(updated.sort((a, b) => b.createdAt - a.createdAt));
   };
 
   const handleParseExam = async () => {
@@ -65,7 +66,7 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
       const parsed = await geminiService.parseExamRawText(rawExamText);
       setParsedExam(parsed);
     } catch (err) {
-      alert("AI Synthesis Engine Error during parsing.");
+      alert("Neural Synthesis Error: Parsing failure.");
     } finally {
       setIsParsing(false);
     }
@@ -73,10 +74,9 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
 
   const handleDeployExam = async () => {
     if (!parsedExam || !examDate || !examTime) {
-      alert("Missing required fields: Parsed data and schedule.");
+      alert("Configuration Error: Missing schedule or data.");
       return;
     }
-
     const startTime = new Date(`${examDate}T${examTime}`).getTime();
     const fullExam: Exam = {
       ...parsedExam as any,
@@ -84,331 +84,352 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
       startTime,
       status: 'Scheduled',
       isApproved: true,
-      totalMarks: parsedExam.questions?.reduce((acc, q) => acc + q.marks, 0) || 100
+      totalMarks: parsedExam.questions?.reduce((acc, q) => acc + (q.marks || 1), 0) || 100
     };
-
-    try {
-      await storageService.saveExam(fullExam);
-      alert("Institutional Exam Node Deployed to Scholars.");
-      setParsedExam(null);
-      setRawExamText('');
-      setActiveTab('Overview');
-    } catch (err) {
-      alert("Deployment Error: Database Write Failed.");
-    }
+    await storageService.saveExam(fullExam);
+    alert("Institutional Exam Deployed to Scholar Nodes.");
+    setParsedExam(null);
+    setRawExamText('');
+    setActiveTab('Dashboard');
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    alert("Registry Token copied to secure clipboard.");
-  };
+  const tokenUsageStats = useMemo(() => {
+    const total = tokens.length;
+    const used = tokens.filter(t => t.isUsed).length;
+    const ratio = total > 0 ? Math.round((used / total) * 100) : 0;
+    return { total, used, ratio };
+  }, [tokens]);
 
-  const selectTab = (t: AdminTab) => {
-    setActiveTab(t);
-    setShowMobileMenu(false);
-  };
+  if (loading) return (
+    <div className="flex-1 flex items-center justify-center p-20 animate-pulse">
+       <div className="text-center">
+          <div className="w-12 h-12 border-4 border-slate-100 border-t-luwa-primary rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Syncing Registry Node...</p>
+       </div>
+    </div>
+  );
 
-  if (loading) return <div className="p-20 text-center opacity-50">Syncing Institutional Registry...</div>;
-
-  const tabConfigs = [
-    { id: 'Overview', label: 'Overview', desc: 'System telemetry' },
-    { id: 'Exams', label: 'Exam Control', desc: 'Manage assessments' },
-    { id: 'Content', label: 'Content', desc: 'Curriculum management' },
-    { id: 'Users', label: 'Users', desc: 'Scholar auditing' },
-    { id: 'Registry', label: 'Registry Codes', desc: 'Token generation' },
-    { id: 'Settings', label: 'Settings', desc: 'Configurations' }
+  const navItems: { id: AdminTab; icon: any; label: string }[] = [
+    { id: 'Dashboard', icon: ICONS.Home, label: 'Control Center' },
+    { id: 'Users', icon: ICONS.Users, label: 'Scholar Registry' },
+    { id: 'Assessments', icon: ICONS.Zap, label: 'Assessment Hub' },
+    { id: 'Curriculum', icon: ICONS.Layout, label: 'Curriculum Master' },
+    { id: 'Tokens', icon: ICONS.Shield, label: 'Registry Codes' },
+    { id: 'Settings', icon: ICONS.Layout, label: 'Platform Config' }
   ];
 
   return (
-    <div className="h-full flex flex-col gap-6 animate-m3-fade overflow-hidden">
-      {showMobileMenu && (
-        <div className="fixed inset-0 z-[1100] bg-white/98 backdrop-blur-2xl flex flex-col p-8 md:p-12 animate-m3-fade xl:hidden">
-          <div className="flex justify-between items-center mb-12">
-            <h3 className="headline-small font-serif font-black text-luwa-primary uppercase">Sector Control</h3>
-            <button onClick={() => setShowMobileMenu(false)} className="p-4 bg-slate-50 rounded-full text-slate-400">
-              <ICONS.X className="w-6 h-6" />
-            </button>
-          </div>
-          <nav className="flex-1 space-y-4 overflow-y-auto">
-            {tabConfigs.map(t => (
-              <button 
-                key={t.id} 
-                onClick={() => selectTab(t.id as AdminTab)} 
-                className={`w-full text-left p-6 rounded-m3-xl border transition-all flex items-center justify-between group ${activeTab === t.id ? 'bg-luwa-primary border-luwa-primary text-white' : 'bg-white border-slate-100'}`}
-              >
-                <div>
-                  <p className="text-lg font-black uppercase tracking-widest">{t.label}</p>
-                  <p className={`text-[9px] font-medium uppercase tracking-widest mt-1 opacity-60`}>{t.desc}</p>
-                </div>
-                <ICONS.Zap className={`w-5 h-5 ${activeTab === t.id ? 'text-white' : 'text-slate-200'}`} />
-              </button>
-            ))}
-          </nav>
+    <div className="h-full flex flex-col xl:flex-row gap-8 animate-m3-fade">
+      {/* Admin Sidebar Navigation */}
+      <aside className="w-full xl:w-72 flex flex-col gap-2 bg-slate-50 p-4 rounded-m3-2xl border border-slate-100 shrink-0 overflow-y-auto">
+        <div className="px-4 py-6 border-b border-slate-200 mb-4">
+          <h3 className="text-lg font-serif font-black text-luwa-primary uppercase">Institutional Admin</h3>
+          <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">Registry Protocol v{APP_VERSION}</p>
         </div>
-      )}
-
-      <header className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 shrink-0 border-b border-slate-100 pb-6 relative">
-        <div className="flex justify-between items-center w-full xl:w-auto">
-          <div>
-            <h2 className="headline-medium font-serif font-black text-luwa-primary uppercase tracking-tighter">Mission Control</h2>
-            <p className="label-small text-slate-400 font-black uppercase tracking-[0.4em] mt-2">v{APP_VERSION} Secure Registry</p>
-          </div>
-          <button onClick={() => setShowMobileMenu(true)} className="xl:hidden p-4 bg-luwa-primary text-white rounded-m3-l shadow-sm">
-            <ICONS.Menu className="w-6 h-6" />
-          </button>
-        </div>
-        
-        <nav className="hidden xl:flex bg-slate-50 p-1 rounded-m3-xl border border-slate-100">
-          {tabConfigs.map(t => (
-            <button 
-              key={t.id} 
-              onClick={() => setActiveTab(t.id as AdminTab)} 
-              className={`px-6 py-3 rounded-m3-l text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === t.id ? 'bg-white text-luwa-primary shadow-sm' : 'text-slate-400 hover:text-luwa-primary'}`}
+        <nav className="space-y-1">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-4 px-6 py-4 rounded-m3-xl font-bold text-xs uppercase tracking-widest transition-all ${activeTab === item.id ? 'bg-white text-luwa-primary shadow-sm border border-slate-100' : 'text-slate-400 hover:bg-slate-100'}`}
             >
-              {t.label}
+              <item.icon className={`w-4 h-4 ${activeTab === item.id ? 'text-luwa-primary' : 'text-slate-300'}`} />
+              {item.label}
             </button>
           ))}
         </nav>
-      </header>
+      </aside>
 
-      <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-24">
-        {activeTab === 'Overview' && (
-          <div className="space-y-10">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <GlassCard className="p-8 bg-blue-50 border-none">
-                <p className="label-small font-black uppercase text-blue-600 mb-2">Total Scholars</p>
-                <p className="display-medium text-blue-800 font-black">{users.length}</p>
-              </GlassCard>
-              <GlassCard className="p-8 bg-purple-50 border-none">
-                <p className="label-small font-black uppercase text-purple-600 mb-2">Active Tokens</p>
-                <p className="display-medium text-purple-800 font-black">{tokens.filter(t => !t.isUsed).length}</p>
-              </GlassCard>
-              <GlassCard className="p-8 bg-green-50 border-none">
-                <p className="label-small font-black uppercase text-green-600 mb-2">Live Exams</p>
-                <p className="display-medium text-green-800 font-black">{existingExams.filter(e => e.status !== 'Closed').length}</p>
-              </GlassCard>
-              <GlassCard className="p-8 bg-amber-50 border-none">
-                <p className="label-small font-black uppercase text-amber-600 mb-2">Study Nodes</p>
-                <p className="display-medium text-amber-800 font-black">{notes.length}</p>
-              </GlassCard>
-            </div>
-            
-            <div className="p-10 bg-white border border-slate-100 rounded-m3-2xl shadow-sm">
-               <h3 className="label-large font-black uppercase text-slate-400 mb-6">Recent Scholar Registrations</h3>
-               <div className="space-y-4">
-                  {users.slice(-5).reverse().map(u => (
-                    <div key={u.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-m3-xl border border-slate-100">
-                       <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-luwa-primary shadow-sm">{u.fullName.charAt(0)}</div>
-                          <div>
-                             <p className="text-sm font-bold text-luwa-onSurface">{u.fullName}</p>
-                             <p className="text-[10px] text-slate-400 uppercase font-black">{u.stream} • Grade {u.grade}</p>
-                          </div>
-                       </div>
-                       <button onClick={() => onSimulate(u)} className="px-4 py-2 bg-luwa-primary text-white rounded-m3-m text-[9px] font-black uppercase">Simulate Node</button>
-                    </div>
-                  ))}
-               </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'Exams' && (
+      {/* Main Admin Viewport */}
+      <main className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-24">
+        {activeTab === 'Dashboard' && (
           <div className="space-y-10 animate-m3-fade">
-             {!parsedExam ? (
-                <div className="space-y-8">
-                  <GlassCard className="p-10 border-none bg-white">
-                     <h3 className="headline-small font-serif font-black text-luwa-primary uppercase mb-6">Deploy New Examination Node</h3>
-                     <div className="space-y-6">
-                        <p className="label-small text-slate-400 font-black uppercase">Paste Raw Question Text (AI Parser Support)</p>
-                        <textarea 
-                          value={rawExamText}
-                          onChange={(e) => setRawExamText(e.target.value)}
-                          placeholder="Paste questions here. Example: 1. What is 2+2? A) 3 B) 4 C) 5 D) 6..."
-                          className="w-full h-80 p-8 bg-slate-50 border-2 border-slate-100 rounded-m3-xl text-sm font-medium focus:bg-white focus:border-luwa-primary transition-all outline-none resize-none shadow-inner"
-                        />
-                        <button 
-                          onClick={handleParseExam}
-                          disabled={isParsing || !rawExamText.trim()}
-                          className="w-full py-6 bg-luwa-primary text-white rounded-m3-xl label-large font-black uppercase tracking-[0.2em] shadow-m3-2 transition-all disabled:opacity-50"
-                        >
-                          {isParsing ? 'AI Engine Analyzing Schema...' : 'Synchronize and Structure'}
-                        </button>
-                     </div>
-                  </GlassCard>
-                  
-                  <div className="space-y-6">
-                    <h3 className="label-large text-slate-400 font-black uppercase tracking-widest">Existing Examination Nodes</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {existingExams.map(e => (
-                        <div key={e.id} className="p-6 bg-white border border-slate-100 rounded-m3-xl shadow-sm flex justify-between items-center">
-                          <div>
-                             <p className="text-sm font-black text-luwa-onSurface uppercase">{e.title}</p>
-                             <p className="text-[10px] text-slate-400 font-bold uppercase">{e.subject} • {e.status}</p>
-                          </div>
-                          <span className="text-xs font-black text-luwa-primary">{e.questions.length} Qs</span>
-                        </div>
-                      ))}
-                    </div>
+            <header className="flex justify-between items-end">
+               <div>
+                  <h1 className="display-small font-serif font-black text-luwa-onSurface">Admin Dashboard</h1>
+                  <p className="label-medium text-slate-400 font-black uppercase tracking-widest mt-1">Institutional Telemetry Active</p>
+               </div>
+               <button onClick={handleGenerateToken} className="px-6 py-3 bg-luwa-primary text-white rounded-xl label-small font-black uppercase tracking-widest shadow-m3-2 m3-ripple">+ New Registry Code</button>
+            </header>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { label: 'Total Scholars', value: users.length, color: 'blue', icon: ICONS.Users },
+                { label: 'Live Exams', value: existingExams.length, color: 'green', icon: ICONS.Zap },
+                { label: 'Token Utilization', value: `${tokenUsageStats.ratio}%`, color: 'amber', icon: ICONS.Shield },
+                { label: 'Registry Nodes', value: notes.length, color: 'purple', icon: ICONS.Layout },
+              ].map((stat, i) => (
+                <GlassCard key={i} className={`p-8 border-none bg-white shadow-m3-1`}>
+                  <div className="flex justify-between items-start mb-4">
+                     <p className={`text-[10px] font-black uppercase text-slate-400 tracking-widest`}>{stat.label}</p>
+                     <stat.icon className={`w-5 h-5 text-luwa-primary opacity-20`} />
                   </div>
-                </div>
-             ) : (
-                <div className="space-y-10">
-                   <GlassCard className="p-10 border-none bg-luwa-primary text-white shadow-m3-3">
-                      <div className="flex justify-between items-start mb-10">
-                         <div>
-                            <h3 className="headline-medium font-serif font-black uppercase tracking-tight">{parsedExam.title || 'Untitled Exam'}</h3>
-                            <p className="label-small font-black opacity-70 uppercase tracking-widest">{parsedExam.subject} • {parsedExam.questions?.length} Questions • {parsedExam.durationMinutes} Minutes</p>
-                         </div>
-                         <button onClick={() => setParsedExam(null)} className="text-[10px] font-black uppercase border border-white/20 px-6 py-2 rounded-m3-l hover:bg-white/10">Discard Node</button>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-                         <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase opacity-60">Session Start Date</label>
-                            <input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-m3-xl p-4 text-white outline-none focus:bg-white/20" />
-                         </div>
-                         <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase opacity-60">Session Start Time (24h)</label>
-                            <input type="time" value={examTime} onChange={(e) => setExamTime(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-m3-xl p-4 text-white outline-none focus:bg-white/20" />
-                         </div>
-                      </div>
-
-                      <button onClick={handleDeployExam} className="w-full py-6 bg-white text-luwa-primary rounded-m3-xl label-large font-black uppercase tracking-[0.2em] shadow-m3-3 m3-ripple">Authorize and Deploy</button>
-                   </GlassCard>
-
-                   <div className="space-y-6">
-                      <h4 className="label-large text-slate-400 uppercase font-black tracking-widest">Question Registry Preview</h4>
-                      <div className="grid grid-cols-1 gap-4">
-                         {parsedExam.questions?.map((q: any, idx: number) => (
-                            <div key={idx} className="p-8 bg-white border border-slate-100 rounded-m3-2xl shadow-sm">
-                               <div className="flex justify-between mb-4">
-                                  <span className="text-[9px] font-black uppercase text-luwa-primary bg-luwa-primaryContainer px-3 py-1 rounded-full">Sect: {q.section || 'General'}</span>
-                                  <span className="text-[9px] font-black uppercase text-slate-400">{q.marks} Marks</span>
-                               </div>
-                               <p className="text-lg font-bold text-luwa-onSurface mb-6">{q.text}</p>
-                               <div className="grid grid-cols-2 gap-2">
-                                  {q.options?.map((opt: string, i: number) => (
-                                    <div key={i} className={`text-[11px] p-2 rounded-m3-s border ${q.correctAnswer == String.fromCharCode(65+i) || q.correctAnswer == i ? 'bg-luwa-primaryContainer border-luwa-primary text-luwa-primary font-black' : 'bg-slate-50 border-slate-100'}`}>
-                                      {String.fromCharCode(65+i)}) {opt}
-                                    </div>
-                                  ))}
-                                </div>
-                            </div>
-                         ))}
-                      </div>
-                   </div>
-                </div>
-             )}
-          </div>
-        )}
-
-        {activeTab === 'Content' && (
-          <div className="space-y-6 animate-m3-fade">
-            <h3 className="label-large text-slate-400 font-black uppercase tracking-widest">Master Curriculum Nodes</h3>
-            <div className="grid grid-cols-1 gap-4">
-              {notes.map(n => (
-                <div key={n.id} className="p-6 bg-white border border-slate-100 rounded-m3-xl shadow-sm flex justify-between items-center">
-                   <div>
-                      <p className="text-[9px] font-black text-luwa-primary uppercase mb-1">{n.subjectId} • Grade {n.gradeLevel}</p>
-                      <p className="text-sm font-bold text-luwa-onSurface">{n.topic.en}</p>
-                   </div>
-                   <ICONS.Copy className="w-4 h-4 text-slate-200" />
-                </div>
+                  <p className={`text-4xl font-serif font-black text-luwa-onSurface`}>{stat.value}</p>
+                </GlassCard>
               ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-8">
+                <GlassCard className="p-8 bg-white border-slate-100">
+                  <h3 className="label-large font-black uppercase text-slate-400 mb-8 tracking-widest">Recent Node Synchronizations</h3>
+                  <div className="space-y-4">
+                    {users.slice(-4).reverse().map(u => (
+                      <div key={u.id} className="flex justify-between items-center p-5 bg-slate-50 border border-slate-100 rounded-m3-xl">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-black text-luwa-primary shadow-sm">{u.fullName.charAt(0)}</div>
+                          <div>
+                            <p className="text-sm font-bold text-luwa-onSurface">{u.fullName}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase">{u.stream} • Grade {u.grade}</p>
+                          </div>
+                        </div>
+                        <button onClick={() => onSimulate(u)} className="px-4 py-2 bg-luwa-primaryContainer text-luwa-primary rounded-lg text-[9px] font-black uppercase m3-ripple">Simulate</button>
+                      </div>
+                    ))}
+                  </div>
+                </GlassCard>
+              </div>
+              <div className="lg:col-span-4">
+                <GlassCard className="p-8 bg-slate-900 text-white border-none h-full">
+                   <h3 className="label-small font-black uppercase tracking-[0.3em] mb-6 opacity-60">System Log</h3>
+                   <div className="space-y-4 text-[11px] font-medium opacity-80">
+                      <p><span className="text-luwa-primary font-black">[SYNC]</span> Registry nodes verified.</p>
+                      <p><span className="text-green-400 font-black">[SEC]</span> SSL Token encryption active.</p>
+                      <p><span className="text-amber-400 font-black">[SYS]</span> Neural bandwidth optimal.</p>
+                      <p><span className="text-blue-400 font-black">[AUTH]</span> {tokenUsageStats.used} scholars admitted.</p>
+                   </div>
+                </GlassCard>
+              </div>
             </div>
           </div>
         )}
 
         {activeTab === 'Users' && (
-          <div className="space-y-6 animate-m3-fade">
-            <h3 className="label-large text-slate-400 font-black uppercase tracking-widest">Scholar User Directory</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {users.map(u => (
-                <div key={u.id} className="p-6 bg-white border border-slate-100 rounded-m3-xl shadow-sm">
-                   <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 bg-luwa-primaryContainer text-luwa-primary rounded-xl flex items-center justify-center font-black text-lg">{u.fullName.charAt(0)}</div>
-                      <div>
-                         <p className="text-sm font-bold text-luwa-onSurface">{u.fullName}</p>
-                         <p className="text-[10px] text-slate-400 uppercase font-black">{u.subscriptionTier} Tier</p>
-                      </div>
-                   </div>
-                   <div className="flex justify-between items-center pt-4 border-t border-slate-50">
-                      <span className="text-[10px] font-black text-luwa-tertiary uppercase">{u.xp} XP</span>
-                      <button onClick={() => onSimulate(u)} className="text-[8px] font-black uppercase text-luwa-primary tracking-widest hover:underline">Monitor Node</button>
-                   </div>
+          <div className="space-y-8 animate-m3-fade">
+             <header className="flex justify-between items-center">
+                <div>
+                   <h2 className="display-small font-serif font-black uppercase">Scholar Registry</h2>
+                   <p className="label-small text-slate-400 font-black uppercase tracking-widest mt-1">Global User Database</p>
                 </div>
-              ))}
-            </div>
+                <div className="flex gap-3">
+                   <button onClick={handleGenerateToken} className="px-6 py-3 bg-luwa-primaryContainer text-luwa-primary rounded-xl text-[10px] font-black uppercase tracking-widest m3-ripple">Admission Control</button>
+                   <button className="text-[10px] font-black uppercase tracking-widest px-6 py-3 border border-slate-200 rounded-xl hover:bg-slate-50">Export CSV</button>
+                </div>
+             </header>
+             <GlassCard className="bg-white border-slate-100 overflow-hidden shadow-m3-2">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-50 border-b border-slate-100">
+                        <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-8 py-5">Full Name</th>
+                          <th className="px-8 py-5">Academic Stream</th>
+                          <th className="px-8 py-5 text-center">Progression</th>
+                          <th className="px-8 py-5 text-right">Node Protocol</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                        {users.map(u => (
+                          <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-8 py-5">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400">{u.fullName.charAt(0)}</div>
+                                  <div>
+                                      <p className="text-sm font-bold text-luwa-onSurface">{u.fullName}</p>
+                                      <p className="text-[9px] text-slate-400 font-bold">{u.email}</p>
+                                  </div>
+                                </div>
+                            </td>
+                            <td className="px-8 py-5 text-xs font-medium text-slate-500">{u.stream === 'NATURAL_SCIENCE' ? 'Natural Science' : 'Social Science'}</td>
+                            <td className="px-8 py-5 text-center">
+                                <span className="px-3 py-1 bg-luwa-primaryContainer text-luwa-primary rounded-full text-[10px] font-black">{u.xp} XP</span>
+                            </td>
+                            <td className="px-8 py-5 text-right">
+                                <button onClick={() => onSimulate(u)} className="text-[10px] font-black text-luwa-primary hover:text-luwa-onPrimaryContainer px-4 py-2 bg-slate-50 rounded-lg uppercase tracking-tighter transition-all">Simulate Node</button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+             </GlassCard>
           </div>
         )}
 
-        {activeTab === 'Registry' && (
+        {activeTab === 'Tokens' && (
           <div className="space-y-10 animate-m3-fade">
-            <GlassCard className="p-10 border-none bg-white shadow-m3-2">
-               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
-                  <div>
-                    <h3 className="headline-small font-serif font-black text-luwa-primary uppercase">Institutional Token Registry</h3>
-                    <p className="label-small text-slate-400 font-black uppercase tracking-widest mt-1">Enrollment Authorization Management</p>
-                  </div>
-                  <button 
-                    onClick={handleGenerateToken} 
-                    className="px-10 py-5 bg-luwa-primary text-white rounded-m3-xl label-large font-black uppercase tracking-[0.2em] shadow-m3-2 m3-ripple active:scale-95 transition-all"
-                  >
-                    Generate New Code
-                  </button>
-               </div>
+             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-m3-2xl border border-slate-100 shadow-sm">
+                <div>
+                   <h2 className="display-small font-serif font-black text-luwa-primary uppercase">Institutional Codes</h2>
+                   <p className="label-small text-slate-400 font-black uppercase tracking-widest mt-1">Authorized Registry Authorization</p>
+                </div>
+                <button 
+                  onClick={handleGenerateToken} 
+                  className="w-full md:w-auto px-10 py-5 bg-luwa-primary text-white rounded-m3-xl label-large font-black uppercase tracking-widest shadow-m3-2 m3-ripple transition-all active:scale-95 flex items-center justify-center gap-3"
+                >
+                  <ICONS.Zap className="w-5 h-5" /> Generate Admission Code
+                </button>
+             </header>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                 {tokens.map(t => (
-                    <div key={t.code} className="p-6 bg-slate-50 border border-slate-100 rounded-m3-2xl flex flex-col justify-between group hover:border-luwa-primary/30 transition-all">
-                       <div className="flex justify-between items-start mb-6">
-                          <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Access Token</p>
-                            <p className="text-xl font-mono font-black text-luwa-onSurface tracking-tighter">{t.code}</p>
-                          </div>
-                          <button onClick={() => copyToClipboard(t.code)} className="p-3 bg-white text-slate-400 hover:text-luwa-primary rounded-full shadow-sm">
-                            <ICONS.Copy className="w-4 h-4" />
-                          </button>
-                       </div>
-                       <div className="flex justify-between items-center pt-6 border-t border-slate-200">
-                          <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full ${t.isUsed ? 'bg-slate-200 text-slate-400' : 'bg-green-100 text-green-600'}`}>
-                            {t.isUsed ? 'Consumed' : 'Valid Registry'}
-                          </span>
-                          <p className="text-[8px] text-slate-300 font-bold">{new Date(t.createdAt).toLocaleDateString()}</p>
-                       </div>
-                    </div>
-                 ))}
-                 {tokens.length === 0 && (
-                   <div className="col-span-full py-20 text-center opacity-20">
-                      <ICONS.Shield className="w-16 h-16 mx-auto mb-4" />
-                      <p className="label-large uppercase font-black tracking-[0.4em]">No Authorized Codes Found</p>
+             <div className="grid grid-cols-1 gap-4">
+                <div className="hidden lg:grid lg:grid-cols-12 px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                   <div className="col-span-3">Token Code</div>
+                   <div className="col-span-2 text-center">Status</div>
+                   <div className="col-span-3">Sync Date</div>
+                   <div className="col-span-3">Consumed By</div>
+                   <div className="col-span-1 text-right">Registry</div>
+                </div>
+
+                {tokens.length === 0 && (
+                   <div className="p-20 text-center bg-slate-50 rounded-m3-2xl border border-dashed border-slate-200">
+                      <ICONS.Shield className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Registry code buffer empty</p>
                    </div>
-                 )}
+                )}
+
+                {tokens.map(t => {
+                  const consumer = t.usedBy ? users.find(u => u.id === t.usedBy) : null;
+                  return (
+                    <GlassCard key={t.code} className="p-6 bg-white border-slate-100 group hover:border-luwa-primary/30 transition-all shadow-sm">
+                       <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-6">
+                          <div className="col-span-3">
+                             <p className="text-2xl font-mono font-black text-luwa-onSurface tracking-tighter">{t.code}</p>
+                          </div>
+                          <div className="col-span-2 text-center">
+                             <span className={`inline-flex px-4 py-1.5 rounded-full text-[9px] font-black uppercase ${t.isUsed ? 'bg-slate-100 text-slate-400' : 'bg-green-50 text-green-600 animate-pulse'}`}>
+                                {t.isUsed ? 'Consumed' : 'Available'}
+                             </span>
+                          </div>
+                          <div className="col-span-3">
+                             <p className="text-[11px] text-slate-500 font-bold uppercase tracking-tight">{new Date(t.createdAt).toLocaleString()}</p>
+                          </div>
+                          <div className="col-span-3">
+                             {t.isUsed ? (
+                                <div className="flex items-center gap-3">
+                                   <div className="w-8 h-8 rounded-full bg-luwa-primaryContainer flex items-center justify-center text-[10px] font-black text-luwa-primary">{consumer?.fullName?.charAt(0) || 'U'}</div>
+                                   <div className="min-w-0">
+                                      <p className="text-xs font-black text-luwa-onSurface truncate">{consumer?.fullName || 'Unknown Scholar'}</p>
+                                      <p className="text-[8px] text-slate-400 font-bold uppercase truncate">{t.usedBy}</p>
+                                   </div>
+                                </div>
+                             ) : (
+                                <span className="text-[10px] text-slate-300 font-black uppercase italic tracking-widest">Awaiting Scholar...</span>
+                             )}
+                          </div>
+                          <div className="col-span-1 text-right flex justify-end gap-2">
+                             <button 
+                               onClick={() => { navigator.clipboard.writeText(t.code); alert("Node Code Copied"); }} 
+                               className="p-3 bg-slate-50 text-slate-300 hover:text-luwa-primary hover:bg-luwa-primaryContainer rounded-full transition-all"
+                               title="Copy to Clipboard"
+                             >
+                                <ICONS.Copy className="w-4 h-4" />
+                             </button>
+                          </div>
+                       </div>
+                    </GlassCard>
+                  );
+                })}
+             </div>
+          </div>
+        )}
+
+        {activeTab === 'Assessments' && (
+          <div className="space-y-10 animate-m3-fade">
+             {!parsedExam ? (
+               <div className="space-y-8">
+                 <GlassCard className="p-10 bg-white border-slate-100 shadow-m3-2">
+                    <h3 className="headline-small font-serif font-black text-luwa-primary uppercase mb-6">Neural Exam Synthesis</h3>
+                    <div className="space-y-6">
+                       <p className="label-small text-slate-400 font-black uppercase tracking-widest">Paste Raw Registry Content (AI Parser Active)</p>
+                       <textarea
+                         value={rawExamText}
+                         onChange={(e) => setRawExamText(e.target.value)}
+                         placeholder="1. What is 2+2? A) 3 B) 4 C) 5 D) 6"
+                         className="w-full h-80 p-8 bg-slate-50 border-2 border-slate-100 rounded-m3-2xl text-sm font-medium focus:bg-white focus:border-luwa-primary transition-all outline-none resize-none shadow-inner"
+                       />
+                       <button
+                         onClick={handleParseExam}
+                         disabled={isParsing || !rawExamText.trim()}
+                         className="w-full py-6 bg-luwa-primary text-white rounded-m3-xl label-large font-black uppercase tracking-[0.2em] shadow-m3-2 transition-all disabled:opacity-50"
+                       >
+                         {isParsing ? 'Neural Engine Analyzing Schema...' : 'Synchronize and Structure Assessment'}
+                       </button>
+                    </div>
+                 </GlassCard>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {existingExams.map(e => (
+                       <div key={e.id} className="p-6 bg-white border border-slate-100 rounded-m3-xl shadow-sm flex justify-between items-center group">
+                          <div>
+                             <p className="text-[10px] font-black text-luwa-primary uppercase mb-1">{e.subject}</p>
+                             <p className="text-sm font-black text-luwa-onSurface">{e.title}</p>
+                          </div>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{e.questions.length} Nodes</span>
+                       </div>
+                    ))}
+                 </div>
                </div>
-            </GlassCard>
+             ) : (
+               <div className="space-y-10">
+                  <GlassCard className="p-10 bg-luwa-primary text-white border-none shadow-m3-3">
+                     <div className="flex justify-between items-start mb-10">
+                        <div>
+                           <h3 className="headline-medium font-serif font-black uppercase tracking-tight">{parsedExam.title || 'Institutional Node'}</h3>
+                           <p className="label-small font-black opacity-70 uppercase tracking-widest">{parsedExam.subject} • {parsedExam.questions?.length} Questions • {parsedExam.durationMinutes}m</p>
+                        </div>
+                        <button onClick={() => setParsedExam(null)} className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-all"><ICONS.X className="w-5 h-5" /></button>
+                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                        <input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-m3-xl p-4 text-white placeholder-white/50 outline-none" placeholder="Deploy Date" />
+                        <input type="time" value={examTime} onChange={(e) => setExamTime(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-m3-xl p-4 text-white placeholder-white/50 outline-none" />
+                     </div>
+                     <button onClick={handleDeployExam} className="w-full py-6 bg-white text-luwa-primary rounded-m3-xl label-large font-black uppercase tracking-[0.2em] shadow-m3-3 m3-ripple">Authorize and Deploy Node</button>
+                  </GlassCard>
+               </div>
+             )}
+          </div>
+        )}
+
+        {activeTab === 'Curriculum' && (
+          <div className="space-y-6 animate-m3-fade">
+             <h2 className="title-large font-serif font-black uppercase">Registry Mastery</h2>
+             <div className="grid grid-cols-1 gap-4">
+                {notes.map(n => (
+                   <div key={n.id} className="p-6 bg-white border border-slate-100 rounded-m3-xl flex justify-between items-center group hover:shadow-m3-2 transition-all">
+                      <div>
+                         <p className="text-[9px] font-black text-luwa-primary uppercase mb-1">{n.subjectId} • Grade {n.gradeLevel}</p>
+                         <p className="text-sm font-black text-luwa-onSurface">{n.topic.en}</p>
+                      </div>
+                      <ICONS.Layout className="w-5 h-5 text-slate-200" />
+                   </div>
+                ))}
+             </div>
           </div>
         )}
 
         {activeTab === 'Settings' && (
-          <div className="space-y-6 animate-m3-fade">
-             <GlassCard className="p-10 border-none bg-white">
-                <h3 className="label-large text-slate-400 font-black uppercase tracking-widest mb-10">Institutional Configuration</h3>
-                <div className="space-y-6">
-                   <div className="flex justify-between items-center p-6 bg-slate-50 rounded-m3-xl border border-slate-100">
+          <div className="space-y-10 animate-m3-fade max-w-2xl">
+             <GlassCard className="p-10 bg-white border-slate-100 shadow-m3-2">
+                <h3 className="label-large font-black uppercase text-slate-400 mb-10 tracking-widest">Registry Synchronization</h3>
+                <div className="space-y-8">
+                   <div className="flex justify-between items-center p-6 bg-slate-50 rounded-2xl border border-slate-100">
                       <div>
                          <p className="text-sm font-black text-luwa-onSurface uppercase">Neural Persistence Mode</p>
-                         <p className="text-[10px] text-slate-400 font-bold uppercase">Automated IndexDB Cloud Sync</p>
+                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Automated Registry Backups Active</p>
                       </div>
-                      <div className="w-12 h-6 bg-luwa-primary rounded-full relative">
-                         <div className="absolute top-1 right-1 w-4 h-4 bg-white rounded-full" />
+                      <div className="w-12 h-6 bg-luwa-primary rounded-full relative"><div className="absolute top-1 right-1 w-4 h-4 bg-white rounded-full shadow-sm" /></div>
+                   </div>
+                   <div className="flex justify-between items-center p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                      <div>
+                         <p className="text-sm font-black text-luwa-onSurface uppercase">AI Parsing Precision</p>
+                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">High-Fidelity Curriculum Analysis</p>
                       </div>
+                      <span className="text-xs font-black text-luwa-primary uppercase">Active</span>
                    </div>
                 </div>
              </GlassCard>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };
