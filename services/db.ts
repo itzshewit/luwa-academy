@@ -1,11 +1,11 @@
 
 /*
   Luwa Academy – Neural Registry Database
-  V1.5 - Registry Version Bump (Store Synchronization Fix)
+  V1.6 - Registry Version Bump (Handshake & Stability Fix)
 */
 
 const DB_NAME = 'LuwaAcademy_Institutional_Registry';
-const DB_VERSION = 3; // Bumped version to force schema update
+const DB_VERSION = 4; // Bumped version for schema integrity
 
 export const dbService = {
   db: null as IDBDatabase | null,
@@ -19,30 +19,35 @@ export const dbService = {
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
         
-        // Institutional Data Stores - Verified existence before creation
-        if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('notes')) db.createObjectStore('notes', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('questions')) db.createObjectStore('questions', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('tokens')) db.createObjectStore('tokens', { keyPath: 'code' });
-        if (!db.objectStoreNames.contains('results')) db.createObjectStore('results', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('audits')) db.createObjectStore('audits', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('exams')) db.createObjectStore('exams', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('static_quizzes')) db.createObjectStore('static_quizzes', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('tasks')) db.createObjectStore('tasks', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('assignments')) db.createObjectStore('assignments', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('assignment_submissions')) db.createObjectStore('assignment_submissions', { keyPath: 'id' });
+        const stores = [
+          'users', 'notes', 'questions', 'tokens', 'results', 
+          'audits', 'exams', 'static_quizzes', 'tasks', 
+          'assignments', 'assignment_submissions'
+        ];
+
+        stores.forEach(store => {
+          if (!db.objectStoreNames.contains(store)) {
+            // Using 'id' for most, but 'code' for tokens specifically
+            const keyPath = store === 'tokens' ? 'code' : 'id';
+            db.createObjectStore(store, { keyPath });
+          }
+        });
         
-        // Indices for faster querying
+        // Ensure indices are present
         const transaction = (event.target as IDBOpenDBRequest).transaction;
         if (transaction) {
-          const noteStore = transaction.objectStore('notes');
-          if (!noteStore.indexNames.contains('subjectId')) noteStore.createIndex('subjectId', 'subjectId', { unique: false });
-          
-          const qStore = transaction.objectStore('questions');
-          if (!qStore.indexNames.contains('subjectId')) qStore.createIndex('subjectId', 'subjectId', { unique: false });
+          try {
+            const noteStore = transaction.objectStore('notes');
+            if (!noteStore.indexNames.contains('subjectId')) noteStore.createIndex('subjectId', 'subjectId', { unique: false });
+            
+            const qStore = transaction.objectStore('questions');
+            if (!qStore.indexNames.contains('subjectId')) qStore.createIndex('subjectId', 'subjectId', { unique: false });
 
-          const taskStore = transaction.objectStore('tasks');
-          if (!taskStore.indexNames.contains('date')) taskStore.createIndex('date', 'date', { unique: false });
+            const taskStore = transaction.objectStore('tasks');
+            if (!taskStore.indexNames.contains('date')) taskStore.createIndex('date', 'date', { unique: false });
+          } catch (e) {
+            console.warn("Registry Index Sync Warning:", e);
+          }
         }
       };
 
@@ -65,7 +70,7 @@ export const dbService = {
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(`Failed to fetch from ${storeName}`);
       } catch (e) {
-        reject(`Registry error accessing ${storeName}`);
+        reject(`Registry access error: ${storeName}`);
       }
     });
   },
@@ -80,7 +85,7 @@ export const dbService = {
         request.onsuccess = () => resolve(request.result || null);
         request.onerror = () => reject(`Failed to fetch ID ${id} from ${storeName}`);
       } catch (e) {
-        reject(`Registry error accessing ${storeName} for ID ${id}`);
+        reject(`Registry fetch error for ${id}`);
       }
     });
   },
@@ -95,7 +100,7 @@ export const dbService = {
         request.onsuccess = () => resolve();
         request.onerror = () => reject(`Failed to persist to ${storeName}`);
       } catch (e) {
-        reject(`Registry write error for ${storeName}`);
+        reject(`Registry write failure in ${storeName}`);
       }
     });
   },
@@ -110,7 +115,7 @@ export const dbService = {
         request.onsuccess = () => resolve();
         request.onerror = () => reject(`Failed to delete from ${storeName}`);
       } catch (e) {
-        reject(`Registry deletion error for ${storeName}`);
+        reject(`Registry deletion failure in ${storeName}`);
       }
     });
   },
@@ -125,7 +130,7 @@ export const dbService = {
         transaction.oncomplete = () => resolve();
         transaction.onerror = () => reject(`Bulk persist failed for ${storeName}`);
       } catch (e) {
-        reject(`Registry bulk write error for ${storeName}`);
+        reject(`Registry bulk write failure`);
       }
     });
   }

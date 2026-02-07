@@ -1,10 +1,10 @@
 
 /*
   Luwa Academy – Authentication & Registration Module
-  V6.1 - Secure Token-Based Enrollment (Sanitized)
+  V6.2 - Secure Atomic Token Enrollment
 */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { storageService } from '../services/storageService.ts';
 import { User, Stream } from '../types.ts';
 
@@ -21,16 +21,27 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   const [stream, setStream] = useState<Stream>(Stream.NATURAL);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [dbReady, setDbReady] = useState(false);
+
+  useEffect(() => {
+    const checkDb = async () => {
+      const ready = await storageService.isReady();
+      setDbReady(ready);
+    };
+    checkDb();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!dbReady) return setError('Registry Database Synchronizing. Please wait.');
     setError('');
     setLoading(true);
 
     try {
+      const cleanEmail = email.trim().toLowerCase();
       // Admin Hard-coded Bypass
-      if (email === "admin@luwa.academy" && password === "admin123") {
-        let adminUser = await storageService.getUserByEmail(email);
+      if (cleanEmail === "admin@luwa.academy" && password === "admin123") {
+        let adminUser = await storageService.getUserByEmail(cleanEmail);
         if (!adminUser) {
           adminUser = {
              id: 'admin-root',
@@ -62,7 +73,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         return;
       }
 
-      const user = await storageService.getUserByEmail(email);
+      const user = await storageService.getUserByEmail(cleanEmail);
       const hash = storageService.hashPassword(password);
 
       if (user && user.passwordHash === hash) {
@@ -80,6 +91,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!dbReady) return setError('Registry Database Synchronizing. Please wait.');
     setError('');
     setLoading(true);
 
@@ -90,12 +102,12 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
       // 1. Check for duplicate email
       const existing = await storageService.getUserByEmail(cleanEmail);
       if (existing) {
-        setError('Email already exists in registry.');
+        setError('Email already exists in global registry.');
         setLoading(false);
         return;
       }
 
-      // 2. Validate Token (Consume strictly if valid)
+      // 2. Atomic Token Validation
       const tempId = `scholar_${Date.now()}`;
       const isValidToken = await storageService.validateAndUseToken(cleanToken, tempId);
       
@@ -105,7 +117,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         return;
       }
 
-      // 3. Create User
+      // 3. Create Scholar Profile
       const newUser: User = {
         id: tempId,
         email: cleanEmail,
@@ -135,7 +147,8 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
       storageService.setSession(storageService.updateSessionActivity(newUser));
       onLogin(newUser);
     } catch (err) {
-      setError('Registration Error: Neural Registry link failed.');
+      console.error("Registration Handshake Failure:", err);
+      setError('Enrollment Error: Registry node link failed.');
     } finally {
       setLoading(false);
     }
@@ -225,10 +238,10 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
             <button 
               type="submit" 
-              disabled={loading} 
+              disabled={loading || !dbReady} 
               className="w-full py-5 bg-luwa-primary text-white rounded-m3-xl label-large font-black uppercase tracking-[0.2em] shadow-m3-2 transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
             >
-              {loading ? 'Authorizing Node...' : isRegistering ? 'Finalize Enrollment' : 'Authorize Access'}
+              {loading ? 'Authorizing Registry...' : isRegistering ? 'Finalize Enrollment' : 'Authorize Access'}
             </button>
           </form>
 
@@ -243,8 +256,14 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         </div>
 
         <div className="mt-10 text-center">
+          {!dbReady && (
+             <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                <p className="text-[8px] font-black uppercase text-amber-500 tracking-widest">Registry Syncing...</p>
+             </div>
+          )}
           <p className="text-[9px] text-slate-300 font-medium uppercase tracking-[0.2em]">
-            This registry is for exclusive use by authorized Luwa scholars.
+            Institutional integrity monitored by Luwa Central Hub.
           </p>
         </div>
       </div>

@@ -18,6 +18,16 @@ export const storageService = {
     return Date.now() - user.lastActive > 30 * 60 * 1000;
   },
 
+  async isReady(): Promise<boolean> {
+    try {
+      await dbService.init();
+      return true;
+    } catch (e) {
+      console.error("Registry Database not ready:", e);
+      return false;
+    }
+  },
+
   updateSessionActivity: (user: User) => {
     const updated = { ...user, lastActive: Date.now() };
     storageService.setSession(updated);
@@ -97,7 +107,6 @@ export const storageService = {
     await dbService.delete('tasks', id);
   },
 
-  // Assignment System Integration
   async getAssignments(): Promise<Assignment[]> {
     try {
       return await dbService.getAll<Assignment>('assignments');
@@ -146,21 +155,28 @@ export const storageService = {
 
   async validateAndUseToken(code: string, userId: string): Promise<boolean> {
     const cleanCode = (code || '').trim().toUpperCase();
+    if (!cleanCode) return false;
+    
+    // Developer bypass
     if (cleanCode.startsWith('LUWA-DEV-')) return true;
     
     try {
       const token = await dbService.getById<AccessToken>('tokens', cleanCode);
       if (token && !token.isUsed) {
-        token.isUsed = true;
-        token.usedBy = userId;
-        await dbService.put('tokens', token);
+        // Atomic update
+        const updatedToken: AccessToken = {
+          ...token,
+          isUsed: true,
+          usedBy: userId
+        };
+        await dbService.put('tokens', updatedToken);
         return true;
       }
+      return false;
     } catch (err) {
-      console.error('Token validation failed in registry:', err);
+      console.error('Token verification node failure:', err);
       return false;
     }
-    return false;
   },
 
   async getExams(): Promise<Exam[]> {
