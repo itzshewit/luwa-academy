@@ -25,7 +25,11 @@ export const storageService = {
   },
 
   async getAllUsers(): Promise<User[]> {
-    return dbService.getAll<User>('users');
+    try {
+      return await dbService.getAll<User>('users');
+    } catch (e) {
+      return [];
+    }
   },
 
   async saveUser(user: User): Promise<void> {
@@ -42,7 +46,11 @@ export const storageService = {
   },
 
   async getNotes(): Promise<StudyNote[]> {
-    return dbService.getAll<StudyNote>('notes');
+    try {
+      return await dbService.getAll<StudyNote>('notes');
+    } catch (e) {
+      return [];
+    }
   },
 
   async saveNotes(notes: StudyNote[]): Promise<void> {
@@ -50,7 +58,11 @@ export const storageService = {
   },
 
   async getQuestions(): Promise<Question[]> {
-    return dbService.getAll<Question>('questions');
+    try {
+      return await dbService.getAll<Question>('questions');
+    } catch (e) {
+      return [];
+    }
   },
 
   async saveQuestions(questions: Question[]): Promise<void> {
@@ -58,7 +70,11 @@ export const storageService = {
   },
 
   async getStaticQuizzes(): Promise<StaticQuiz[]> {
-    return dbService.getAll<StaticQuiz>('static_quizzes');
+    try {
+      return await dbService.getAll<StaticQuiz>('static_quizzes');
+    } catch (e) {
+      return [];
+    }
   },
 
   async saveStaticQuizzes(quizzes: StaticQuiz[]): Promise<void> {
@@ -66,7 +82,11 @@ export const storageService = {
   },
 
   async getStudyTasks(): Promise<StudyTask[]> {
-    return dbService.getAll<StudyTask>('tasks');
+    try {
+      return await dbService.getAll<StudyTask>('tasks');
+    } catch (e) {
+      return [];
+    }
   },
 
   async saveStudyTask(task: StudyTask): Promise<void> {
@@ -79,7 +99,11 @@ export const storageService = {
 
   // Assignment System Integration
   async getAssignments(): Promise<Assignment[]> {
-    return dbService.getAll<Assignment>('assignments');
+    try {
+      return await dbService.getAll<Assignment>('assignments');
+    } catch (e) {
+      return [];
+    }
   },
 
   async saveAssignment(assignment: Assignment): Promise<void> {
@@ -91,7 +115,11 @@ export const storageService = {
   },
 
   async getAssignmentSubmissions(): Promise<AssignmentSubmission[]> {
-    return dbService.getAll<AssignmentSubmission>('assignment_submissions');
+    try {
+      return await dbService.getAll<AssignmentSubmission>('assignment_submissions');
+    } catch (e) {
+      return [];
+    }
   },
 
   async saveAssignmentSubmission(submission: AssignmentSubmission): Promise<void> {
@@ -99,7 +127,11 @@ export const storageService = {
   },
 
   async getTokens(): Promise<AccessToken[]> {
-    return dbService.getAll<AccessToken>('tokens');
+    try {
+      return await dbService.getAll<AccessToken>('tokens');
+    } catch (e) {
+      return [];
+    }
   },
 
   async generateToken(): Promise<string> {
@@ -116,18 +148,27 @@ export const storageService = {
     const cleanCode = (code || '').trim().toUpperCase();
     if (cleanCode.startsWith('LUWA-DEV-')) return true;
     
-    const token = await dbService.getById<AccessToken>('tokens', cleanCode);
-    if (token && !token.isUsed) {
-      token.isUsed = true;
-      token.usedBy = userId;
-      await dbService.put('tokens', token);
-      return true;
+    try {
+      const token = await dbService.getById<AccessToken>('tokens', cleanCode);
+      if (token && !token.isUsed) {
+        token.isUsed = true;
+        token.usedBy = userId;
+        await dbService.put('tokens', token);
+        return true;
+      }
+    } catch (err) {
+      console.error('Token validation failed in registry:', err);
+      return false;
     }
     return false;
   },
 
   async getExams(): Promise<Exam[]> {
-    return dbService.getAll<Exam>('exams');
+    try {
+      return await dbService.getAll<Exam>('exams');
+    } catch (e) {
+      return [];
+    }
   },
 
   async saveExam(exam: Exam): Promise<void> {
@@ -135,7 +176,11 @@ export const storageService = {
   },
 
   async getSubmissions(): Promise<ExamSubmission[]> {
-    return dbService.getAll<ExamSubmission>('results');
+    try {
+      return await dbService.getAll<ExamSubmission>('results');
+    } catch (e) {
+      return [];
+    }
   },
 
   async saveSubmission(submission: ExamSubmission): Promise<void> {
@@ -185,59 +230,63 @@ export const storageService = {
   },
 
   async seedRegistry(): Promise<void> {
-    const existingQuizzes = await this.getStaticQuizzes();
-    if (existingQuizzes.length > 0) return;
+    try {
+      const existingQuizzes = await this.getStaticQuizzes();
+      if (existingQuizzes.length > 0) return;
 
-    const initialQuizzes: StaticQuiz[] = [
-      {
-        id: 1,
-        title: "Mathematics - Relations & Functions",
-        subject: "Mathematics",
-        stream: "both",
-        icon: "📐",
-        color: "#2563eb",
-        duration: "15 min",
-        totalQuestions: 8,
-        description: "Test your understanding of relations, functions, domain and range.",
-        questions: [
-          { type: "multiple-choice", question: "What is the domain of f(x) = √(x - 4)?", options: ["x ≥ 4", "x > 4", "x ≤ 4", "All real numbers"], correctAnswer: 0 },
-          { type: "true-false", question: "A function is a relation where each input has exactly one output.", correctAnswer: true },
-          { type: "multiple-choice", question: "Which of the following represents a function?", options: ["{(1,2), (2,3), (1,4)}", "{(1,2), (2,2), (3,2)}", "{(1,2), (1,3), (2,4)}", "None of the above"], correctAnswer: 1 },
-          { type: "fill-blank", question: "If f(x) = 3x + 5 and f(2) = k, what is the value of k?", correctAnswer: "11" },
-          { type: "multiple-select", question: "Which of the following are properties of equivalence relations? (Select all that apply)", options: ["Reflexive", "Symmetric", "Transitive", "Associative"], correctAnswers: [0, 1, 2] },
-          { type: "multiple-choice", question: "What is the range of f(x) = x²?", options: ["All real numbers", "x ≥ 0", "y ≥ 0", "y ≤ 0"], correctAnswer: 2 },
-          { type: "true-false", question: "The relation {(1,1), (2,2), (3,3)} is reflexive on the set {1, 2, 3}.", correctAnswer: true },
-          { type: "multiple-choice", question: "If f(x) = 2x - 1, what is f⁻¹(x)?", options: ["(x + 1)/2", "(x - 1)/2", "2x + 1", "Cannot be determined"], correctAnswer: 0 }
-        ]
-      },
-      {
-        id: 2,
-        title: "Mathematics - Sequences & Series",
-        subject: "Mathematics",
-        stream: "both",
-        icon: "📐",
-        color: "#2563eb",
-        duration: "12 min",
-        totalQuestions: 6,
-        description: "Test your knowledge of arithmetic and geometric sequences.",
-        questions: [
-          { type: "multiple-choice", question: "What is the 10th term of the arithmetic sequence 3, 7, 11, 15...?", options: ["39", "43", "47", "51"], correctAnswer: 0 },
-          { type: "fill-blank", question: "In a geometric sequence, if a = 2 and r = 3, the 4th term is ___.", correctAnswer: "54" },
-          { type: "true-false", question: "The sum of an infinite geometric series converges when |r| < 1.", correctAnswer: true },
-          { type: "multiple-choice", question: "The formula for the nth term of an arithmetic sequence is:", options: ["a_n = a + nd", "a_n = a + (n-1)d", "a_n = ar^n", "a_n = ar^(n-1)"], correctAnswer: 1 },
-          { type: "multiple-select", question: "Which of the following are geometric sequences? (Select all that apply)", options: ["2, 4, 8, 16...", "3, 6, 9, 12...", "1, -2, 4, -8...", "5, 10, 20, 40..."], correctAnswers: [0, 2, 3] },
-          { type: "true-false", question: "An arithmetic sequence has a constant ratio between consecutive terms.", correctAnswer: false }
-        ]
-      }
-    ];
+      const initialQuizzes: StaticQuiz[] = [
+        {
+          id: 1,
+          title: "Mathematics - Relations & Functions",
+          subject: "Mathematics",
+          stream: "both",
+          icon: "📐",
+          color: "#2563eb",
+          duration: "15 min",
+          totalQuestions: 8,
+          description: "Test your understanding of relations, functions, domain and range.",
+          questions: [
+            { type: "multiple-choice", question: "What is the domain of f(x) = √(x - 4)?", options: ["x ≥ 4", "x > 4", "x ≤ 4", "All real numbers"], correctAnswer: 0 },
+            { type: "true-false", question: "A function is a relation where each input has exactly one output.", correctAnswer: true },
+            { type: "multiple-choice", question: "Which of the following represents a function?", options: ["{(1,2), (2,3), (1,4)}", "{(1,2), (2,2), (3,2)}", "{(1,2), (1,3), (2,4)}", "None of the above"], correctAnswer: 1 },
+            { type: "fill-blank", question: "If f(x) = 3x + 5 and f(2) = k, what is the value of k?", correctAnswer: "11" },
+            { type: "multiple-select", question: "Which of the following are properties of equivalence relations? (Select all that apply)", options: ["Reflexive", "Symmetric", "Transitive", "Associative"], correctAnswers: [0, 1, 2] },
+            { type: "multiple-choice", question: "What is the range of f(x) = x²?", options: ["All real numbers", "x ≥ 0", "y ≥ 0", "y ≤ 0"], correctAnswer: 2 },
+            { type: "true-false", question: "The relation {(1,1), (2,2), (3,3)} is reflexive on the set {1, 2, 3}.", correctAnswer: true },
+            { type: "multiple-choice", question: "If f(x) = 2x - 1, what is f⁻¹(x)?", options: ["(x + 1)/2", "(x - 1)/2", "2x + 1", "Cannot be determined"], correctAnswer: 0 }
+          ]
+        },
+        {
+          id: 2,
+          title: "Mathematics - Sequences & Series",
+          subject: "Mathematics",
+          stream: "both",
+          icon: "📐",
+          color: "#2563eb",
+          duration: "12 min",
+          totalQuestions: 6,
+          description: "Test your knowledge of arithmetic and geometric sequences.",
+          questions: [
+            { type: "multiple-choice", question: "What is the 10th term of the arithmetic sequence 3, 7, 11, 15...?", options: ["39", "43", "47", "51"], correctAnswer: 0 },
+            { type: "fill-blank", question: "In a geometric sequence, if a = 2 and r = 3, the 4th term is ___.", correctAnswer: "54" },
+            { type: "true-false", question: "The sum of an infinite geometric series converges when |r| < 1.", correctAnswer: true },
+            { type: "multiple-choice", question: "The formula for the nth term of an arithmetic sequence is:", options: ["a_n = a + nd", "a_n = a + (n-1)d", "a_n = ar^n", "a_n = ar^(n-1)"], correctAnswer: 1 },
+            { type: "multiple-select", question: "Which of the following are geometric sequences? (Select all that apply)", options: ["2, 4, 8, 16...", "3, 6, 9, 12...", "1, -2, 4, -8...", "5, 10, 20, 40..."], correctAnswers: [0, 2, 3] },
+            { type: "true-false", question: "An arithmetic sequence has a constant ratio between consecutive terms.", correctAnswer: false }
+          ]
+        }
+      ];
 
-    await this.saveStaticQuizzes(initialQuizzes);
+      await this.saveStaticQuizzes(initialQuizzes);
 
-    const initialNotes: StudyNote[] = [
-      { id: 'sat_overview', topic: { en: 'EUEE SAT: Overview' }, subjectId: 'SAT', gradeLevel: 12, chapterNumber: 0, contentHtml: { en: "The Scholastic Aptitude Test (SAT) is mandatory. 60 Qs: 35 Verbal, 25 Quantitative. 120 minutes." }, keyFormulas: [], diagrams: [], estimatedReadTime: 10, difficulty: 'MEDIUM', isBookmarked: false },
-      { id: 'hist_g11_u1', topic: { en: 'G11 History U1: Historiography' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 1, contentHtml: { en: "History is study of past human events based on evidence. Historiography is historical writing. Sources are primary and secondary." }, keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL }
-    ];
+      const initialNotes: StudyNote[] = [
+        { id: 'sat_overview', topic: { en: 'EUEE SAT: Overview' }, subjectId: 'SAT', gradeLevel: 12, chapterNumber: 0, contentHtml: { en: "The Scholastic Aptitude Test (SAT) is mandatory. 60 Qs: 35 Verbal, 25 Quantitative. 120 minutes." }, keyFormulas: [], diagrams: [], estimatedReadTime: 10, difficulty: 'MEDIUM', isBookmarked: false },
+        { id: 'hist_g11_u1', topic: { en: 'G11 History U1: Historiography' }, subjectId: 'History', gradeLevel: 11, chapterNumber: 1, contentHtml: { en: "History is study of past human events based on evidence. Historiography is historical writing. Sources are primary and secondary." }, keyFormulas: [], diagrams: [], estimatedReadTime: 15, difficulty: 'MEDIUM', isBookmarked: false, stream: Stream.SOCIAL }
+      ];
 
-    await this.saveNotes(initialNotes);
+      await this.saveNotes(initialNotes);
+    } catch (e) {
+      console.warn('Registry seeding deferred: Database initializing.');
+    }
   }
 };
