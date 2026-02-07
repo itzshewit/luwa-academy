@@ -104,6 +104,10 @@ export const storageService = {
     return code;
   },
 
+  async deleteToken(code: string): Promise<void> {
+    await dbService.delete('tokens', code);
+  },
+
   async validateAndUseToken(code: string, userId: string): Promise<boolean> {
     if (code.startsWith('LUWA-DEV-')) return true;
     const token = await dbService.getById<AccessToken>('tokens', code);

@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – Institutional Mission Control
-  V9.0 - Enhanced Admission & Token Registry Oversight
+  V9.1 - Enhanced Admission & Token Registry Oversight (Delete & Copy Actions)
 */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -33,31 +33,37 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
   const [examTime, setExamTime] = useState('');
 
   useEffect(() => {
-    const syncRegistry = async () => {
-      setLoading(true);
-      try {
-        const [t, u, e, n] = await Promise.all([
-          storageService.getTokens(),
-          storageService.getAllUsers(),
-          storageService.getExams(),
-          storageService.getNotes()
-        ]);
-        setTokens(t.sort((a, b) => b.createdAt - a.createdAt));
-        setUsers(u);
-        setExistingExams(e);
-        setNotes(n);
-      } finally {
-        setLoading(false);
-      }
-    };
     syncRegistry();
   }, [activeTab]);
 
+  const syncRegistry = async () => {
+    setLoading(true);
+    try {
+      const [t, u, e, n] = await Promise.all([
+        storageService.getTokens(),
+        storageService.getAllUsers(),
+        storageService.getExams(),
+        storageService.getNotes()
+      ]);
+      setTokens(t.sort((a, b) => b.createdAt - a.createdAt));
+      setUsers(u);
+      setExistingExams(e);
+      setNotes(n);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGenerateToken = async () => {
     const code = await storageService.generateToken();
-    const updated = await storageService.getTokens();
-    setTokens(updated.sort((a, b) => b.createdAt - a.createdAt));
+    await syncRegistry();
     alert(`Institutional Code Generated: ${code}`);
+  };
+
+  const handleDeleteToken = async (code: string) => {
+    if (!confirm(`Revoke authorization for token [${code}]? This registry node will be purged.`)) return;
+    await storageService.deleteToken(code);
+    await syncRegistry();
   };
 
   const handleParseExam = async () => {
@@ -282,8 +288,8 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                    <div className="col-span-3">Registry Token</div>
                    <div className="col-span-2 text-center">Status</div>
                    <div className="col-span-3">Authorization Date</div>
-                   <div className="col-span-3">Consumed By</div>
-                   <div className="col-span-1 text-right">Actions</div>
+                   <div className="col-span-2">Consumed By</div>
+                   <div className="col-span-2 text-right">Actions</div>
                 </div>
 
                 {tokens.length === 0 && (
@@ -309,26 +315,32 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                           <div className="col-span-3">
                              <p className="text-[11px] text-slate-500 font-bold uppercase tracking-tight">{new Date(t.createdAt).toLocaleString()}</p>
                           </div>
-                          <div className="col-span-3">
+                          <div className="col-span-2">
                              {t.isUsed ? (
                                 <div className="flex items-center gap-3">
                                    <div className="w-8 h-8 rounded-full bg-luwa-primaryContainer flex items-center justify-center text-[10px] font-black text-luwa-primary">{consumer?.fullName?.charAt(0) || 'U'}</div>
                                    <div className="min-w-0">
                                       <p className="text-xs font-black text-luwa-onSurface truncate">{consumer?.fullName || 'Unknown Scholar'}</p>
-                                      <p className="text-[8px] text-slate-400 font-bold uppercase truncate">{consumer?.email || 'N/A'}</p>
                                    </div>
                                 </div>
                              ) : (
                                 <span className="text-[10px] text-slate-300 font-black uppercase italic tracking-widest">Awaiting Admission...</span>
                              )}
                           </div>
-                          <div className="col-span-1 text-right flex justify-end gap-2">
+                          <div className="col-span-2 text-right flex justify-end gap-2">
                              <button 
                                onClick={() => { navigator.clipboard.writeText(t.code); alert("Admission Code Copied to Clipboard"); }} 
-                               className="p-3 bg-slate-50 text-slate-300 hover:text-luwa-primary hover:bg-luwa-primaryContainer rounded-full transition-all"
+                               className="p-3 bg-slate-50 text-slate-400 hover:text-luwa-primary hover:bg-luwa-primaryContainer rounded-full transition-all"
                                title="Copy Code"
                              >
                                 <ICONS.Copy className="w-4 h-4" />
+                             </button>
+                             <button 
+                               onClick={() => handleDeleteToken(t.code)} 
+                               className="p-3 bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                               title="Revoke Token"
+                             >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
                              </button>
                           </div>
                        </div>
