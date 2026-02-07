@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – Institutional Mission Control
-  V9.1 - Enhanced Admission & Token Registry Oversight (Delete & Copy Actions)
+  V9.2 - Scholar Purge Node & Enhanced Token UX
 */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -57,12 +57,21 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
   const handleGenerateToken = async () => {
     const code = await storageService.generateToken();
     await syncRegistry();
-    alert(`Institutional Code Generated: ${code}`);
+    // Copy automatically for convenience
+    navigator.clipboard.writeText(code);
+    alert(`Institutional Code Generated & Copied: ${code}`);
   };
 
   const handleDeleteToken = async (code: string) => {
     if (!confirm(`Revoke authorization for token [${code}]? This registry node will be purged.`)) return;
     await storageService.deleteToken(code);
+    await syncRegistry();
+  };
+
+  const handleDeleteUser = async (u: User) => {
+    if (u.role === 'admin') return alert("System Error: Root administrator nodes cannot be purged.");
+    if (!confirm(`Institutional Purge: Remove scholar [${u.fullName}] from global registry? All XP and historical nodes will be lost.`)) return;
+    await storageService.deleteUser(u.id);
     await syncRegistry();
   };
 
@@ -191,7 +200,14 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                             <p className="text-[10px] text-slate-400 font-bold uppercase">{u.stream} • Grade {u.grade}</p>
                           </div>
                         </div>
-                        <button onClick={() => onSimulate(u)} className="px-4 py-2 bg-luwa-primaryContainer text-luwa-primary rounded-lg text-[9px] font-black uppercase m3-ripple">Simulate</button>
+                        <div className="flex gap-2">
+                           <button onClick={() => onSimulate(u)} className="px-4 py-2 bg-luwa-primaryContainer text-luwa-primary rounded-lg text-[9px] font-black uppercase m3-ripple">Simulate</button>
+                           {u.role !== 'admin' && (
+                             <button onClick={() => handleDeleteUser(u)} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+                             </button>
+                           )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -216,7 +232,7 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
           <div className="space-y-8 animate-m3-fade">
              <header className="flex justify-between items-center">
                 <div>
-                   <h2 className="display-small font-serif font-black uppercase">Scholar Registry</h2>
+                   <h2 className="display-small font-serif font-black uppercase text-luwa-onSurface">Scholar Registry</h2>
                    <p className="label-small text-slate-400 font-black uppercase tracking-widest mt-1">Global User Database</p>
                 </div>
                 <div className="flex gap-3">
@@ -232,7 +248,7 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                           <th className="px-8 py-5">Full Name</th>
                           <th className="px-8 py-5">Admission Source</th>
                           <th className="px-8 py-5 text-center">Progression</th>
-                          <th className="px-8 py-5 text-right">Node Protocol</th>
+                          <th className="px-8 py-5 text-right">Registry Audit</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -257,7 +273,14 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                                 <span className="px-3 py-1 bg-luwa-primaryContainer text-luwa-primary rounded-full text-[10px] font-black">{u.xp} XP</span>
                             </td>
                             <td className="px-8 py-5 text-right">
-                                <button onClick={() => onSimulate(u)} className="text-[10px] font-black text-luwa-primary hover:text-luwa-onPrimaryContainer px-4 py-2 bg-slate-50 rounded-lg uppercase tracking-tighter transition-all">Simulate Node</button>
+                                <div className="flex justify-end gap-2">
+                                   <button onClick={() => onSimulate(u)} className="text-[10px] font-black text-luwa-primary hover:text-luwa-onPrimaryContainer px-4 py-2 bg-slate-50 rounded-lg uppercase tracking-tighter transition-all">Simulate</button>
+                                   {u.role !== 'admin' && (
+                                     <button onClick={() => handleDeleteUser(u)} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-all" title="Purge Record">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+                                     </button>
+                                   )}
+                                </div>
                             </td>
                           </tr>
                         ))}
@@ -279,7 +302,7 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                   onClick={handleGenerateToken} 
                   className="w-full md:w-auto px-10 py-5 bg-luwa-primary text-white rounded-m3-xl label-large font-black uppercase tracking-widest shadow-m3-2 m3-ripple transition-all active:scale-95 flex items-center justify-center gap-3"
                 >
-                  <ICONS.Zap className="w-5 h-5" /> Generate New Admission Code
+                  <ICONS.Zap className="w-5 h-5" /> Generate & Copy New Code
                 </button>
              </header>
 
@@ -305,7 +328,16 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                     <GlassCard key={t.code} className="p-6 bg-white border-slate-100 group hover:border-luwa-primary/30 transition-all shadow-sm">
                        <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-6">
                           <div className="col-span-3">
-                             <p className="text-2xl font-mono font-black text-luwa-onSurface tracking-tighter">{t.code}</p>
+                             <div className="flex items-center gap-3">
+                                <p className="text-2xl font-mono font-black text-luwa-onSurface tracking-tighter">{t.code}</p>
+                                <button 
+                                  onClick={() => { navigator.clipboard.writeText(t.code); alert("Admission Code Copied"); }}
+                                  className="p-2 text-slate-300 hover:text-luwa-primary transition-colors"
+                                  title="Copy Registry Code"
+                                >
+                                  <ICONS.Copy className="w-4 h-4" />
+                                </button>
+                             </div>
                           </div>
                           <div className="col-span-2 text-center">
                              <span className={`inline-flex px-4 py-1.5 rounded-full text-[9px] font-black uppercase ${t.isUsed ? 'bg-slate-100 text-slate-400' : 'bg-green-50 text-green-600 animate-pulse'}`}>
@@ -328,13 +360,6 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                              )}
                           </div>
                           <div className="col-span-2 text-right flex justify-end gap-2">
-                             <button 
-                               onClick={() => { navigator.clipboard.writeText(t.code); alert("Admission Code Copied to Clipboard"); }} 
-                               className="p-3 bg-slate-50 text-slate-400 hover:text-luwa-primary hover:bg-luwa-primaryContainer rounded-full transition-all"
-                               title="Copy Code"
-                             >
-                                <ICONS.Copy className="w-4 h-4" />
-                             </button>
                              <button 
                                onClick={() => handleDeleteToken(t.code)} 
                                className="p-3 bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
@@ -398,7 +423,7 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
 
         {activeTab === 'Curriculum' && (
           <div className="space-y-6 animate-m3-fade">
-             <h2 className="title-large font-serif font-black uppercase">Registry Mastery</h2>
+             <h2 className="title-large font-serif font-black uppercase text-luwa-onSurface">Registry Mastery</h2>
              <div className="grid grid-cols-1 gap-4">
                 {notes.map(n => (
                    <div key={n.id} className="p-6 bg-white border border-slate-100 rounded-m3-xl flex justify-between items-center group hover:shadow-m3-2 transition-all">

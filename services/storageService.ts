@@ -32,6 +32,10 @@ export const storageService = {
     await dbService.put('users', user);
   },
 
+  async deleteUser(id: string): Promise<void> {
+    await dbService.delete('users', id);
+  },
+
   async getUserByEmail(email: string): Promise<User | null> {
     const users = await this.getAllUsers();
     return users.find(u => u.email === email) || null;
