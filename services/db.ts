@@ -1,11 +1,11 @@
 
 /*
   Luwa Academy – Neural Registry Database
-  V1.3 - Assignment System Stores Integration
+  V1.4 - Registry Version Bump (Token Store Stability)
 */
 
 const DB_NAME = 'LuwaAcademy_Institutional_Registry';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Bumped version to ensure store creation for all users
 
 export const dbService = {
   db: null as IDBDatabase | null,
@@ -35,21 +35,24 @@ export const dbService = {
         if (!db.objectStoreNames.contains('assignment_submissions')) db.createObjectStore('assignment_submissions', { keyPath: 'id' });
         
         // Indices for faster querying
-        const noteStore = request.transaction?.objectStore('notes');
-        noteStore?.createIndex('subjectId', 'subjectId', { unique: false });
-        
-        const qStore = request.transaction?.objectStore('questions');
-        qStore?.createIndex('subjectId', 'subjectId', { unique: false });
+        const transaction = (event.target as IDBOpenDBRequest).transaction;
+        if (transaction) {
+          const noteStore = transaction.objectStore('notes');
+          if (!noteStore.indexNames.contains('subjectId')) noteStore.createIndex('subjectId', 'subjectId', { unique: false });
+          
+          const qStore = transaction.objectStore('questions');
+          if (!qStore.indexNames.contains('subjectId')) qStore.createIndex('subjectId', 'subjectId', { unique: false });
 
-        const taskStore = request.transaction?.objectStore('tasks');
-        taskStore?.createIndex('date', 'date', { unique: false });
+          const taskStore = transaction.objectStore('tasks');
+          if (!taskStore.indexNames.contains('date')) taskStore.createIndex('date', 'date', { unique: false });
 
-        const assignmentStore = request.transaction?.objectStore('assignments');
-        assignmentStore?.createIndex('subject', 'subject', { unique: false });
+          const assignmentStore = transaction.objectStore('assignments');
+          if (!assignmentStore.indexNames.contains('subject')) assignmentStore.createIndex('subject', 'subject', { unique: false });
 
-        const subStore = request.transaction?.objectStore('assignment_submissions');
-        subStore?.createIndex('userId', 'userId', { unique: false });
-        subStore?.createIndex('assignmentId', 'assignmentId', { unique: false });
+          const subStore = transaction.objectStore('assignment_submissions');
+          if (!subStore.indexNames.contains('userId')) subStore.createIndex('userId', 'userId', { unique: false });
+          if (!subStore.indexNames.contains('assignmentId')) subStore.createIndex('assignmentId', 'assignmentId', { unique: false });
+        }
       };
 
       request.onsuccess = (event) => {

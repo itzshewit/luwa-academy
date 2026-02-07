@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – Authentication & Registration Module
-  V6.0 - Secure Token-Based Enrollment
+  V6.1 - Secure Token-Based Enrollment (Sanitized)
 */
 
 import React, { useState } from 'react';
@@ -83,10 +83,21 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     setError('');
     setLoading(true);
 
+    const cleanToken = token.trim().toUpperCase();
+    const cleanEmail = email.trim().toLowerCase();
+
     try {
-      // 1. Validate Token First
+      // 1. Check for duplicate email
+      const existing = await storageService.getUserByEmail(cleanEmail);
+      if (existing) {
+        setError('Email already exists in registry.');
+        setLoading(false);
+        return;
+      }
+
+      // 2. Validate Token (Consume strictly if valid)
       const tempId = `scholar_${Date.now()}`;
-      const isValidToken = await storageService.validateAndUseToken(token, tempId);
+      const isValidToken = await storageService.validateAndUseToken(cleanToken, tempId);
       
       if (!isValidToken) {
         setError('Invalid or Expired Institutional Token.');
@@ -94,20 +105,12 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         return;
       }
 
-      // 2. Check for duplicate email
-      const existing = await storageService.getUserByEmail(email);
-      if (existing) {
-        setError('Email already exists in registry.');
-        setLoading(false);
-        return;
-      }
-
       // 3. Create User
       const newUser: User = {
         id: tempId,
-        email: email,
+        email: cleanEmail,
         passwordHash: storageService.hashPassword(password),
-        fullName: fullName,
+        fullName: fullName.trim(),
         role: 'scholar',
         stream: stream,
         grade: 12,
@@ -160,7 +163,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                     <input 
                       type="text" 
                       value={token} 
-                      onChange={(e) => setToken(e.target.value.toUpperCase())} 
+                      onChange={(e) => setToken(e.target.value)} 
                       className="w-full bg-slate-50 border-b-2 border-slate-100 px-5 py-4 text-sm font-bold focus:bg-white focus:border-luwa-tertiary outline-none transition-all" 
                       placeholder="Institutional Access Token" 
                       required 

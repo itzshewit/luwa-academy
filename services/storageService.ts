@@ -113,8 +113,10 @@ export const storageService = {
   },
 
   async validateAndUseToken(code: string, userId: string): Promise<boolean> {
-    if (code.startsWith('LUWA-DEV-')) return true;
-    const token = await dbService.getById<AccessToken>('tokens', code);
+    const cleanCode = (code || '').trim().toUpperCase();
+    if (cleanCode.startsWith('LUWA-DEV-')) return true;
+    
+    const token = await dbService.getById<AccessToken>('tokens', cleanCode);
     if (token && !token.isUsed) {
       token.isUsed = true;
       token.usedBy = userId;
