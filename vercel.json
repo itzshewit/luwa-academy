@@ -1,5 +1,20 @@
-
 {
+  "version": 2,
+  "regions": ["iad1", "sfo1", "fra1", "hnd1"],
+  "functions": {
+    "api/*": {
+      "memory": 512,
+      "maxDuration": 10
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",

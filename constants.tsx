@@ -1,4 +1,3 @@
-
 /*
   Module: Global Icons & Constants
   Purpose: Centralized repository for application-wide UI constants, color palettes, and SVG icon components.
@@ -151,3 +150,46 @@ export const ICONS = {
     </svg>
   ),
 };
+
+export const learningPaths = [
+  {
+    id: 'path1',
+    name: 'Data Science Track',
+    description: 'Learn the fundamentals of data science, including Python, statistics, and machine learning.',
+    courses: ['Intro to Python', 'Statistics 101', 'Machine Learning Basics']
+  },
+  {
+    id: 'path2',
+    name: 'Web Development Track',
+    description: 'Master web development with HTML, CSS, JavaScript, and React.',
+    courses: ['HTML & CSS Basics', 'JavaScript Essentials', 'React for Beginners']
+  },
+  {
+    id: 'path3',
+    name: 'AI and Machine Learning',
+    description: 'Dive deep into AI concepts, neural networks, and advanced machine learning techniques.',
+    courses: ['AI Fundamentals', 'Deep Learning with TensorFlow', 'Advanced Machine Learning']
+  },
+  {
+    id: 'path4',
+    name: 'Full-Stack Development',
+    description: 'Build real-world applications using modern web technologies.',
+    courses: ['Frontend Basics', 'Backend Development', 'Deploying Applications'],
+    projects: [
+      { name: 'Portfolio Website', description: 'Create a personal portfolio using HTML, CSS, and JavaScript.' },
+      { name: 'E-commerce API', description: 'Develop a RESTful API for an online store.' },
+      { name: 'Full-Stack Blog', description: 'Combine frontend and backend skills to build a blogging platform.' }
+    ]
+  },
+  {
+    id: 'path5',
+    name: 'Gamified Data Science Track',
+    description: 'Learn data science with gamified challenges and rewards.',
+    courses: ['Intro to Python', 'Statistics 101', 'Machine Learning Basics'],
+    rewards: [
+      { milestone: 'Complete Python Basics', reward: 'Badge: Python Novice' },
+      { milestone: 'Score 80% in Statistics Quiz', reward: '50 Points' },
+      { milestone: 'Finish Machine Learning Project', reward: 'Certificate of Excellence' }
+    ]
+  }
+];

@@ -1,4 +1,3 @@
-
 /*
   Luwa Academy – AI-Powered Educational Platform
   Developed by Shewit – 2026
@@ -7,6 +6,12 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 import { Quiz, TutorMode, IntentType, Language, Exam, User, Question, QuizHistoryEntry, ExamSubmission } from "../types.ts";
+import { Configuration, OpenAIApi } from 'openai';
+import axios from 'axios';
+
+const openai = new OpenAIApi(
+  new Configuration({ apiKey: process.env.OPENAI_API_KEY })
+);
 
 export const geminiService = {
   getAI: () => {
@@ -285,3 +290,132 @@ export const geminiService = {
     }
   }
 };
+
+export function recommendCourses(userPreferences: any, courseCatalog: any[], userHistory: any[]) {
+  // Advanced AI-driven recommendation logic using collaborative filtering
+  const userTags = new Set(userPreferences.interests);
+
+  // Calculate course scores based on user preferences and history
+  const courseScores = courseCatalog.map(course => {
+    let score = 0;
+
+    // Boost score for matching tags
+    course.tags.forEach(tag => {
+      if (userTags.has(tag)) {
+        score += 10;
+      }
+    });
+
+    // Boost score for courses similar to user history
+    userHistory.forEach(history => {
+      if (history.tags.some((tag: string) => course.tags.includes(tag))) {
+        score += 5;
+      }
+    });
+
+    return { ...course, score };
+  });
+
+  // Sort courses by score in descending order
+  courseScores.sort((a, b) => b.score - a.score);
+
+  return courseScores.slice(0, 5); // Return top 5 recommendations
+}
+
+// Example usage:
+// const userPreferences = { interests: ['math', 'science'] };
+// const userHistory = [
+//   { id: 1, name: 'Algebra Basics', tags: ['math'] },
+//   { id: 2, name: 'Physics Fundamentals', tags: ['science'] }
+// ];
+// const courseCatalog = [
+//   { id: 3, name: 'Advanced Algebra', tags: ['math'] },
+//   { id: 4, name: 'Chemistry 101', tags: ['science'] }
+// ];
+// console.log(recommendCourses(userPreferences, courseCatalog, userHistory));
+
+export async function generatePersonalizedLearningPlan(userProfile, courseCatalog) {
+  try {
+    const prompt = `Create a personalized learning plan for a user with the following profile: ${JSON.stringify(userProfile)}. Use the following course catalog: ${JSON.stringify(courseCatalog)}.`;
+
+    const response = await openai.createCompletion({
+      model: 'gpt-4',
+      prompt,
+      max_tokens: 500,
+    });
+
+    return response.data.choices[0].text.trim();
+  } catch (error) {
+    console.error('Error generating personalized learning plan:', error);
+    throw new Error('Failed to generate personalized learning plan.');
+  }
+}
+
+// Example usage:
+// const userProfile = { interests: ['math', 'science'], goals: ['career advancement'] };
+// const courseCatalog = [
+//   { id: 1, name: 'Algebra Basics', tags: ['math'] },
+//   { id: 2, name: 'Physics Fundamentals', tags: ['science'] }
+// ];
+// generatePersonalizedLearningPlan(userProfile, courseCatalog).then(console.log);
+
+export function generateAdaptiveLearningPath(userPerformance, courseCatalog) {
+  // Example adaptive learning logic
+  const { strengths, weaknesses } = userPerformance;
+
+  const adaptivePath = courseCatalog.filter(course => {
+    if (weaknesses.some(weakness => course.tags.includes(weakness))) {
+      return true; // Prioritize courses that address weaknesses
+    }
+    return strengths.some(strength => course.tags.includes(strength));
+  });
+
+  return adaptivePath.slice(0, 5); // Return top 5 courses for the adaptive path
+}
+
+// Example usage:
+// const userPerformance = {
+//   strengths: ['math'],
+//   weaknesses: ['science']
+// };
+// const courseCatalog = [
+//   { id: 1, name: 'Algebra Basics', tags: ['math'] },
+//   { id: 2, name: 'Physics Fundamentals', tags: ['science'] }
+// ];
+// console.log(generateAdaptiveLearningPath(userPerformance, courseCatalog));
+
+export async function fetchExternalCourses(apiUrl) {
+  try {
+    const response = await axios.get(apiUrl);
+    console.log('Fetched external courses:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching external courses:', error);
+    throw new Error('Failed to fetch external courses.');
+  }
+}
+
+// Example usage:
+// const apiUrl = 'https://external-course-api.com/courses';
+// fetchExternalCourses(apiUrl).then(console.log);
+
+export async function getChatbotResponse(userMessage) {
+  try {
+    const prompt = `You are a helpful educational assistant. Respond to the following user message: ${userMessage}`;
+
+    const response = await openai.createCompletion({
+      model: 'gpt-4',
+      prompt,
+      max_tokens: 200,
+    });
+
+    return response.data.choices[0].text.trim();
+  } catch (error) {
+    console.error('Error generating chatbot response:', error);
+    throw new Error('Failed to generate chatbot response.');
+  }
+}
+
+// Example usage:
+// const userMessage = 'Can you help me understand algebra?';
+// getChatbotResponse(userMessage).then(console.log);

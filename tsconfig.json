@@ -11,7 +11,8 @@
     ],
     "skipLibCheck": true,
     "types": [
-      "node"
+      "node",
+      "react-chartjs-2"
     ],
     "moduleResolution": "bundler",
     "isolatedModules": true,
