@@ -9,6 +9,12 @@ export const authService = {
   },
 
   async loginUser(username, password) {
+    // Check for admin credentials
+    if (username === 'admin@luwa.academy' && password === 'admin123') {
+      const adminToken = jwt.sign({ username, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      return adminToken;
+    }
+
     // Verify user credentials (mock implementation)
     const isValid = await bcrypt.compare(password, 'stored-hashed-password');
     if (!isValid) {
