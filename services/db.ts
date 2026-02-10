@@ -1,22 +1,11 @@
+
 /*
   Luwa Academy – Neural Registry Database
-  V1.6 - Registry Version Bump (Handshake & Stability Fix)
+  V1.7 - Registry Version Bump (Registration Stability Fix)
 */
 
 const DB_NAME = 'LuwaAcademy_Institutional_Registry';
-const DB_VERSION = 4; // Bumped version for schema integrity
-
-import { ethers } from 'ethers';
-
-const blockchainProvider = new ethers.providers.JsonRpcProvider(process.env.BLOCKCHAIN_RPC_URL);
-const credentialContract = new ethers.Contract(
-  process.env.CREDENTIAL_CONTRACT_ADDRESS,
-  [
-    'function verifyCredential(string memory credentialHash) public view returns (bool)',
-    'function issueCredential(string memory credentialHash) public'
-  ],
-  blockchainProvider
-);
+const DB_VERSION = 5; // Bumped to 5 for definitive store synchronization
 
 export const dbService = {
   db: null as IDBDatabase | null,
@@ -38,13 +27,11 @@ export const dbService = {
 
         stores.forEach(store => {
           if (!db.objectStoreNames.contains(store)) {
-            // Using 'id' for most, but 'code' for tokens specifically
             const keyPath = store === 'tokens' ? 'code' : 'id';
             db.createObjectStore(store, { keyPath });
           }
         });
         
-        // Ensure indices are present
         const transaction = (event.target as IDBOpenDBRequest).transaction;
         if (transaction) {
           try {
@@ -144,68 +131,5 @@ export const dbService = {
         reject(`Registry bulk write failure`);
       }
     });
-  }
-};
-
-export const analyticsService = {
-  logProgress: (userId, courseId, progress) => {
-    console.log(`User ${userId} progress in course ${courseId}: ${progress}%`);
-    // Save progress to the database with indexing for faster retrieval
-    // Example: db.collection('progress').createIndex({ userId: 1, courseId: 1 });
-  },
-
-  getUserAnalytics: (userId) => {
-    console.log(`Fetching analytics for user ${userId}`);
-    // Use caching to reduce database load
-    const cacheKey = `userAnalytics:${userId}`;
-    const cachedData = cache.get(cacheKey);
-    if (cachedData) {
-      return cachedData;
-    }
-
-    // Retrieve user analytics from the database (mock implementation)
-    const analytics = {
-      coursesCompleted: 5,
-      averageScore: 85,
-      activeDays: 30
-    };
-
-    cache.set(cacheKey, analytics, 3600); // Cache for 1 hour
-    return analytics;
-  },
-
-  getPlatformAnalytics: () => {
-    console.log('Fetching platform-wide analytics');
-    // Optimize queries with aggregation pipelines
-    return {
-      totalUsers: 1000,
-      activeUsers: 200,
-      coursesCompleted: 5000
-    };
-  }
-};
-
-export const blockchainService = {
-  async verifyCredential(credentialHash) {
-    try {
-      const isValid = await credentialContract.verifyCredential(credentialHash);
-      console.log(`Credential verification result: ${isValid}`);
-      return isValid;
-    } catch (error) {
-      console.error('Error verifying credential:', error);
-      throw new Error('Failed to verify credential.');
-    }
-  },
-
-  async issueCredential(credentialHash) {
-    try {
-      const signer = blockchainProvider.getSigner();
-      const contractWithSigner = credentialContract.connect(signer);
-      await contractWithSigner.issueCredential(credentialHash);
-      console.log('Credential issued successfully.');
-    } catch (error) {
-      console.error('Error issuing credential:', error);
-      throw new Error('Failed to issue credential.');
-    }
   }
 };

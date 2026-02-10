@@ -157,13 +157,13 @@ export const storageService = {
     const cleanCode = (code || '').trim().toUpperCase();
     if (!cleanCode) return false;
     
-    // Developer bypass
+    // Global Access Bypass for Admins/Devs
     if (cleanCode.startsWith('LUWA-DEV-')) return true;
     
     try {
       const token = await dbService.getById<AccessToken>('tokens', cleanCode);
       if (token && !token.isUsed) {
-        // Atomic update
+        // Atomic Registry Lock
         const updatedToken: AccessToken = {
           ...token,
           isUsed: true,
@@ -174,7 +174,7 @@ export const storageService = {
       }
       return false;
     } catch (err) {
-      console.error('Token verification node failure:', err);
+      console.error('Registry Handshake Node Failure:', err);
       return false;
     }
   },
@@ -270,25 +270,6 @@ export const storageService = {
             { type: "multiple-choice", question: "What is the range of f(x) = x²?", options: ["All real numbers", "x ≥ 0", "y ≥ 0", "y ≤ 0"], correctAnswer: 2 },
             { type: "true-false", question: "The relation {(1,1), (2,2), (3,3)} is reflexive on the set {1, 2, 3}.", correctAnswer: true },
             { type: "multiple-choice", question: "If f(x) = 2x - 1, what is f⁻¹(x)?", options: ["(x + 1)/2", "(x - 1)/2", "2x + 1", "Cannot be determined"], correctAnswer: 0 }
-          ]
-        },
-        {
-          id: 2,
-          title: "Mathematics - Sequences & Series",
-          subject: "Mathematics",
-          stream: "both",
-          icon: "📐",
-          color: "#2563eb",
-          duration: "12 min",
-          totalQuestions: 6,
-          description: "Test your knowledge of arithmetic and geometric sequences.",
-          questions: [
-            { type: "multiple-choice", question: "What is the 10th term of the arithmetic sequence 3, 7, 11, 15...?", options: ["39", "43", "47", "51"], correctAnswer: 0 },
-            { type: "fill-blank", question: "In a geometric sequence, if a = 2 and r = 3, the 4th term is ___.", correctAnswer: "54" },
-            { type: "true-false", question: "The sum of an infinite geometric series converges when |r| < 1.", correctAnswer: true },
-            { type: "multiple-choice", question: "The formula for the nth term of an arithmetic sequence is:", options: ["a_n = a + nd", "a_n = a + (n-1)d", "a_n = ar^n", "a_n = ar^(n-1)"], correctAnswer: 1 },
-            { type: "multiple-select", question: "Which of the following are geometric sequences? (Select all that apply)", options: ["2, 4, 8, 16...", "3, 6, 9, 12...", "1, -2, 4, -8...", "5, 10, 20, 40..."], correctAnswers: [0, 2, 3] },
-            { type: "true-false", question: "An arithmetic sequence has a constant ratio between consecutive terms.", correctAnswer: false }
           ]
         }
       ];

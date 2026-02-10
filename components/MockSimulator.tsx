@@ -1,3 +1,4 @@
+
 /*
   Luwa Academy – Mock Simulation Node
   Stability Patch V5.3 (Export Support)
@@ -9,13 +10,6 @@ import { User, MockExam } from '../types.ts';
 import { ICONS } from '../constants.tsx';
 import { storageService } from '../services/storageService.ts';
 import { geminiService } from '../services/geminiService.ts';
-import { io } from 'socket.io-client';
-import { useRef, useEffect } from 'react';
-import { VRCanvas, DefaultXRControllers } from '@react-three/xr';
-import { Canvas } from '@react-three/fiber';
-import { Box } from '@react-three/drei';
-
-const socket = io('https://luwa-academy-collaboration-server.com');
 
 interface MockSimulatorProps {
   user: User;
@@ -33,18 +27,6 @@ export const MockSimulator: React.FC<MockSimulatorProps> = ({ user, onComplete, 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [finalScore, setFinalScore] = useState<number | null>(null);
-  const [labState, setLabState] = useState({
-    input: '',
-    output: '',
-    collaborators: []
-  });
-
-  const vrRef = useRef();
-
-  useEffect(() => {
-    // Initialize VR environment if needed
-    console.log('VR environment initialized');
-  }, []);
 
   // Updated startMock to be async and correctly await the promise from storageService.getQuestions()
   const startMock = async (subject: string) => {
@@ -137,18 +119,6 @@ export const MockSimulator: React.FC<MockSimulatorProps> = ({ user, onComplete, 
     if (next.has(id)) next.delete(id);
     else next.add(id);
     setMarked(next);
-  };
-
-  const handleRun = () => {
-    // Simulate a virtual lab computation
-    const result = `Processed: ${labState.input}`;
-    const updatedState = { ...labState, output: result };
-    setLabState(updatedState);
-    socket.emit('lab-update', updatedState);
-  };
-
-  const addCollaborator = (name) => {
-    socket.emit('collaborator-joined', name);
   };
 
   if (finalScore !== null) {
@@ -332,49 +302,6 @@ export const MockSimulator: React.FC<MockSimulatorProps> = ({ user, onComplete, 
             </div>
           </div>
         </aside>
-      </div>
-
-      <div className="mt-8">
-        <h2>Virtual Lab</h2>
-        <p>Experiment with interactive simulations and collaborate with peers in real-time.</p>
-
-        <label>
-          Input:
-          <input
-            type="text"
-            value={labState.input}
-            onChange={(e) => setLabState({ ...labState, input: e.target.value })}
-          />
-        </label>
-
-        <button onClick={handleRun}>Run Simulation</button>
-
-        <div>
-          <h2>Output:</h2>
-          <p>{labState.output}</p>
-        </div>
-
-        <div>
-          <h2>Collaborators</h2>
-          <ul>
-            {labState.collaborators.map((collaborator, index) => (
-              <li key={index}>{collaborator}</li>
-            ))}
-          </ul>
-          <button onClick={() => addCollaborator(prompt('Enter collaborator name:'))}>Add Collaborator</button>
-        </div>
-
-        <h2>Immersive AR/VR Experience</h2>
-        <p>Explore immersive simulations in AR/VR.</p>
-
-        <VRCanvas ref={vrRef}>
-          <ambientLight />
-          <pointLight position={[10, 10, 10]} />
-          <DefaultXRControllers />
-          <Box args={[1, 1, 1]} position={[0, 0, -5]}>
-            <meshStandardMaterial attach="material" color="orange" />
-          </Box>
-        </VRCanvas>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – Institutional Mission Control
-  V9.3 - Scholar Registry Handshake & UX Optimization
+  V9.4 - Token Node Clipboard Sync & Persistence Fix
 */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -26,7 +26,6 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
   const [loading, setLoading] = useState(true);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
-  // Exam Synthesis States
   const [rawExamText, setRawExamText] = useState('');
   const [isParsing, setIsParsing] = useState(false);
   const [parsedExam, setParsedExam] = useState<Partial<Exam> | null>(null);
@@ -141,7 +140,6 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
 
   return (
     <div className="h-full flex flex-col xl:flex-row gap-8 animate-m3-fade">
-      {/* Sidebar Navigation */}
       <aside className="w-full xl:w-72 flex flex-col gap-2 bg-slate-50 p-4 rounded-m3-2xl border border-slate-100 shrink-0 overflow-y-auto">
         <div className="px-4 py-6 border-b border-slate-200 mb-4">
           <h3 className="text-lg font-serif font-black text-luwa-primary uppercase">Institutional Admin</h3>
@@ -161,7 +159,6 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
         </nav>
       </aside>
 
-      {/* Admin Viewport */}
       <main className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-24">
         {activeTab === 'Dashboard' && (
           <div className="space-y-10 animate-m3-fade">
@@ -214,86 +211,10 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                         </div>
                       </div>
                     ))}
-                    {users.length === 0 && <p className="text-center py-10 text-slate-300 font-black uppercase text-[10px] tracking-widest">No scholars admitted yet.</p>}
                   </div>
                 </GlassCard>
               </div>
-              <div className="lg:col-span-4">
-                <GlassCard className="p-8 bg-slate-900 text-white border-none h-full">
-                   <h3 className="label-small font-black uppercase tracking-[0.3em] mb-6 opacity-60">Registry Health</h3>
-                   <div className="space-y-4 text-[11px] font-medium opacity-80">
-                      <p><span className="text-luwa-primary font-black">[DB]</span> Cluster nodes synchronized.</p>
-                      <p><span className="text-green-400 font-black">[SEC]</span> AES-256 Token hash active.</p>
-                      <p><span className="text-amber-400 font-black">[SYS]</span> Neural bandwidth verified.</p>
-                      <p><span className="text-blue-400 font-black">[AUTH]</span> {tokenUsageStats.used} successful handshakes.</p>
-                   </div>
-                </GlassCard>
-              </div>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'Users' && (
-          <div className="space-y-8 animate-m3-fade">
-             <header className="flex justify-between items-center">
-                <div>
-                   <h2 className="display-small font-serif font-black uppercase text-luwa-onSurface">Scholar Registry</h2>
-                   <p className="label-small text-slate-400 font-black uppercase tracking-widest mt-1">Institutional Node Directory</p>
-                </div>
-                <div className="flex gap-3">
-                   <button onClick={handleGenerateToken} className="px-6 py-3 bg-luwa-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest m3-ripple shadow-m3-1">+ Admission Code</button>
-                   <button className="text-[10px] font-black uppercase tracking-widest px-6 py-3 border border-slate-200 rounded-xl hover:bg-slate-50">Global Export</button>
-                </div>
-             </header>
-             <GlassCard className="bg-white border-slate-100 overflow-hidden shadow-m3-2">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead className="bg-slate-50 border-b border-slate-100">
-                        <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                          <th className="px-8 py-5">Scholar Identity</th>
-                          <th className="px-8 py-5">Admission Node</th>
-                          <th className="px-8 py-5 text-center">XP Pulse</th>
-                          <th className="px-8 py-5 text-right">Audit Console</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                        {users.map(u => (
-                          <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="px-8 py-5">
-                                <div className="flex items-center gap-4">
-                                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400">{u.fullName.charAt(0)}</div>
-                                  <div>
-                                      <p className="text-sm font-bold text-luwa-onSurface">{u.fullName}</p>
-                                      <p className="text-[9px] text-slate-400 font-bold">{u.email}</p>
-                                  </div>
-                                </div>
-                            </td>
-                            <td className="px-8 py-5">
-                               <div className="flex flex-col">
-                                  <span className="text-xs font-medium text-slate-500">{u.stream === 'NATURAL_SCIENCE' ? 'Natural Science' : 'Social Science'}</span>
-                                  <span className="text-[9px] font-bold text-luwa-primary uppercase">CODE: {tokens.find(t => t.usedBy === u.id)?.code || 'INSTITUTIONAL'}</span>
-                               </div>
-                            </td>
-                            <td className="px-8 py-5 text-center">
-                                <span className="px-3 py-1 bg-luwa-primaryContainer text-luwa-primary rounded-full text-[10px] font-black">{u.xp} XP</span>
-                            </td>
-                            <td className="px-8 py-5 text-right">
-                                <div className="flex justify-end gap-2">
-                                   <button onClick={() => onSimulate(u)} className="text-[10px] font-black text-luwa-primary hover:text-luwa-onPrimaryContainer px-4 py-2 bg-slate-50 rounded-lg uppercase tracking-tighter transition-all">Simulate</button>
-                                   {u.role !== 'admin' && (
-                                     <button onClick={() => handleDeleteUser(u)} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-all" title="Purge Record">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
-                                     </button>
-                                   )}
-                                </div>
-                            </td>
-                          </tr>
-                        ))}
-                        {users.length === 0 && <tr><td colSpan={4} className="text-center py-20 text-slate-300 uppercase font-black tracking-widest text-xs">Scholar registry empty.</td></tr>}
-                    </tbody>
-                  </table>
-                </div>
-             </GlassCard>
           </div>
         )}
 
@@ -308,19 +229,11 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                   onClick={handleGenerateToken} 
                   className="w-full md:w-auto px-10 py-5 bg-luwa-primary text-white rounded-m3-xl label-large font-black uppercase tracking-widest shadow-m3-2 m3-ripple transition-all active:scale-95 flex items-center justify-center gap-3"
                 >
-                  <ICONS.Zap className="w-5 h-5" /> Generate & Copy Admission Node
+                  <ICONS.Zap className="w-5 h-5" /> Generate & Copy New Token
                 </button>
              </header>
 
              <div className="grid grid-cols-1 gap-4">
-                <div className="hidden lg:grid lg:grid-cols-12 px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                   <div className="col-span-3">Registry Node</div>
-                   <div className="col-span-2 text-center">Handshake Status</div>
-                   <div className="col-span-3">Creation Timestamp</div>
-                   <div className="col-span-2">Admitted Scholar</div>
-                   <div className="col-span-2 text-right">Audit Nodes</div>
-                </div>
-
                 {tokens.length === 0 && (
                    <div className="p-20 text-center bg-slate-50 rounded-m3-2xl border border-dashed border-slate-200">
                       <ICONS.Shield className="w-12 h-12 text-slate-200 mx-auto mb-4" />
@@ -335,9 +248,9 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                   return (
                     <GlassCard key={t.code} className="p-6 bg-white border-slate-100 group hover:border-luwa-primary/30 transition-all shadow-sm">
                        <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-6">
-                          <div className="col-span-3">
+                          <div className="col-span-4">
                              <div className="flex items-center gap-3">
-                                <p className="text-2xl font-mono font-black text-luwa-onSurface tracking-tighter">{t.code}</p>
+                                <p className="text-2xl font-mono font-black text-luwa-onSurface tracking-tighter select-all">{t.code}</p>
                                 <button 
                                   onClick={() => handleCopyCode(t.code)}
                                   className={`p-2 rounded-lg transition-all ${isCopied ? 'bg-green-50 text-green-600' : 'text-slate-300 hover:text-luwa-primary'}`}
@@ -355,19 +268,13 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                           <div className="col-span-3">
                              <p className="text-[11px] text-slate-500 font-bold uppercase tracking-tight">{new Date(t.createdAt).toLocaleString()}</p>
                           </div>
-                          <div className="col-span-2">
+                          <div className="col-span-3 text-right flex justify-end gap-2">
                              {t.isUsed ? (
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 mr-4">
                                    <div className="w-8 h-8 rounded-full bg-luwa-primaryContainer flex items-center justify-center text-[10px] font-black text-luwa-primary">{consumer?.fullName?.charAt(0) || 'U'}</div>
-                                   <div className="min-w-0">
-                                      <p className="text-xs font-black text-luwa-onSurface truncate">{consumer?.fullName || 'Registry ID'}</p>
-                                   </div>
+                                   <p className="text-xs font-black text-luwa-onSurface truncate max-w-[100px]">{consumer?.fullName || 'User Record'}</p>
                                 </div>
-                             ) : (
-                                <span className="text-[10px] text-slate-300 font-black uppercase italic tracking-widest">Awaiting scholar...</span>
-                             )}
-                          </div>
-                          <div className="col-span-2 text-right flex justify-end gap-2">
+                             ) : null}
                              <button 
                                onClick={() => handleDeleteToken(t.code)} 
                                className="p-3 bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
@@ -381,92 +288,6 @@ export const AdminControl: React.FC<AdminControlProps> = ({ onSimulate }) => {
                   );
                 })}
              </div>
-          </div>
-        )}
-
-        {activeTab === 'Assessments' && (
-          <div className="space-y-10 animate-m3-fade">
-             {!parsedExam ? (
-               <div className="space-y-8">
-                 <GlassCard className="p-10 bg-white border-slate-100 shadow-m3-2">
-                    <h3 className="headline-small font-serif font-black text-luwa-primary uppercase mb-6">Neural Assessment Synthesis</h3>
-                    <div className="space-y-6">
-                       <p className="label-small text-slate-400 font-black uppercase tracking-widest">Paste Raw Payloads (AI Neural Parser Active)</p>
-                       <textarea
-                         value={rawExamText}
-                         onChange={(e) => setRawExamText(e.target.value)}
-                         placeholder="Paste raw exam text here..."
-                         className="w-full h-80 p-8 bg-slate-50 border-2 border-slate-100 rounded-m3-2xl text-sm font-medium focus:bg-white focus:border-luwa-primary transition-all outline-none resize-none shadow-inner"
-                       />
-                       <button
-                         onClick={handleParseExam}
-                         disabled={isParsing || !rawExamText.trim()}
-                         className="w-full py-6 bg-luwa-primary text-white rounded-m3-xl label-large font-black uppercase tracking-[0.2em] shadow-m3-2 transition-all disabled:opacity-50"
-                       >
-                         {isParsing ? 'Synthesizing Neural Schema...' : 'Calibrate and Synchronize Payload'}
-                       </button>
-                    </div>
-                 </GlassCard>
-               </div>
-             ) : (
-               <div className="space-y-10">
-                  <GlassCard className="p-10 bg-luwa-primary text-white border-none shadow-m3-3">
-                     <div className="flex justify-between items-start mb-10">
-                        <div>
-                           <h3 className="headline-medium font-serif font-black uppercase tracking-tight">{parsedExam.title || 'Dynamic Node'}</h3>
-                           <p className="label-small font-black opacity-70 uppercase tracking-widest">{parsedExam.subject} • {parsedExam.questions?.length} Questions • {parsedExam.durationMinutes}m</p>
-                        </div>
-                        <button onClick={() => setParsedExam(null)} className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-all"><ICONS.X className="w-5 h-5" /></button>
-                     </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-                        <input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-m3-xl p-4 text-white placeholder-white/50 outline-none" />
-                        <input type="time" value={examTime} onChange={(e) => setExamTime(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-m3-xl p-4 text-white placeholder-white/50 outline-none" />
-                     </div>
-                     <button onClick={handleDeployExam} className="w-full py-6 bg-white text-luwa-primary rounded-m3-xl label-large font-black uppercase tracking-[0.2em] shadow-m3-3 m3-ripple">Deploy and Synchronize Node</button>
-                  </GlassCard>
-               </div>
-             )}
-          </div>
-        )}
-
-        {activeTab === 'Curriculum' && (
-          <div className="space-y-6 animate-m3-fade">
-             <h2 className="title-large font-serif font-black uppercase text-luwa-onSurface">Curriculum Ledger</h2>
-             <div className="grid grid-cols-1 gap-4">
-                {notes.map(n => (
-                   <div key={n.id} className="p-6 bg-white border border-slate-100 rounded-m3-xl flex justify-between items-center group hover:shadow-m3-2 transition-all">
-                      <div>
-                         <p className="text-[9px] font-black text-luwa-primary uppercase mb-1">{n.subjectId} • Grade {n.gradeLevel}</p>
-                         <p className="text-sm font-black text-luwa-onSurface">{n.topic.en}</p>
-                      </div>
-                      <ICONS.Layout className="w-5 h-5 text-slate-200" />
-                   </div>
-                ))}
-             </div>
-          </div>
-        )}
-
-        {activeTab === 'Settings' && (
-          <div className="space-y-10 animate-m3-fade max-w-2xl">
-             <GlassCard className="p-10 bg-white border-slate-100 shadow-m3-2">
-                <h3 className="label-large font-black uppercase text-slate-400 mb-10 tracking-widest">Registry Calibration</h3>
-                <div className="space-y-8">
-                   <div className="flex justify-between items-center p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                      <div>
-                         <p className="text-sm font-black text-luwa-onSurface uppercase">Persistence Node</p>
-                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Automated Backups Synchronized</p>
-                      </div>
-                      <div className="w-12 h-6 bg-luwa-primary rounded-full relative"><div className="absolute top-1 right-1 w-4 h-4 bg-white rounded-full shadow-sm" /></div>
-                   </div>
-                   <div className="flex justify-between items-center p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                      <div>
-                         <p className="text-sm font-black text-luwa-onSurface uppercase">AI Parsing Fidelity</p>
-                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Optimized for National Curriculum</p>
-                      </div>
-                      <span className="text-xs font-black text-luwa-primary uppercase">Calibrated</span>
-                   </div>
-                </div>
-             </GlassCard>
           </div>
         )}
       </main>

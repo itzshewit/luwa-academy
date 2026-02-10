@@ -1,15 +1,15 @@
-export function getStudentType(studentId: string): 'natural' | 'social' {
-  // Mock implementation: Replace with actual database or API call
-  const studentDatabase = {
-    'student1': 'natural',
-    'student2': 'social',
-    // Add more students as needed
-  };
 
-  return studentDatabase[studentId] || 'natural'; // Default to 'natural' for simplicity
-}
+/*
+  Luwa Academy – Auth Support Service
+  Purpose: Provides student type metadata for tracking services.
+*/
+import { storageService } from './storageService.ts';
+import { Stream } from '../types.ts';
 
-export function validateStudentAccess(studentId: string, requestedType: 'natural' | 'social'): boolean {
-  const studentType = getStudentType(studentId);
-  return studentType === requestedType;
+export function getStudentType(studentId?: string): string {
+  const user = storageService.getSession();
+  // Map Stream enum to lowercase strings expected by the Note Service
+  if (user?.stream === Stream.NATURAL) return 'natural';
+  if (user?.stream === Stream.SOCIAL) return 'social';
+  return 'natural'; // Default fallback
 }

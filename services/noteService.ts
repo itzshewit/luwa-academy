@@ -1,5 +1,9 @@
-// Service to manage notes for natural and social students
-import { getStudentType } from '../services/authService';
+
+/*
+  Luwa Academy – Institutional Note Management Service
+  Purpose: Static resource repository for subject blueprints and multimedia links.
+*/
+import { getStudentType } from './authService.ts';
 
 const naturalNotes = {
   biology: {

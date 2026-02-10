@@ -1,7 +1,14 @@
-// Service to track and manage student progress
-import { getStudentType } from './authService';
 
-const progressDatabase = {};
+// Service to track and manage student progress
+import { getStudentType } from './authService.ts';
+
+// Persistence Bridge: Load initial state from storage if it exists
+const STORAGE_KEY = 'luwa_progress_registry';
+const progressDatabase = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+function syncToDisk() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(progressDatabase));
+}
 
 export function initializeProgress(studentId: string) {
   if (!progressDatabase[studentId]) {
@@ -11,12 +18,14 @@ export function initializeProgress(studentId: string) {
       multimediaViewed: {},
       lastActive: new Date().toISOString(),
     };
+    syncToDisk();
   }
 }
 
 export function updateProgress(studentId: string, activity: string, details: any) {
   if (!progressDatabase[studentId]) {
-    throw new Error('Student progress not initialized.');
+    // Auto-init if missing to prevent uncaught errors during node transition
+    initializeProgress(studentId);
   }
 
   const progress = progressDatabase[studentId];
@@ -40,26 +49,27 @@ export function updateProgress(studentId: string, activity: string, details: any
     default:
       throw new Error('Unknown activity type.');
   }
+  syncToDisk();
 }
 
 export function getProgress(studentId: string) {
   if (!progressDatabase[studentId]) {
-    throw new Error('Student progress not initialized.');
+    initializeProgress(studentId);
   }
   return progressDatabase[studentId];
 }
 
 export function setGoals(studentId: string, goals: { [key: string]: any }) {
   if (!progressDatabase[studentId]) {
-    throw new Error('Student progress not initialized.');
+    initializeProgress(studentId);
   }
-
   progressDatabase[studentId].goals = goals;
+  syncToDisk();
 }
 
 export function getAnalytics(studentId: string) {
   if (!progressDatabase[studentId]) {
-    throw new Error('Student progress not initialized.');
+    initializeProgress(studentId);
   }
 
   const progress = progressDatabase[studentId];

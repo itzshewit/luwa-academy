@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – Standard Quiz Assessment Engine
-  V1.0 - Integrated Study Quiz Center
+  V1.1 - Progress Tracking Integration
 */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -9,6 +9,7 @@ import { GlassCard } from './GlassCard.tsx';
 import { User, StaticQuiz, StaticQuestion } from '../types.ts';
 import { ICONS } from '../constants.tsx';
 import { storageService } from '../services/storageService.ts';
+import { updateProgress } from '../services/progressService.ts';
 
 interface QuizCenterProps {
   user: User;
@@ -62,9 +63,20 @@ export const QuizCenter: React.FC<QuizCenterProps> = ({ user, onUpdateUser, onEx
     setUserAnswers([]);
     setScore(0);
     setAnswered(false);
-    // Parse duration string "15 min" to seconds
     const mins = parseInt(activeQuiz.duration) || 15;
     startTimer(mins * 60);
+  };
+
+  const finishQuiz = () => {
+    clearInterval(timerInterval.current);
+    setView('results');
+    const percentage = Math.round((score / activeQuiz!.questions.length) * 100);
+    
+    // Sync with new Progress Service
+    updateProgress(user.id, 'takeQuiz', { quizId: activeQuiz!.id, score: percentage });
+    
+    const xpGain = score * 5;
+    onUpdateUser({ ...user, xp: user.xp + xpGain });
   };
 
   const handleSelectAnswer = (ans: any) => {
@@ -109,14 +121,6 @@ export const QuizCenter: React.FC<QuizCenterProps> = ({ user, onUpdateUser, onEx
     } else {
       finishQuiz();
     }
-  };
-
-  const finishQuiz = () => {
-    clearInterval(timerInterval.current);
-    setView('results');
-    // Save XP
-    const xpGain = score * 5;
-    onUpdateUser({ ...user, xp: user.xp + xpGain });
   };
 
   if (loading) return (
@@ -362,27 +366,6 @@ export const QuizCenter: React.FC<QuizCenterProps> = ({ user, onUpdateUser, onEx
                   <p className="text-[10px] font-black uppercase text-slate-400 mb-1">XP Synced</p>
                   <p className="text-3xl font-black text-luwa-tertiary">+{score * 5}</p>
                </div>
-            </div>
-
-            <div className="space-y-4 max-h-[300px] overflow-y-auto mb-12 pr-4 custom-scrollbar text-left border-t border-slate-100 pt-8">
-               <h4 className="label-medium font-black uppercase text-slate-400 tracking-widest mb-6">Categorical Registry Audit</h4>
-               {activeQuiz.questions.map((q, idx) => {
-                  let isCorrect = false;
-                  const ans = userAnswers[idx];
-                  if (q.type === 'multiple-choice' || q.type === 'true-false') isCorrect = ans === q.correctAnswer;
-                  else if (q.type === 'multiple-select') isCorrect = JSON.stringify((ans || []).sort()) === JSON.stringify((q.correctAnswers || []).sort());
-                  else if (q.type === 'fill-blank') isCorrect = (ans || '').toString().trim().toLowerCase() === (q.correctAnswer || '').toString().trim().toLowerCase();
-
-                  return (
-                    <div key={idx} className={`p-5 rounded-2xl border flex justify-between items-center transition-all ${isCorrect ? 'bg-green-50/50 border-green-100' : 'bg-red-50/50 border-red-100'}`}>
-                       <div className="flex gap-4 items-center">
-                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs ${isCorrect ? 'bg-luwa-secondary text-white' : 'bg-luwa-error text-white'}`}>{idx + 1}</span>
-                          <p className="text-sm font-bold text-slate-700 max-w-[400px] truncate">{q.question}</p>
-                       </div>
-                       <span className={`text-[10px] font-black uppercase ${isCorrect ? 'text-luwa-secondary' : 'text-luwa-error'}`}>{isCorrect ? 'Accurate' : 'Mismatch'}</span>
-                    </div>
-                  );
-               })}
             </div>
 
             <div className="flex gap-4">

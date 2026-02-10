@@ -1,13 +1,14 @@
 
 /*
   Luwa Academy – Curriculum Library & Voice Synthesis
-  V6.5 - Interactive Lesson Viewer Integration
+  V6.6 - Institutional Note Service Integration
 */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { GlassCard } from './GlassCard.tsx';
 import { storageService } from '../services/storageService.ts';
 import { geminiService } from '../services/geminiService.ts';
+import { getNotesForStudent } from '../services/noteService.ts';
 import { User, StudyNote } from '../types.ts';
 import { ICONS } from '../constants.tsx';
 import { Modality } from '@google/genai';
@@ -29,12 +30,20 @@ export const CurriculumLibrary: React.FC<CurriculumLibraryProps> = ({ user, onUp
 
   const subjects = storageService.getSubjects(user.stream);
 
+  // Retrieve static institutional blueprints
+  const blueprints = useMemo(() => {
+    try {
+      return getNotesForStudent(user.id);
+    } catch (e) {
+      return {} as any;
+    }
+  }, [user.id]);
+
   useEffect(() => {
     const fetchNotes = async () => {
       const notes = await storageService.getNotes();
       setCurriculum(notes);
       
-      // Default to the first visible note for the user's stream
       const firstVisible = notes.find(n => (!n.stream || n.stream === user.stream) && subjects.includes(n.subjectId));
       if (firstVisible && !activeNote) setActiveNote(firstVisible);
     };
@@ -81,11 +90,12 @@ export const CurriculumLibrary: React.FC<CurriculumLibraryProps> = ({ user, onUp
     } finally { setIsSynthesizing(false); }
   };
 
+  const activeBlueprint = selectedSubject ? blueprints[selectedSubject.toLowerCase()] : null;
+
   return (
     <div className="h-full flex flex-col gap-6 animate-m3-fade overflow-hidden">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0 px-2 md:px-0">
         <div className="flex items-center gap-4">
-           {/* Library Hamburger Toggle */}
            <button 
              onClick={() => setShowNodeListMobile(!showNodeListMobile)}
              className="md:hidden p-3 bg-luwa-primaryContainer text-luwa-primary rounded-m3-m shadow-sm"
@@ -95,15 +105,15 @@ export const CurriculumLibrary: React.FC<CurriculumLibraryProps> = ({ user, onUp
            </button>
            <div>
               <h2 className="headline-small font-serif font-black text-luwa-onSurface">Library Registry</h2>
-              <p className="label-small text-luwa-onSurfaceVariant font-black uppercase tracking-widest mt-1">Foundation Nodes</p>
+              <p className="label-small text-luwa-onSurfaceVariant font-black uppercase tracking-widest mt-1">Institutional Mastery nodes</p>
            </div>
         </div>
         
         <div className="hidden md:flex gap-4">
            <div className="flex bg-white p-1 rounded-m3-m border border-luwa-surfaceVariant overflow-x-auto custom-scrollbar-hide">
-              <button onClick={() => setSelectedSubject(null)} className={`px-4 py-2 rounded-m3-s text-[10px] font-black uppercase tracking-widest ${!selectedSubject ? 'bg-luwa-primary text-white' : 'text-slate-400'}`}>All</button>
+              <button onClick={() => setSelectedSubject(null)} className={`px-4 py-2 rounded-m3-s text-[10px] font-black uppercase tracking-widest transition-all ${!selectedSubject ? 'bg-luwa-primary text-white shadow-sm' : 'text-slate-400 hover:text-luwa-primary'}`}>All</button>
               {subjects.map(s => (
-                <button key={s} onClick={() => setSelectedSubject(s)} className={`px-4 py-2 rounded-m3-s text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${selectedSubject === s ? 'bg-luwa-primary text-white' : 'text-slate-400'}`}>{s}</button>
+                <button key={s} onClick={() => setSelectedSubject(s)} className={`px-4 py-2 rounded-m3-s text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${selectedSubject === s ? 'bg-luwa-primary text-white shadow-sm' : 'text-slate-400 hover:text-luwa-primary'}`}>{s}</button>
               ))}
            </div>
         </div>
@@ -117,23 +127,56 @@ export const CurriculumLibrary: React.FC<CurriculumLibraryProps> = ({ user, onUp
                 <span className="text-[10px] font-black uppercase tracking-widest text-luwa-primary">Registry Selector</span>
                 <button onClick={() => setShowNodeListMobile(false)} className="p-2 bg-slate-50 rounded-full text-slate-400"><ICONS.X className="w-5 h-5" /></button>
              </div>
-             <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search node registry..." className="w-full bg-slate-50 border border-slate-100 rounded-m3-xl p-4 text-sm font-medium focus:border-luwa-primary outline-none" />
+             <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search node registry..." className="w-full bg-slate-50 border border-slate-100 rounded-m3-xl p-4 text-sm font-bold focus:border-luwa-primary outline-none transition-all shadow-inner" />
              <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
                {filteredNodes.map(node => (
-                 <button key={node.id} onClick={() => handleSelectNode(node)} className={`w-full text-left p-6 rounded-m3-xl border transition-all ${activeNote?.id === node.id ? 'bg-luwa-primary border-luwa-primary shadow-m3-1' : 'bg-white border-luwa-surfaceVariant hover:bg-luwa-surfaceVariant'}`}>
+                 <button key={node.id} onClick={() => handleSelectNode(node)} className={`w-full text-left p-6 rounded-m3-xl border transition-all ${activeNote?.id === node.id ? 'bg-luwa-primary border-luwa-primary shadow-m3-1' : 'bg-white border-luwa-surfaceVariant hover:bg-luwa-surfaceVariant hover:border-luwa-primary/20'}`}>
                    <p className={`text-[8px] font-black uppercase mb-1 ${activeNote?.id === node.id ? 'text-white/60' : 'text-luwa-primary'}`}>{node.subjectId}</p>
                    <p className={`text-sm font-bold ${activeNote?.id === node.id ? 'text-white' : 'text-luwa-onSurface'}`}>{node.topic.en}</p>
                  </button>
                ))}
                {filteredNodes.length === 0 && (
-                 <p className="text-[10px] text-center text-slate-400 mt-10 uppercase font-black tracking-widest">No nodes found in registry.</p>
+                 <div className="py-10 text-center">
+                   <div className="text-3xl mb-4 opacity-20">📂</div>
+                   <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Registry node empty.</p>
+                 </div>
                )}
              </div>
           </div>
         </div>
 
-        {/* Note Content Display */}
-        <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Note Content Display & Subject Blueprint */}
+        <div className="flex-1 flex flex-col overflow-hidden relative gap-6">
+          {/* Subject Blueprint Integration */}
+          {activeBlueprint && !activeNote && (
+            <div className="animate-m3-fade space-y-6">
+              <GlassCard className="p-10 bg-luwa-primaryContainer border-none shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-10 opacity-5"><ICONS.Brain className="w-32 h-32 text-luwa-primary" /></div>
+                <h3 className="text-2xl font-serif font-black text-luwa-onPrimaryContainer uppercase mb-4 tracking-tight">{selectedSubject} Mastery Blueprint</h3>
+                <p className="text-sm font-medium text-luwa-onPrimaryContainer opacity-80 leading-relaxed mb-8 max-w-2xl">{activeBlueprint.content}</p>
+                <div className="flex flex-wrap gap-4">
+                  <a href={activeBlueprint.quiz} target="_blank" rel="noreferrer" className="px-6 py-3 bg-luwa-primary text-white rounded-xl label-small font-black uppercase tracking-widest shadow-m3-1 hover:brightness-110 active:scale-95 transition-all">Launch Subject Diagnostic</a>
+                  <button onClick={() => alert("Loading institutional syllabus nodes...")} className="px-6 py-3 bg-white text-luwa-primary rounded-xl label-small font-black uppercase tracking-widest border border-luwa-primary/10 hover:bg-slate-50 transition-all">View Full Syllabus</button>
+                </div>
+              </GlassCard>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {activeBlueprint.multimedia.map((media: any, idx: number) => (
+                  <GlassCard key={idx} className="p-6 bg-white border-slate-50 flex items-center gap-6 group hover:border-luwa-primary/30 transition-all">
+                    <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                      {media.type === 'video' ? '📽️' : '📊'}
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Institutional Asset</p>
+                      <h4 className="text-sm font-black text-luwa-onSurface uppercase">{selectedSubject} {media.type === 'video' ? 'Conceptual Recap' : 'Visual Mapping'}</h4>
+                      <a href={media.url} target="_blank" rel="noreferrer" className="text-[10px] font-black text-luwa-primary hover:underline mt-2 inline-block">ACCESS LINK →</a>
+                    </div>
+                  </GlassCard>
+                ))}
+              </div>
+            </div>
+          )}
+
           {activeNote ? (
             <div className="flex-1 flex flex-col gap-6 overflow-hidden animate-m3-fade">
               <GlassCard className="flex-1 overflow-y-auto p-8 md:p-12 custom-scrollbar bg-white" variant="elevated">
@@ -165,12 +208,12 @@ export const CurriculumLibrary: React.FC<CurriculumLibraryProps> = ({ user, onUp
                 </div>
               </GlassCard>
             </div>
-          ) : (
+          ) : !activeBlueprint ? (
             <div className="flex-1 flex flex-col items-center justify-center opacity-20 text-center p-10">
                <ICONS.Layout className="w-20 h-20 text-slate-300 mb-6 mx-auto" />
                <p className="text-xs font-black uppercase tracking-widest text-slate-400">Registry node standby</p>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

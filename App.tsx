@@ -1,11 +1,13 @@
+
 /*
   Luwa Academy – Core Application Shell
-  V6.6 - Assignment Manager Integration
+  V6.9 - Multi-Linguistic & Temporal Theme Integration
 */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Auth } from './components/Auth.tsx';
 import { Dashboard } from './components/Dashboard.tsx';
+import { StudentDashboard } from './components/StudentDashboard.tsx';
 import { NeuralTutor } from './components/NeuralTutor.tsx';
 import { AssessmentLab } from './components/AssessmentLab.tsx';
 import { AdminControl } from './components/AdminControl.tsx';
@@ -18,10 +20,9 @@ import { LessonViewer } from './components/LessonViewer.tsx';
 import { QuizCenter } from './components/QuizCenter.tsx';
 import { AssignmentManager } from './components/AssignmentManager.tsx';
 import { storageService } from './services/storageService.ts';
-import { User, StudyNote } from './types.ts';
+import { initializeProgress } from './services/progressService.ts';
+import { User, StudyNote, Tab } from './types.ts';
 import { ICONS } from './constants.tsx';
-
-type Tab = 'home' | 'tutor' | 'lab' | 'analytics' | 'admin' | 'library' | 'planner' | 'mock' | 'papers' | 'cinematic' | 'about' | 'settings' | 'live' | 'viewer' | 'quizzes' | 'assignments';
 
 const translations = {
   en: {
@@ -41,11 +42,11 @@ const translations = {
 const themes = {
   light: {
     backgroundColor: '#ffffff',
-    color: '#000000'
+    color: '#191C1E'
   },
   dark: {
-    backgroundColor: '#000000',
-    color: '#ffffff'
+    backgroundColor: '#0F172A',
+    color: '#F1F2F4'
   }
 };
 
@@ -57,8 +58,10 @@ const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  
+  // Integrated Personalized Settings State
   const [language, setLanguage] = useState('en');
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
     const initApp = async () => {
@@ -73,9 +76,11 @@ const App: React.FC = () => {
           const dbUser = await storageService.getUserByEmail(session.email);
           if (dbUser) {
             setUser(dbUser);
+            initializeProgress(dbUser.id);
             if (dbUser.role === 'admin') setActiveTab('admin');
           } else {
             setUser(session);
+            initializeProgress(session.id);
           }
         }
       }
@@ -104,6 +109,11 @@ const App: React.FC = () => {
     storageService.setSession(updated);
   }, []);
 
+  const handleLogin = (u: User) => {
+    setUser(u);
+    initializeProgress(u.id);
+  };
+
   const logout = useCallback(() => {
     storageService.logout();
     setUser(null);
@@ -111,13 +121,9 @@ const App: React.FC = () => {
     setIsMobileNavOpen(false);
   }, []);
 
-  const changeLanguage = (lang) => {
-    setLanguage(lang);
-  };
-
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
-  };
+  // Integrated Handlers
+  const changeLanguage = (lang: string) => setLanguage(lang);
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
   if (!isReady) return (
     <div className="h-[100dvh] w-screen flex items-center justify-center bg-white">
@@ -125,7 +131,7 @@ const App: React.FC = () => {
     </div>
   );
 
-  if (!user) return <div className="h-[100dvh] bg-white overflow-hidden"><Auth onLogin={setUser} /></div>;
+  if (!user) return <div className="h-[100dvh] bg-white overflow-hidden"><Auth onLogin={handleLogin} /></div>;
 
   const isAdmin = user.role === 'admin';
   const currentTabs = isAdmin 
@@ -136,6 +142,7 @@ const App: React.FC = () => {
       ]
     : [
         { id: 'home', icon: ICONS.Home, label: 'Home', desc: 'Scholar Overview' },
+        { id: 'portal', icon: ICONS.Layout, label: 'Portal', desc: 'Scholar Dashboard' },
         { id: 'library', icon: ICONS.Layout, label: 'Library', desc: 'Study Nodes' },
         { id: 'quizzes', icon: ICONS.Zap, label: 'Quizzes', desc: 'Unit Assessment' },
         { id: 'assignments', icon: ICONS.Copy, label: 'Assignments', desc: 'Scholar Tasks' },
@@ -146,92 +153,124 @@ const App: React.FC = () => {
         { id: 'analytics', icon: ICONS.Layout, label: 'Insights', desc: 'Scholar Pulse' }
       ];
 
+  const activeThemeStyle = themes[theme];
+
   return (
-    <div style={themes[theme]} role="main" aria-label="Luwa Academy Main Content">
-      <header role="banner">
-        <h1 tabIndex={0}>Luwa Academy</h1>
-        <nav role="navigation" aria-label="Main Navigation">
-          <ul>
-            <li><a href="#dashboard" tabIndex={0}>Dashboard</a></li>
-            <li><a href="#courses" tabIndex={0}>Courses</a></li>
-            <li><a href="#settings" tabIndex={0}>Settings</a></li>
-          </ul>
-        </nav>
-        <div>
-          <button onClick={() => changeLanguage('en')}>English</button>
-          <button onClick={() => changeLanguage('am')}>አማርኛ</button>
-        </div>
-        <button onClick={toggleTheme} aria-label="Toggle Theme">
-          Switch to {theme === 'light' ? 'Dark' : 'Light'} Theme
-        </button>
-      </header>
+    <div 
+      className="flex h-[100dvh] overflow-hidden font-sans select-none animate-m3-fade transition-colors duration-500"
+      style={activeThemeStyle}
+      role="main"
+      aria-label="Luwa Academy Institutional Terminal"
+    >
+      {showOnboarding && <OnboardingTutorial onComplete={() => setShowOnboarding(false)} />}
 
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        {showOnboarding && <OnboardingTutorial onComplete={() => setShowOnboarding(false)} />}
-
-        {/* Global Mobile Hamburger Navigation Drawer */}
-        {isMobileNavOpen && (
-          <div className="fixed inset-0 z-[1000] bg-white/95 backdrop-blur-xl flex flex-col p-8 animate-m3-fade md:hidden">
-            <div className="flex justify-between items-center mb-10">
-               <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-luwa-primary rounded-m3-m flex items-center justify-center text-white font-serif font-black shadow-m3-1">L</div>
-                  <span className="title-large font-bold text-luwa-onSurface">Luwa</span>
-               </div>
-               <button onClick={() => setIsMobileNavOpen(false)} className="p-4 bg-slate-50 rounded-full text-slate-400">
-                  <ICONS.X className="w-6 h-6" />
-               </button>
-            </div>
-            
-            <nav className="flex-1 space-y-3 overflow-y-auto custom-scrollbar-hide">
-              {currentTabs.map(t => (
-                <button 
-                  key={t.id} 
-                  onClick={() => navigateTo(t.id as Tab)} 
-                  className={`w-full text-left p-6 rounded-m3-xl border transition-all flex items-center justify-between ${activeTab === t.id ? 'bg-luwa-primary border-luwa-primary text-white shadow-m3-2' : 'bg-white border-slate-100'}`}
-                >
-                  <div>
-                    <p className="text-lg font-black uppercase tracking-widest">{t.label}</p>
-                    <p className={`text-[9px] font-medium uppercase tracking-widest mt-1 ${activeTab === t.id ? 'text-white/60' : 'text-slate-400'}`}>{t.desc}</p>
-                  </div>
-                  <t.icon className={`w-5 h-5 ${activeTab === t.id ? 'text-white' : 'text-slate-200'}`} />
-                </button>
-              ))}
-            </nav>
-
-            <div className="mt-8 pt-8 border-t border-slate-100">
-               <button onClick={logout} className="w-full flex items-center justify-center gap-3 py-5 bg-red-50 text-luwa-error rounded-m3-xl font-black text-xs uppercase tracking-widest m3-ripple">
-                  <ICONS.LogOut className="w-4 h-4" /> Sign Out
-               </button>
-            </div>
+      {/* Global Mobile Hamburger Navigation Drawer */}
+      {isMobileNavOpen && (
+        <div className={`fixed inset-0 z-[1000] backdrop-blur-xl flex flex-col p-8 animate-m3-fade md:hidden ${theme === 'dark' ? 'bg-slate-900/95' : 'bg-white/95'}`}>
+          <div className="flex justify-between items-center mb-10">
+             <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-luwa-primary rounded-m3-m flex items-center justify-center text-white font-serif font-black shadow-m3-1">L</div>
+                <span className={`title-large font-bold ${theme === 'dark' ? 'text-white' : 'text-luwa-onSurface'}`}>Luwa</span>
+             </div>
+             <button onClick={() => setIsMobileNavOpen(false)} className={`p-4 rounded-full ${theme === 'dark' ? 'bg-slate-800 text-slate-400' : 'bg-slate-50 text-slate-400'}`}>
+                <ICONS.X className="w-6 h-6" />
+             </button>
           </div>
-        )}
-
-        {/* Desktop Persistent Sidebar */}
-        <aside className="hidden md:flex w-72 flex-col bg-white border-r border-slate-100 z-40">
-          <div className="p-10 flex items-center gap-4">
-            <div className="w-10 h-10 bg-luwa-primary rounded-m3-m flex items-center justify-center text-white font-serif font-black shadow-m3-1">L</div>
-            <span className="title-large font-bold text-luwa-onSurface">Luwa</span>
-          </div>
-          <nav className="flex-1 px-6 space-y-1 overflow-y-auto custom-scrollbar">
+          
+          <nav className="flex-1 space-y-3 overflow-y-auto custom-scrollbar-hide">
             {currentTabs.map(t => (
               <button 
                 key={t.id} 
                 onClick={() => navigateTo(t.id as Tab)} 
-                className={`w-full flex items-center gap-4 p-4 rounded-m3-xl transition-all duration-300 ${activeTab === t.id ? 'bg-luwa-primaryContainer text-luwa-primary font-bold shadow-sm' : 'text-slate-400 hover:text-luwa-primary hover:bg-slate-50'}`}
+                className={`w-full text-left p-6 rounded-m3-xl border transition-all flex items-center justify-between ${activeTab === t.id ? 'bg-luwa-primary border-luwa-primary text-white shadow-m3-2' : theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-slate-100'}`}
               >
-                <t.icon className="w-5 h-5" />
-                <span className="label-large tracking-wide">{t.label}</span>
+                <div>
+                  <p className="text-lg font-black uppercase tracking-widest">{t.label}</p>
+                  <p className={`text-[9px] font-medium uppercase tracking-widest mt-1 ${activeTab === t.id ? 'text-white/60' : 'text-slate-400'}`}>{t.desc}</p>
+                </div>
+                <t.icon className={`w-5 h-5 ${activeTab === t.id ? 'text-white' : 'text-slate-500'}`} />
               </button>
             ))}
           </nav>
-          <div className="p-6 border-t border-slate-100 space-y-2">
-            <button onClick={logout} className="w-full text-left px-6 py-4 text-slate-400 hover:text-luwa-error hover:bg-red-50 rounded-m3-xl transition-all label-large font-bold uppercase">Logout</button>
-          </div>
-        </aside>
 
-        <div className={`flex-1 overflow-y-auto ${activeTab === 'viewer' ? 'p-0' : 'p-4 md:p-10'} custom-scrollbar bg-white`}>
+          <div className="mt-8 pt-8 border-t border-slate-100/10 space-y-4">
+             <div className="flex gap-2">
+                <button onClick={() => changeLanguage('en')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${language === 'en' ? 'bg-luwa-primary text-white' : 'bg-slate-800 text-slate-400'}`}>EN</button>
+                <button onClick={() => changeLanguage('am')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${language === 'am' ? 'bg-luwa-primary text-white' : 'bg-slate-800 text-slate-400'}`}>AM</button>
+                <button onClick={toggleTheme} className="p-3 bg-slate-800 text-luwa-tertiary rounded-xl"><ICONS.Zap className="w-5 h-5" /></button>
+             </div>
+             <button onClick={logout} className="w-full flex items-center justify-center gap-3 py-5 bg-red-500/10 text-luwa-error rounded-m3-xl font-black text-xs uppercase tracking-widest m3-ripple">
+                <ICONS.LogOut className="w-4 h-4" /> Sign Out
+             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Persistent Sidebar */}
+      <aside className={`hidden md:flex w-72 flex-col border-r transition-colors duration-500 z-40 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
+        <div className="p-10 flex items-center gap-4">
+          <div className="w-10 h-10 bg-luwa-primary rounded-m3-m flex items-center justify-center text-white font-serif font-black shadow-m3-1">L</div>
+          <span className={`title-large font-bold ${theme === 'dark' ? 'text-white' : 'text-luwa-onSurface'}`}>Luwa</span>
+        </div>
+        <nav className="flex-1 px-6 space-y-1 overflow-y-auto custom-scrollbar">
+          {currentTabs.map(t => (
+            <button 
+              key={t.id} 
+              onClick={() => navigateTo(t.id as Tab)} 
+              className={`w-full flex items-center gap-4 p-4 rounded-m3-xl transition-all duration-300 ${activeTab === t.id ? 'bg-luwa-primaryContainer text-luwa-primary font-bold shadow-sm' : 'text-slate-400 hover:text-luwa-primary hover:bg-slate-50/10'}`}
+            >
+              <t.icon className="w-5 h-5" />
+              <span className="label-large tracking-wide">{t.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {/* Integrated Sidebar Controls */}
+        <div className="p-6 border-t border-slate-100/10 space-y-4">
+          <div className="flex gap-2 p-1 bg-slate-800/50 rounded-xl">
+             <button onClick={() => changeLanguage('en')} className={`flex-1 py-2 rounded-lg text-[8px] font-black uppercase tracking-tighter transition-all ${language === 'en' ? 'bg-luwa-primary text-white' : 'text-slate-500'}`}>English</button>
+             <button onClick={() => changeLanguage('am')} className={`flex-1 py-2 rounded-lg text-[8px] font-black uppercase tracking-tighter transition-all ${language === 'am' ? 'bg-luwa-primary text-white' : 'text-slate-500'}`}>አማርኛ</button>
+             <button onClick={toggleTheme} className={`p-2 rounded-lg transition-all ${theme === 'dark' ? 'bg-luwa-tertiary text-white' : 'text-slate-500'}`}>
+                <ICONS.Zap className="w-4 h-4" />
+             </button>
+          </div>
+          <button onClick={logout} className="w-full text-left px-6 py-4 text-slate-400 hover:text-luwa-error hover:bg-red-50/10 rounded-m3-xl transition-all label-large font-bold uppercase">Logout</button>
+        </div>
+      </aside>
+
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        {activeTab !== 'viewer' && (
+          <header className={`h-20 backdrop-blur-xl px-8 flex items-center justify-between z-30 border-b transition-colors duration-500 shrink-0 ${theme === 'dark' ? 'bg-slate-900/80 border-slate-800' : 'bg-white/80 border-slate-100'}`}>
+            <div className="flex items-center gap-6">
+              {/* Global Hamburger Icon */}
+              <button 
+                onClick={() => setIsMobileNavOpen(true)}
+                className="md:hidden p-4 bg-luwa-primaryContainer text-luwa-primary rounded-m3-l active:scale-95 transition-all shadow-sm"
+                aria-label="Toggle Global Navigation"
+              >
+                  <ICONS.Menu className="w-6 h-6" />
+              </button>
+              <span className="text-[10px] text-slate-400 uppercase tracking-[0.4em] font-black hidden sm:inline-block">
+                  {isAdmin ? 'Administrative Cluster' : 'Scholar Node Active'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="text-right hidden sm:block">
+                  <p className={`text-[10px] font-black uppercase ${theme === 'dark' ? 'text-white' : 'text-luwa-onSurface'}`}>{user.fullName}</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Level {Math.floor(user.xp / 100) + 1} Scholar</p>
+              </div>
+              <div className="w-10 h-10 bg-luwa-surfaceVariant rounded-full border border-slate-100/10 flex items-center justify-center font-black text-xs text-luwa-primary">
+                  {user.fullName.charAt(0)}
+              </div>
+            </div>
+          </header>
+        )}
+
+        <div className={`flex-1 overflow-y-auto ${activeTab === 'viewer' ? 'p-0' : 'p-4 md:p-10'} custom-scrollbar`}>
           <div className={`${activeTab === 'viewer' ? 'w-full h-full' : 'max-w-6xl mx-auto h-full'} accelerated`}>
             {activeTab === 'home' && <Dashboard user={user} onNavigate={navigateTo as any} onUpdateUser={handleUpdateUser} />}
+            {activeTab === 'portal' && <StudentDashboard user={user} onNavigate={navigateTo as any} />}
             {activeTab === 'tutor' && <NeuralTutor user={user} onUpdateUser={handleUpdateUser} />}
             {activeTab === 'live' && <LuwaLive />}
             {activeTab === 'quizzes' && <QuizCenter user={user} onUpdateUser={handleUpdateUser} onExit={() => setActiveTab('home')} />}
@@ -245,10 +284,6 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
-
-      <footer role="contentinfo">
-        <p>&copy; 2026 Luwa Academy. All rights reserved.</p>
-      </footer>
     </div>
   );
 };

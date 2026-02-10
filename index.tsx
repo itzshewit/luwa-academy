@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import StudentDashboard from './components/StudentDashboard';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -14,13 +13,3 @@ root.render(
     <App />
   </React.StrictMode>
 );
-
-const App = () => {
-  return (
-    <div className="app-container">
-      <StudentDashboard />
-    </div>
-  );
-};
-
-export default App;

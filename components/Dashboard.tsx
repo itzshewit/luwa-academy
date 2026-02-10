@@ -1,19 +1,13 @@
+
 /*
   Luwa Academy – Scholar Home Dashboard
   Integrated Mockup Logic - V6.2 (Assignment Node Entry)
 */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { GlassCard } from './GlassCard.tsx';
 import { User, Stream } from '../types.ts';
 import { ICONS } from '../constants.tsx';
-import { getNotesForStudent } from '../services/notesService';
-import { validateStudentAccess } from '../services/authService';
-import { initializeProgress, updateProgress, getProgress } from '../services/progressTrackingService';
-import { getAnalytics } from '../services/progressTrackingService';
-import { Line } from 'react-chartjs-2';
-import { Bar } from 'react-chartjs-2';
-import DashboardOverview from './DashboardOverview';
 
 interface DashboardProps {
   user: User;
@@ -32,120 +26,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onUpdate
 
   const welcomeText = isAmharic ? `ሰላም፣ ${user.fullName.split(' ')[0]}` : `Welcome, ${user.fullName.split(' ')[0]}`;
 
-  function GamificationSection() {
-    const badges = [
-      { id: 1, name: 'Math Whiz', description: 'Completed 10 math quizzes' },
-      { id: 2, name: 'Science Explorer', description: 'Watched 5 science tutorials' }
-    ];
-
-    const leaderboard = [
-      { rank: 1, name: 'Alice', points: 1500 },
-      { rank: 2, name: 'Bob', points: 1200 },
-      { rank: 3, name: 'Charlie', points: 1000 }
-    ];
-
-    return (
-      <div>
-        <h2>Achievements</h2>
-        <ul>
-          {badges.map(badge => (
-            <li key={badge.id}>
-              <strong>{badge.name}</strong>: {badge.description}
-            </li>
-          ))}
-        </ul>
-
-        <h2>Leaderboard</h2>
-        <ol>
-          {leaderboard.map(entry => (
-            <li key={entry.rank}>
-              {entry.rank}. {entry.name} - {entry.points} points
-            </li>
-          ))}
-        </ol>
-      </div>
-    );
-  }
-
-  function DynamicChallenges() {
-    const challenges = [
-      { id: 1, name: 'Complete 3 Quizzes', reward: '50 Points' },
-      { id: 2, name: 'Watch 5 Tutorials', reward: 'Badge: Knowledge Seeker' },
-      { id: 3, name: 'Score 80% in a Mock Exam', reward: '100 Points' }
-    ];
-
-    return (
-      <div>
-        <h2>Dynamic Challenges</h2>
-        <ul>
-          {challenges.map(challenge => (
-            <li key={challenge.id}>
-              <strong>{challenge.name}</strong> - Reward: {challenge.reward}
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  }
-
-  function InstructorDashboard() {
-    const reports = [
-      { id: 1, title: 'Student Progress', data: '85% average completion rate' },
-      { id: 2, title: 'Quiz Performance', data: '90% average score' },
-      { id: 3, title: 'Engagement Metrics', data: '75% active participation' }
-    ];
-
-    return (
-      <div>
-        <h2>Instructor Reports</h2>
-        <ul>
-          {reports.map(report => (
-            <li key={report.id}>
-              <strong>{report.title}</strong>: {report.data}
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  }
-
-  function AdvancedAnalytics() {
-    const data = {
-      labels: ['January', 'February', 'March', 'April', 'May'],
-      datasets: [
-        {
-          label: 'Student Progress',
-          data: [65, 59, 80, 81, 56],
-          backgroundColor: 'rgba(75,192,192,0.4)',
-          borderColor: 'rgba(75,192,192,1)',
-          borderWidth: 1,
-        },
-      ],
-    };
-
-    const options = {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'top',
-        },
-      },
-    };
-
-    return (
-      <div className="p-8 bg-white border border-slate-100 rounded-m3-2xl shadow-m3-2">
-        <h2 className="label-small text-slate-400 uppercase font-black tracking-widest mb-6">Advanced Analytics</h2>
-        <div className="space-y-6">
-          <Line data={data} options={options} />
-          <Bar data={data} options={options} />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="h-full flex flex-col gap-8 animate-m3-fade pb-20 overflow-y-auto custom-scrollbar pr-2">
-      <DashboardOverview />
+      {/* Dynamic Streak Badge from Mockup */}
+      <div className="flex">
+        <div className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-500 to-orange-400 text-white px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-lg animate-float">
+          <span>🔥</span>
+          <span>{user.streak || 7} Day Streak Active</span>
+        </div>
+      </div>
+
       <section className="relative overflow-hidden p-10 rounded-m3-2xl bg-white border border-slate-100 shadow-m3-3">
         <div className="absolute top-0 right-0 w-full h-full hero-pattern opacity-[0.05] pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-10">
@@ -241,122 +131,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onUpdate
           </div>
         </div>
       </div>
-
-      <GamificationSection />
-      <DynamicChallenges />
-      <InstructorDashboard />
-      <AdvancedAnalytics />
     </div>
   );
 };
-
-function GamificationSection() {
-  const badges = [
-    { id: 1, name: 'Math Whiz', description: 'Completed 10 math quizzes' },
-    { id: 2, name: 'Science Explorer', description: 'Watched 5 science tutorials' }
-  ];
-
-  const leaderboard = [
-    { rank: 1, name: 'Alice', points: 1500 },
-    { rank: 2, name: 'Bob', points: 1200 },
-    { rank: 3, name: 'Charlie', points: 1000 }
-  ];
-
-  return (
-    <div>
-      <h2>Achievements</h2>
-      <ul>
-        {badges.map(badge => (
-          <li key={badge.id}>
-            <strong>{badge.name}</strong>: {badge.description}
-          </li>
-        ))}
-      </ul>
-
-      <h2>Leaderboard</h2>
-      <ol>
-        {leaderboard.map(entry => (
-          <li key={entry.rank}>
-            {entry.rank}. {entry.name} - {entry.points} points
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
-function DynamicChallenges() {
-  const challenges = [
-    { id: 1, name: 'Complete 3 Quizzes', reward: '50 Points' },
-    { id: 2, name: 'Watch 5 Tutorials', reward: 'Badge: Knowledge Seeker' },
-    { id: 3, name: 'Score 80% in a Mock Exam', reward: '100 Points' }
-  ];
-
-  return (
-    <div>
-      <h2>Dynamic Challenges</h2>
-      <ul>
-        {challenges.map(challenge => (
-          <li key={challenge.id}>
-            <strong>{challenge.name}</strong> - Reward: {challenge.reward}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function InstructorDashboard() {
-  const reports = [
-    { id: 1, title: 'Student Progress', data: '85% average completion rate' },
-    { id: 2, title: 'Quiz Performance', data: '90% average score' },
-    { id: 3, title: 'Engagement Metrics', data: '75% active participation' }
-  ];
-
-  return (
-    <div>
-      <h2>Instructor Reports</h2>
-      <ul>
-        {reports.map(report => (
-          <li key={report.id}>
-            <strong>{report.title}</strong>: {report.data}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function AdvancedAnalytics() {
-  const data = {
-    labels: ['January', 'February', 'March', 'April', 'May'],
-    datasets: [
-      {
-        label: 'Student Progress',
-        data: [65, 59, 80, 81, 56],
-        backgroundColor: 'rgba(75,192,192,0.4)',
-        borderColor: 'rgba(75,192,192,1)',
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-    },
-  };
-
-  return (
-    <div className="p-8 bg-white border border-slate-100 rounded-m3-2xl shadow-m3-2">
-      <h2 className="label-small text-slate-400 uppercase font-black tracking-widest mb-6">Advanced Analytics</h2>
-      <div className="space-y-6">
-        <Line data={data} options={options} />
-        <Bar data={data} options={options} />
-      </div>
-    </div>
-  );
-}

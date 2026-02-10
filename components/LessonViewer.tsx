@@ -1,12 +1,13 @@
 
 /*
   Luwa Academy – Interactive Lesson Viewer
-  V1.0 - Advanced Study Node Experience
+  V1.1 - Progress Tracking Integration
 */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { User, StudyNote } from '../types.ts';
 import { ICONS } from '../constants.tsx';
+import { updateProgress } from '../services/progressService.ts';
 
 interface LessonViewerProps {
   user: User;
@@ -41,7 +42,6 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ user, note, onClose,
   
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Parse simulated Table of Contents based on the note content
   const sections = [
     { id: 'intro', title: 'Introduction', icon: '📖' },
     { id: 'core', title: 'Core Concepts', icon: '📐' },
@@ -51,7 +51,6 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ user, note, onClose,
   ];
 
   useEffect(() => {
-    // Load persisted notes/bookmarks from local storage if needed
     const saved = localStorage.getItem(`luwa_note_data_${note.id}`);
     if (saved) {
       const { notes, bms } = JSON.parse(saved);
@@ -62,6 +61,13 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ user, note, onClose,
 
   const saveLocalData = (notes: UserNote[], bms: Bookmark[]) => {
     localStorage.setItem(`luwa_note_data_${note.id}`, JSON.stringify({ notes, bms }));
+  };
+
+  const handleMarkComplete = () => {
+    updateProgress(user.id, 'completeTopic', { topic: note.id });
+    onUpdateUser({ ...user, xp: user.xp + 50 });
+    alert("Lesson marked as complete. Progress Registry Synced (+50 XP).");
+    onClose();
   };
 
   const addNote = () => {
@@ -140,7 +146,6 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ user, note, onClose,
 
   return (
     <div className="fixed inset-0 z-[1000] flex flex-col bg-slate-50 animate-m3-fade">
-      {/* Viewer Header */}
       <header className="h-20 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0 shadow-sm z-50">
         <div className="flex items-center gap-4">
            <button onClick={onClose} className="p-3 bg-slate-50 text-slate-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-all">
@@ -186,14 +191,13 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ user, note, onClose,
            >
               <ICONS.Layout className="w-5 h-5" />
            </button>
-           <button onClick={() => { alert("Lesson marked as complete. XP Synced."); onClose(); }} className="ml-4 px-6 py-3 bg-luwa-secondary text-white rounded-xl label-small font-black uppercase tracking-widest shadow-m3-1 hover:brightness-110 active:scale-95 transition-all">
+           <button onClick={handleMarkComplete} className="ml-4 px-6 py-3 bg-luwa-secondary text-white rounded-xl label-small font-black uppercase tracking-widest shadow-m3-1 hover:brightness-110 active:scale-95 transition-all">
               Mark Complete
            </button>
         </div>
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar - Table of Contents */}
         <aside className={`bg-white border-r border-slate-100 flex flex-col transition-all duration-300 overflow-hidden ${sidebarOpen ? 'w-80' : 'w-0'}`}>
            <div className="p-8 shrink-0">
               <h3 className="label-large font-black uppercase tracking-widest text-slate-400">Registry Index</h3>
@@ -215,7 +219,6 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ user, note, onClose,
            </nav>
         </aside>
 
-        {/* Main Content Viewport */}
         <main className="flex-1 overflow-y-auto bg-slate-50/50 custom-scrollbar relative" onMouseUp={handleMouseUp}>
            <div className="max-w-4xl mx-auto py-12 px-6">
               <article className="bg-white rounded-m3-2xl p-10 md:p-16 shadow-m3-2 border border-slate-100 space-y-12" ref={contentRef}>
@@ -236,7 +239,6 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ user, note, onClose,
                     <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-6">
                        <p className="whitespace-pre-wrap">{note.contentHtml.en}</p>
                     </div>
-                    {/* Formula Component Integrated from Demo */}
                     <div className="p-10 bg-slate-900 text-white rounded-3xl border border-white/10 text-center font-mono text-2xl font-black shadow-xl my-10 animate-m3-fade">
                        Δk = ∑ (η • 𝜙) / ∫ Ω dt
                        <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest mt-4">Calculus of Registry Stability</p>
@@ -295,7 +297,6 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ user, note, onClose,
                  </section>
               </article>
 
-              {/* Viewer Footer Navigation */}
               <div className="mt-12 p-8 bg-white border border-slate-200 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm">
                  <button onClick={() => alert("Loading previous registry node...")} className="px-6 py-3 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all">← Previous Lesson</button>
                  <div className="text-center">
@@ -309,7 +310,6 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ user, note, onClose,
            </div>
         </main>
 
-        {/* Right Sidebar - Notes & Bookmarks */}
         <aside className={`bg-white border-l border-slate-100 flex flex-col transition-all duration-300 overflow-hidden ${notesOpen ? 'w-96' : 'w-0'}`}>
            <div className="p-8 shrink-0 flex items-center justify-between">
               <h3 className="label-large font-black uppercase tracking-widest text-slate-900">Scholar Ledger</h3>
@@ -354,12 +354,6 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ user, note, onClose,
                            <p className="mt-4 text-[9px] font-black text-luwa-primary uppercase tracking-tighter italic">Source Node: {sections.find(s => s.id === n.section)?.title}</p>
                         </div>
                       ))}
-                      {userNotes.length === 0 && (
-                        <div className="py-20 text-center opacity-20">
-                           <span className="text-4xl block mb-4">📝</span>
-                           <p className="text-[10px] font-black uppercase tracking-widest">Scholar Ledger Empty</p>
-                        </div>
-                      )}
                    </div>
                 </div>
               ) : (
@@ -378,12 +372,6 @@ export const LessonViewer: React.FC<LessonViewerProps> = ({ user, note, onClose,
                         </div>
                      </div>
                    ))}
-                   {bookmarks.length === 0 && (
-                     <div className="py-20 text-center opacity-20">
-                        <span className="text-4xl block mb-4">🔖</span>
-                        <p className="text-[10px] font-black uppercase tracking-widest">No Node Bookmarks</p>
-                     </div>
-                   )}
                 </div>
               )}
            </div>

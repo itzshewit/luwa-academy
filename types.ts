@@ -1,7 +1,7 @@
 
 /*
   Luwa Academy – AI-Powered Educational Platform
-  Global Type Definitions - V4.2 (Assignment System Update)
+  Global Type Definitions - V4.3 (Portal Integration)
 */
 
 export enum Grade {
@@ -389,3 +389,5 @@ export interface FAQItem {
   answer: string;
   category: 'General' | 'Offline' | 'Study Planner' | 'Technical';
 }
+
+export type Tab = 'home' | 'portal' | 'tutor' | 'lab' | 'analytics' | 'admin' | 'library' | 'planner' | 'mock' | 'papers' | 'cinematic' | 'about' | 'settings' | 'live' | 'viewer' | 'quizzes' | 'assignments';

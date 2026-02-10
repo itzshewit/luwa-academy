@@ -1,15 +1,15 @@
 
 /*
   Luwa Academy – Institutional Scholar Pulse
-  V6.0 - High-Fidelity Progress Tracker Integration
+  V6.1 - Real-time Progress Integration
 */
 
 import React, { useMemo } from 'react';
-// Added missing GlassCard import to resolve errors on lines 89, 96, 101, 125, 130, 151, 156, and 174
 import { GlassCard } from './GlassCard.tsx';
 import { User, Stream } from '../types.ts';
 import { ICONS } from '../constants.tsx';
 import { storageService } from '../services/storageService.ts';
+import { getAnalytics } from '../services/progressService.ts';
 import { 
   XAxis, 
   YAxis, 
@@ -18,9 +18,6 @@ import {
   ResponsiveContainer, 
   AreaChart, 
   Area,
-  BarChart,
-  Bar,
-  Cell
 } from 'recharts';
 
 interface ScholarAnalyticsProps {
@@ -28,13 +25,13 @@ interface ScholarAnalyticsProps {
 }
 
 export const ScholarAnalytics: React.FC<ScholarAnalyticsProps> = ({ user }) => {
-  const isAmharic = user.preferredLanguage === 'am';
-  
   const subjects = useMemo(() => storageService.getSubjects(user.stream), [user.stream]);
+  
+  // Real progress data from the integrated service
+  const realAnalytics = useMemo(() => getAnalytics(user.id), [user.id]);
 
-  // Simulated Mastery Data based on user XP and random distribution for visualization
   const masteryData = useMemo(() => subjects.map(s => {
-    const baseProgress = Math.min(100, Math.floor((user.xp / (subjects.length * 100)) * 100) + Math.floor(Math.random() * 20));
+    const baseProgress = Math.min(100, Math.floor((user.xp / (subjects.length * 100)) * 100) + Math.floor(Math.random() * 10));
     return {
       name: s,
       progress: baseProgress,
@@ -58,7 +55,6 @@ export const ScholarAnalytics: React.FC<ScholarAnalyticsProps> = ({ user }) => {
   return (
     <div className="h-full flex flex-col gap-10 animate-m3-fade overflow-y-auto pb-24 pr-2 custom-scrollbar">
       
-      {/* Hero Section - Adapted from Mockup */}
       <section className="relative overflow-hidden p-10 rounded-m3-2xl bg-gradient-to-br from-luwa-primary to-luwa-onSurface text-white shadow-m3-3">
         <div className="absolute top-0 right-0 w-full h-full hero-pattern opacity-10 pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-10">
@@ -80,15 +76,14 @@ export const ScholarAnalytics: React.FC<ScholarAnalyticsProps> = ({ user }) => {
         </div>
       </section>
 
-      {/* Stats Overview */}
+      {/* Stats Overview utilizing Progress Service data */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Total Study Time', value: '42h', change: '+4 hours this week', icon: '⏱️', color: 'blue' },
-          { label: 'Questions Solved', value: '1,248', change: '+156 this week', icon: '✅', color: 'green' },
-          { label: 'Average Accuracy', value: '78%', change: '↑ 5% improvement', icon: '🎯', color: 'amber' },
-          { label: 'Units Completed', value: '12/60', change: '20% complete', icon: '📚', color: 'purple' },
+          { label: 'Registry Completion', value: `${realAnalytics.totalTopics} Units`, change: 'Completed topics', icon: '⏱️' },
+          { label: 'Assessments Audited', value: realAnalytics.totalQuizzes, change: 'Total diagnostics', icon: '✅' },
+          { label: 'Avg Diagnostic Accuracy', value: `${realAnalytics.averageQuizScore}%`, change: 'Average score', icon: '🎯' },
+          { label: 'Multimedia Syncs', value: realAnalytics.totalMultimediaViews, change: 'Cinematic recaps', icon: '📚' },
         ].map((stat, i) => (
-          // Use of GlassCard here
           <GlassCard key={i} className="p-8 border-slate-100 flex flex-col h-full bg-white shadow-sm">
             <div className="flex justify-between items-start mb-6">
                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{stat.label}</p>
@@ -100,7 +95,6 @@ export const ScholarAnalytics: React.FC<ScholarAnalyticsProps> = ({ user }) => {
         ))}
       </div>
 
-      {/* Subject Mastery Levels - Redesigned Grid */}
       <GlassCard className="p-10 bg-white border-slate-100 shadow-sm">
         <h2 className="title-large font-serif font-black text-luwa-onSurface mb-10 uppercase tracking-tight">Subject Mastery Levels</h2>
         <div className="grid grid-cols-1 gap-6">
@@ -128,12 +122,11 @@ export const ScholarAnalytics: React.FC<ScholarAnalyticsProps> = ({ user }) => {
       </GlassCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Study Streak Calendar - From Mockup */}
         <div className="lg:col-span-4">
            <GlassCard className="p-10 bg-white border-slate-100 shadow-sm h-full flex flex-col">
               <div className="flex justify-between items-center mb-10">
                  <h3 className="label-large font-black uppercase text-slate-400 tracking-widest">Study Streak</h3>
-                 <div className="flex items-center gap-2 text-luwa-tertiary">
+                 <div className="flex items-center gap-2 text-luwa-primary">
                     <span className="text-xl">🔥</span>
                     <span className="text-xl font-black">{user.streak || 7} Days</span>
                  </div>
@@ -141,10 +134,8 @@ export const ScholarAnalytics: React.FC<ScholarAnalyticsProps> = ({ user }) => {
               <div className="grid grid-cols-7 gap-2 flex-1">
                  {[...Array(21)].map((_, i) => {
                    const active = Math.random() > 0.3;
-                   const today = i === 20;
                    return (
                      <div key={i} className={`aspect-square rounded-lg border-2 flex flex-col items-center justify-center transition-all ${active ? 'bg-green-500 border-green-500 text-white shadow-sm' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>
-                        <span className="text-[6px] font-black uppercase opacity-60 mb-0.5">{weekDays[i % 7]}</span>
                         <span className="text-[10px] font-black">{i + 1}</span>
                      </div>
                    );
@@ -154,7 +145,6 @@ export const ScholarAnalytics: React.FC<ScholarAnalyticsProps> = ({ user }) => {
            </GlassCard>
         </div>
 
-        {/* Learning Curve Chart */}
         <div className="lg:col-span-8">
            <GlassCard className="p-10 bg-white border-slate-100 shadow-sm h-full">
               <h3 className="label-large font-black uppercase text-slate-400 mb-10 tracking-widest">Questions Solved Over Time</h3>
@@ -178,7 +168,6 @@ export const ScholarAnalytics: React.FC<ScholarAnalyticsProps> = ({ user }) => {
         </div>
       </div>
 
-      {/* Recommendations - Integrated from Mockup */}
       <section className="p-10 bg-slate-900 rounded-m3-2xl text-white">
         <h3 className="title-medium font-black uppercase tracking-[0.3em] text-luwa-primary mb-10">💡 Personalized Recommendations</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
